@@ -143,7 +143,12 @@ class WindowsArenaDesktop:
     def _verified_geometry(self):
         """Fail closed if focus, client origin, size or DPI coordinate space changes."""
         user32 = ctypes.windll.user32
-        user32.GetForegroundWindow.restype = ctypes.c_void_p
+        from ctypes import wintypes
+        user32.GetForegroundWindow.restype = wintypes.HWND
+        user32.IsIconic.argtypes = (wintypes.HWND,)
+        user32.IsWindowVisible.argtypes = (wintypes.HWND,)
+        user32.GetWindowTextLengthW.argtypes = (wintypes.HWND,)
+        user32.GetWindowTextW.argtypes = (wintypes.HWND, wintypes.LPWSTR, ctypes.c_int)
         hwnd = user32.GetForegroundWindow()
         if not hwnd or not self.foreground():
             raise ArenaError('FOREGROUND_LOST')
