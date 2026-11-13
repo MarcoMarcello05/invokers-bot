@@ -1,0 +1,584 @@
+{
+  "Resources": {
+    "layout": "VersionTolerant",
+    "fields": [
+      {
+        "name": "RawValues",
+        "type": "SortedDictionary<ResourceTypeId, Int32>"
+      }
+    ],
+    "source": "Shared/Choreograph/Models/Resources.cs"
+  },
+  "PlayerModel": {
+    "layout": "VersionTolerant",
+    "fields": [
+      {
+        "name": "PlayerId",
+        "type": "Guid"
+      },
+      {
+        "name": "Name",
+        "type": "string"
+      },
+      {
+        "name": "RegistrationDate",
+        "type": "DateTime"
+      },
+      {
+        "name": "AppliedMigrations",
+        "type": "List<Int32>"
+      },
+      {
+        "name": "Level",
+        "type": "int"
+      },
+      {
+        "name": "Experience",
+        "type": "int"
+      },
+      {
+        "name": "TotalExperience",
+        "type": "int"
+      },
+      {
+        "name": "EnergySyncTime",
+        "type": "DateTime"
+      },
+      {
+        "name": "Resources",
+        "type": "Resources"
+      },
+      {
+        "name": "ResourcesGained",
+        "type": "Resources"
+      },
+      {
+        "name": "ResourcesSpent",
+        "type": "Resources"
+      },
+      {
+        "name": "LastActivityDate",
+        "type": "DateTime"
+      },
+      {
+        "name": "Boosters",
+        "type": "List<Booster>"
+      },
+      {
+        "name": "ConfigVersion",
+        "type": "string"
+      },
+      {
+        "name": "AbTest",
+        "type": "string"
+      },
+      {
+        "name": "Tutorial",
+        "type": "PlayerTutorial"
+      },
+      {
+        "name": "Settings",
+        "type": "PlayerSettings"
+      },
+      {
+        "name": "IsCheater",
+        "type": "bool"
+      },
+      {
+        "name": "LinkStatus",
+        "type": "ExternalLinkStatus"
+      },
+      {
+        "name": "ClaimedPlayTimeRewards",
+        "type": "List<Int32>"
+      },
+      {
+        "name": "ClaimedPlayerLevelRewards",
+        "type": "List<Int32>"
+      },
+      {
+        "name": "DailyLoginPrograms",
+        "type": "List<DailyLoginProgramProgress>"
+      },
+      {
+        "name": "SummonResults",
+        "type": "List<SummonResult>"
+      },
+      {
+        "name": "SummonBonusSystem",
+        "type": "PlayerSummonBonusSystem"
+      },
+      {
+        "name": "ClientNotificationsCheckpoint",
+        "type": "ClientNotificationsCheckpoint"
+      },
+      {
+        "name": "BanInfo",
+        "type": "BanInfo"
+      },
+      {
+        "name": "LastActualizationTime",
+        "type": "DateTime"
+      },
+      {
+        "name": "LastDeviceId",
+        "type": "string"
+      },
+      {
+        "name": "MultiBattleTokensRefreshTime",
+        "type": "DateTime"
+      },
+      {
+        "name": "TodayTotalPlayedMinutes",
+        "type": "int"
+      },
+      {
+        "name": "ArenaTokenSyncTime",
+        "type": "DateTime"
+      },
+      {
+        "name": "LiveOps",
+        "type": "PlayerLiveOps"
+      },
+      {
+        "name": "SelectedAvatar",
+        "type": "PlayerAvatarInfo"
+      },
+      {
+        "name": "SelectedFrame",
+        "type": "PlayerFrameInfo"
+      },
+      {
+        "name": "UnlockedCustomAvatarIds",
+        "type": "SortedSet<Int64>"
+      },
+      {
+        "name": "UnlockedFrameIds",
+        "type": "SortedSet<Int32>"
+      },
+      {
+        "name": "NameChangeCount",
+        "type": "int"
+      },
+      {
+        "name": "Capabilities",
+        "type": "PlayerCapabilities"
+      },
+      {
+        "name": "RelicSwapPassFinish",
+        "type": "DateTime"
+      },
+      {
+        "name": "DaysPlayed",
+        "type": "int"
+      },
+      {
+        "name": "LastVirtualTimeResetTime",
+        "type": "DateTime"
+      },
+      {
+        "name": "VipStatus",
+        "type": "PlayerVipStatus"
+      },
+      {
+        "name": "LastDeviceModel",
+        "type": "string"
+      },
+      {
+        "name": "LobbySelectedHero",
+        "type": "Nullable<Int32>"
+      },
+      {
+        "name": "LobbySelectedAnimaId",
+        "type": "Nullable<Int32>"
+      },
+      {
+        "name": "CreatorsProfile",
+        "type": "CreatorsProfileInfo"
+      },
+      {
+        "name": "Acquisition",
+        "type": "PlayerAcquisition"
+      },
+      {
+        "name": "SupportRevision",
+        "type": "long"
+      },
+      {
+        "name": "SupportLastReadRevision",
+        "type": "long"
+      }
+    ],
+    "source": "Shared/Choreograph/Models/PlayerModel.cs"
+  },
+  "PlayerBattleModel": {
+    "layout": "VersionTolerant",
+    "fields": [
+      {
+        "name": "FormationLevelById",
+        "type": "SortedDictionary<FormationTypeId, Int32>"
+      },
+      {
+        "name": "LevelStats",
+        "type": "SortedDictionary<LevelProgressionIdentifier, LevelStats>"
+      },
+      {
+        "name": "LastMetaBattleSetup",
+        "type": "MetaBattleSetup"
+      },
+      {
+        "name": "Presets",
+        "type": "List<TeamPreset>"
+      },
+      {
+        "name": "LastBattleNotUsedBoostedRewards",
+        "type": "SortedDictionary<BoosterTypeId, Reward>"
+      },
+      {
+        "name": "Randoms",
+        "type": "SortedDictionary<RegionId, DeterministicRandomState>"
+      },
+      {
+        "name": "LastBattles",
+        "type": "List<BattleInfo>"
+      },
+      {
+        "name": "ScheduleDungeonsPassExpiration",
+        "type": "DateTime"
+      },
+      {
+        "name": "TowerData",
+        "type": "PlayerTowerData"
+      },
+      {
+        "name": "ClaimedCampaignNormalRewards",
+        "type": "List<Int32>"
+      },
+      {
+        "name": "ClaimedCampaignHardRewards",
+        "type": "List<Int32>"
+      },
+      {
+        "name": "ClaimedCampaignBrutalRewards",
+        "type": "List<Int32>"
+      },
+      {
+        "name": "TotalValidationFailures",
+        "type": "int"
+      },
+      {
+        "name": "CurrentPeriodValidationFailures",
+        "type": "int"
+      },
+      {
+        "name": "ValidationPeriodStartDate",
+        "type": "Nullable<DateTime>"
+      },
+      {
+        "name": "AutoBattleDataByArea",
+        "type": "SortedDictionary<AreaId, PlayerAutoBattleData>"
+      },
+      {
+        "name": "RegionPassExpiresAt",
+        "type": "SortedDictionary<RegionId, DateTime>"
+      },
+      {
+        "name": "MostUsedHeroesUsageByDay",
+        "type": "SortedDictionary<Int32, SortedDictionary`2<Int32, Int32>>"
+      },
+      {
+        "name": "Statistics",
+        "type": "PlayerBattleStatistics"
+      },
+      {
+        "name": "CampaignChapterPresets",
+        "type": "SortedDictionary<RegionId, SortedDictionary`2<Difficulty, TeamPresetData>>"
+      },
+      {
+        "name": "AsyncPvpPreset",
+        "type": "TeamPresetData"
+      },
+      {
+        "name": "MultiBattleSession",
+        "type": "MultiBattleSession"
+      },
+      {
+        "name": "TowerPresets",
+        "type": "SortedDictionary<RegionId, TeamPresetData>"
+      },
+      {
+        "name": "LastTournamentBattleContext",
+        "type": "TournamentBattleContext"
+      },
+      {
+        "name": "DailyBattleStartCounts",
+        "type": "DeterministicDictionary<AreaId, DailyBattleStartCount>"
+      }
+    ],
+    "source": "Shared/Choreograph/Models/PlayerBattleModel.cs"
+  },
+  "LevelStats": {
+    "layout": "VersionTolerant",
+    "fields": [
+      {
+        "name": "Victories",
+        "type": "int"
+      },
+      {
+        "name": "Defeats",
+        "type": "int"
+      },
+      {
+        "name": "LastBattleTime",
+        "type": "DateTime"
+      },
+      {
+        "name": "BestTimeInSeconds",
+        "type": "int"
+      },
+      {
+        "name": "BestTimeTeamPreset",
+        "type": "TeamPresetData"
+      },
+      {
+        "name": "LastUsedTeamPreset",
+        "type": "TeamPresetData"
+      },
+      {
+        "name": "Stars",
+        "type": "CampaignStar"
+      }
+    ],
+    "source": "Shared/Choreograph/Models/LevelStats.cs"
+  },
+  "TeamPresetData": {
+    "layout": "VersionTolerant",
+    "fields": [
+      {
+        "name": "Formation",
+        "type": "FormationTypeId"
+      },
+      {
+        "name": "Slots",
+        "type": "List<TeamPresetSlot>"
+      },
+      {
+        "name": "LeadPosition",
+        "type": "FormationSlotPosition"
+      }
+    ],
+    "source": "Shared/Choreograph/Models/TeamPresetData.cs"
+  },
+  "TeamPresetSlot": {
+    "layout": "VersionTolerant",
+    "fields": [
+      {
+        "name": "Position",
+        "type": "FormationSlotPosition"
+      },
+      {
+        "name": "HeroInventoryId",
+        "type": "Nullable<Int32>"
+      },
+      {
+        "name": "HeroConfigId",
+        "type": "Nullable<Int64>"
+      },
+      {
+        "name": "AnimaInventoryId",
+        "type": "Nullable<Int32>"
+      },
+      {
+        "name": "AnimaConfigId",
+        "type": "Nullable<Int64>"
+      },
+      {
+        "name": "AnimaPriority",
+        "type": "int"
+      }
+    ],
+    "source": "Shared/Choreograph/Models/TeamPresetSlot.cs"
+  },
+  "MetaBattleSetup": {
+    "layout": "VersionTolerant",
+    "fields": [
+      {
+        "name": "Id",
+        "type": "Guid"
+      },
+      {
+        "name": "RandomState",
+        "type": "DeterministicRandomState"
+      },
+      {
+        "name": "StartTime",
+        "type": "DateTime"
+      },
+      {
+        "name": "TeamSetups",
+        "type": "ImmutableList<BattlePlayerTeamSetup>"
+      },
+      {
+        "name": "LevelTeamSetup",
+        "type": "BattleLevelTeamSetup"
+      },
+      {
+        "name": "OnlineStart",
+        "type": "bool"
+      },
+      {
+        "name": "StaticDataHash",
+        "type": "int"
+      },
+      {
+        "name": "IgnoreElement",
+        "type": "bool"
+      },
+      {
+        "name": "PlayerDetails",
+        "type": "BattlePlayerDetails"
+      },
+      {
+        "name": "LootRandomStates",
+        "type": "ImmutableList<DeterministicRandomState>"
+      },
+      {
+        "name": "RunesDropBoost",
+        "type": "F64"
+      },
+      {
+        "name": "ClanBoss2Context",
+        "type": "ClanBoss2BattleContext"
+      },
+      {
+        "name": "BossInitialHp",
+        "type": "long"
+      },
+      {
+        "name": "BossMaxHp",
+        "type": "long"
+      },
+      {
+        "name": "PlayerTeamSetup",
+        "type": "BattlePlayerTeamSetup"
+      },
+      {
+        "name": "CoopTeamsSetup",
+        "type": "ImmutableList<BattlePlayerTeamSetup>"
+      }
+    ],
+    "source": "Shared/Choreograph/Models/MetaBattleSetup.cs"
+  },
+  "BattlePlayerTeamSetup": {
+    "layout": "VersionTolerant",
+    "fields": [
+      {
+        "name": "CombatPower",
+        "type": "int"
+      },
+      {
+        "name": "PlayerId",
+        "type": "HzGuid"
+      },
+      {
+        "name": "Formation",
+        "type": "FormationTypeId"
+      },
+      {
+        "name": "LeadPosition",
+        "type": "FormationSlotPosition"
+      },
+      {
+        "name": "Slots",
+        "type": "ImmutableList<BattleSlotSetup>"
+      },
+      {
+        "name": "PlayerName",
+        "type": "string"
+      },
+      {
+        "name": "ClanAbbreviation",
+        "type": "string"
+      },
+      {
+        "name": "LevelBattleCount",
+        "type": "int"
+      },
+      {
+        "name": "LootRandomStates",
+        "type": "ImmutableList<DeterministicRandomState>"
+      },
+      {
+        "name": "Victories",
+        "type": "int"
+      },
+      {
+        "name": "Defeats",
+        "type": "int"
+      }
+    ],
+    "source": "Shared/Choreograph/Models/BattlePlayerTeamSetup.cs"
+  },
+  "PlayerGlobalEventsModel": {
+    "layout": "VersionTolerant",
+    "fields": [
+      {
+        "name": "TournamentsById",
+        "type": "SortedDictionary<Int64, TournamentParticipationState>"
+      },
+      {
+        "name": "FinishedNoviceTournament",
+        "type": "bool"
+      },
+      {
+        "name": "CompletedNoviceTournamentGroupIds",
+        "type": "SortedSet<Int32>"
+      }
+    ],
+    "source": "Shared/Choreograph/Models/PlayerGlobalEventsModel.cs"
+  },
+  "TournamentParticipationState": {
+    "layout": "unknown",
+    "fields": [
+      {
+        "name": "TournamentId",
+        "type": "long"
+      },
+      {
+        "name": "JoinedAtUtc",
+        "type": "DateTime"
+      },
+      {
+        "name": "ScoringCompleted",
+        "type": "bool"
+      },
+      {
+        "name": "GroupId",
+        "type": "int"
+      }
+    ],
+    "source": "Shared/Choreograph/Models/TournamentParticipationState.cs"
+  },
+  "LevelProgressionIdentifier": {
+    "layout": "Sequential",
+    "fields": [
+      {
+        "name": "AreaId",
+        "type": "AreaId"
+      },
+      {
+        "name": "RegionId",
+        "type": "RegionId"
+      },
+      {
+        "name": "Difficulty",
+        "type": "Difficulty"
+      },
+      {
+        "name": "Number",
+        "type": "int"
+      }
+    ],
+    "source": "Shared/Choreograph/Models/LevelProgressionIdentifier.cs"
+  }
+}

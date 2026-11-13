@@ -1,0 +1,134 @@
+{
+  "main_team": [],
+  "next_action": {
+    "kind": "campaign_progress",
+    "action": "PushCampaignUntilFirstDefeat",
+    "target": "highest_available",
+    "score": 1000,
+    "blocked": false,
+    "reasons": [
+      "account progression rule; stop immediately after first defeat and remember safe level"
+    ],
+    "quest_ids": [],
+    "actor_command": "CAMPAIGN_PUSH",
+    "actor_path": "CAMPAIGN_PUSH",
+    "execution_ready": true
+  },
+  "queue": [
+    {
+      "kind": "campaign_progress",
+      "action": "PushCampaignUntilFirstDefeat",
+      "target": "highest_available",
+      "score": 1000,
+      "blocked": false,
+      "reasons": [
+        "account progression rule; stop immediately after first defeat and remember safe level"
+      ],
+      "quest_ids": [],
+      "actor_command": "CAMPAIGN_PUSH",
+      "actor_path": "CAMPAIGN_PUSH",
+      "execution_ready": true
+    },
+    {
+      "kind": "inventory",
+      "action": "RelicCleanup",
+      "target": "Common/Uncommon unequipped",
+      "score": 0,
+      "blocked": true,
+      "block_reason": "preview only until stat/value parser is complete",
+      "reasons": [
+        "0 preliminary low-rarity candidates; 0 equipped relics protected"
+      ],
+      "quest_ids": [],
+      "actor_command": null,
+      "actor_path": null,
+      "execution_ready": false
+    }
+  ],
+  "safety": {
+    "actor_enabled": false,
+    "gems_allowed": false,
+    "premium_spend_allowed": false,
+    "wild_star_auto_allowed": true,
+    "min_heroes_after_send_away": 30,
+    "campaign_stop_on_first_defeat": true,
+    "equipped_relics_protected": true
+  },
+  "resource_capabilities": {
+    "schema_known": true,
+    "balances_decoded": false,
+    "types": {
+      "1": "Gem",
+      "2": "Gold",
+      "3": "Energy",
+      "4": "Memorium",
+      "11": "MultiBattleToken",
+      "12": "ClanBoss2Key",
+      "21": "ArenaToken",
+      "22": "ArenaCoin",
+      "23": "ArenaMedalBronze",
+      "24": "ArenaMedalSilver",
+      "25": "ArenaMedalGold",
+      "34": "AccountXp",
+      "35": "HeroXp",
+      "51": "XpPotionSmall",
+      "52": "XpPotionRegular",
+      "53": "XpPotionBig",
+      "54": "XpPotionPremium",
+      "101": "WildStar",
+      "102": "FateStar",
+      "103": "DestinyStar",
+      "104": "DivineStar",
+      "105": "RadiantStar",
+      "106": "DreamOrb",
+      "107": "WonderOrb",
+      "108": "MiracleOrb",
+      "111": "LegendaryStar",
+      "112": "MythicOrb"
+    },
+    "hard_blocks": [
+      "Gem",
+      "premium purchases"
+    ],
+    "explicit_auto_allow": [
+      "WildStar"
+    ],
+    "note": "Resource IDs are known; balances are intentionally not guessed."
+  },
+  "executable_queue": [
+    {
+      "kind": "campaign_progress",
+      "action": "PushCampaignUntilFirstDefeat",
+      "target": "highest_available",
+      "score": 1000,
+      "blocked": false,
+      "reasons": [
+        "account progression rule; stop immediately after first defeat and remember safe level"
+      ],
+      "quest_ids": [],
+      "actor_command": "CAMPAIGN_PUSH",
+      "actor_path": "CAMPAIGN_PUSH",
+      "execution_ready": true
+    }
+  ],
+  "next_executable": {
+    "kind": "campaign_progress",
+    "action": "PushCampaignUntilFirstDefeat",
+    "target": "highest_available",
+    "score": 1000,
+    "blocked": false,
+    "reasons": [
+      "account progression rule; stop immediately after first defeat and remember safe level"
+    ],
+    "quest_ids": [],
+    "actor_command": "CAMPAIGN_PUSH",
+    "actor_path": "CAMPAIGN_PUSH",
+    "execution_ready": true
+  },
+  "mode": "DRY_RUN",
+  "actor_enabled": false,
+  "generated_at": "2026-11-12T17:46:41",
+  "game_root": "/home/oai/AppData/LocalLow/Hit_Zone/Invokers",
+  "hero_internal_names": {},
+  "sources": {}
+}
