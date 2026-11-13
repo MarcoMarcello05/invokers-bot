@@ -69,6 +69,33 @@ def profile_fingerprint(path):
     return hashlib.sha256(Path(path).read_bytes()).hexdigest()
 
 
+
+def validate_client_geometry(client_rect, expected_size, desktop_size):
+    """Validate screen-space client bounds; never scale an uncalibrated layout."""
+    left, top, right, bottom = client_rect
+    width, height = right-left, bottom-top
+    if (width, height) != tuple(expected_size) or width <= 0 or height <= 0:
+        raise ArenaError('GEOMETRY_MISMATCH')
+    if left < 0 or top < 0 or right > desktop_size[0] or bottom > desktop_size[1]:
+        raise ArenaError('CLIENT_OUTSIDE_DESKTOP')
+    return (left, top, right, bottom)
+
+
+def windows_client_rect(hwnd):
+    """Physical client-area bounds in desktop coordinates (not window frame)."""
+    from ctypes import wintypes
+    user32 = ctypes.windll.user32
+    user32.GetClientRect.argtypes = (wintypes.HWND, ctypes.POINTER(wintypes.RECT))
+    user32.GetClientRect.restype = wintypes.BOOL
+    user32.ClientToScreen.argtypes = (wintypes.HWND, ctypes.POINTER(wintypes.POINT))
+    user32.ClientToScreen.restype = wintypes.BOOL
+    rect = wintypes.RECT()
+    origin = wintypes.POINT(0, 0)
+    if not user32.GetClientRect(hwnd, ctypes.byref(rect)) or not user32.ClientToScreen(hwnd, ctypes.byref(origin)):
+        raise ArenaError('CLIENT_GEOMETRY_UNAVAILABLE')
+    return (origin.x, origin.y, origin.x + rect.right-rect.left, origin.y + rect.bottom-rect.top)
+
+
 class WindowsArenaDesktop:
     simulated = False
 
@@ -88,9 +115,11 @@ class WindowsArenaDesktop:
         self.closed = threading.Event()
         self.thread = threading.Thread(target=self._watch_stop, daemon=True)
         self.thread.start()
-        if list(self.pg.size()) != profile['size']:
+        try:
+            self._baseline = self._verified_geometry()
+        except Exception:
             self.close()
-            raise ArenaError('GEOMETRY_MISMATCH')
+            raise
 
     def _watch_stop(self):
         while not self.closed.wait(.05):
@@ -110,6 +139,52 @@ class WindowsArenaDesktop:
         buffer = ctypes.create_unicode_buffer(length+1)
         ctypes.windll.user32.GetWindowTextW(handle, buffer, length+1)
         return buffer.value.casefold() == self.profile['window_title'].casefold()
+
+    def _verified_geometry(self):
+        """Fail closed if focus, client origin, size or DPI coordinate space changes."""
+        user32 = ctypes.windll.user32
+        user32.GetForegroundWindow.restype = ctypes.c_void_p
+        hwnd = user32.GetForegroundWindow()
+        if not hwnd or not self.foreground():
+            raise ArenaError('FOREGROUND_LOST')
+        if user32.IsIconic(hwnd) or not user32.IsWindowVisible(hwnd):
+            raise ArenaError('WINDOW_NOT_VISIBLE')
+        desktop = tuple(self.pg.size())
+        # PyAutoGUI and Win32 must agree about coordinate units. No silent DPI scaling.
+        if desktop != (user32.GetSystemMetrics(0), user32.GetSystemMetrics(1)):
+            raise ArenaError('DPI_COORDINATE_MISMATCH')
+        rect = validate_client_geometry(windows_client_rect(hwnd), self.profile['size'], desktop)
+        result = (hwnd, rect)
+        if hasattr(self, '_baseline') and result != self._baseline:
+            raise ArenaError('WINDOW_GEOMETRY_CHANGED')
+        return result
+
+    def _screen_point(self, point, region=None):
+        """Translate verified client-local OCR/template points to desktop input."""
+        if not isinstance(point, (tuple, list)) or len(point) != 2:
+            raise ArenaError('CONTROL_UNCONFIRMED')
+        x, y = point
+        if not all(type(v) in (int, float) and v == v for v in (x, y)):
+            raise ArenaError('CONTROL_UNCONFIRMED')
+        if not (0 <= x < self.profile['size'][0] and 0 <= y < self.profile['size'][1]):
+            raise ArenaError('CONTROL_OUTSIDE_CLIENT')
+        if region is not None:
+            x1, y1, x2, y2 = self.profile['regions'][region]
+            if not (x1 <= x < x2 and y1 <= y < y2):
+                raise ArenaError('CONTROL_OUTSIDE_REGION')
+        _, (left, top, right, bottom) = self._verified_geometry()
+        sx, sy = left + int(x), top + int(y)
+        if not (left <= sx < right and top <= sy < bottom):
+            raise ArenaError('CONTROL_OUTSIDE_CLIENT')
+        return sx, sy
+
+    def _client_image(self):
+        _, (left, top, right, bottom) = self._verified_geometry()
+        image = self.screen.shot()
+        if image.shape[0] < bottom or image.shape[1] < right:
+            raise ArenaError('SCREENSHOT_GEOMETRY_MISMATCH')
+        self._verified_geometry()
+        return image[top:bottom, left:right]
 
     def _rows(self, image, name):
         rows = self.screen.ocr_region(image, self.profile['regions'][name])
@@ -145,9 +220,7 @@ class WindowsArenaDesktop:
             raise ArenaError('STOP_REQUESTED')
         if not self.foreground():
             return ArenaFrame('UNKNOWN', safe_foreground=False)
-        if list(self.pg.size()) != self.profile['size']:
-            raise ArenaError('GEOMETRY_MISMATCH')
-        image = self.screen.shot()
+        image = self._client_image()
         # First inspect potential modal labels. Never confirm an unknown overlay.
         all_rows = self.screen.ocr_region(image, (0, 30, 1920, 1028))
         if any(_norm(r['text']) in {_norm(x) for x in ('KAUFEN', 'BESTÄTIGEN', 'WIEDERBELEBEN', 'ABBRECHEN', 'OK')}
@@ -207,7 +280,13 @@ class WindowsArenaDesktop:
             check_stop()
             if not self.allow_navigation or not self.foreground():
                 raise ArenaError('NAVIGATION_NOT_AUTHORIZED')
-            self.pg.moveTo(1344, 680, duration=.1)
+            # Scroll in the verified list area, never at a desktop-global coordinate.
+            x1, y1, x2, y2 = self.profile['regions']['names']
+            point = self._screen_point(((x1+x2)//2, (y1+y2)//2), 'names')
+            self.pg.moveTo(*point, duration=.1)
+            self._verified_geometry()
+            if self.stopped():
+                raise ArenaError('STOP_REQUESTED')
             self.pg.scroll(5 if direction == 'up' else -5)
             time.sleep(.45)
         found, meta = search_selected_candidate(target, checked, scroll, self.stopped,
@@ -257,8 +336,21 @@ class WindowsArenaDesktop:
             raise ArenaError('REFRESH_COST_UNVERIFIED')
         if not self.foreground() or self.stopped():
             raise ArenaError('FOREGROUND_LOST')
-        self.pg.click(*point)
+        region = {
+            'open_battles': None, 'open_arena': 'arena_menu',
+            'open_formation': 'row_fight', 'start_battle': 'start_battle',
+            'refresh': 'refresh', 'back': 'back', 'return_to_arena': 'back',
+        }.get(command)
+        if command not in ('open_battles', 'open_arena', 'open_formation',
+                           'start_battle', 'refresh', 'back', 'return_to_arena'):
+            raise ArenaError('UNKNOWN_COMMAND')
+        # Templates may be elsewhere within the client, but never outside it.
+        screen_point = self._screen_point(point, region)
+        if self.stopped():
+            raise ArenaError('STOP_REQUESTED')
+        self.pg.click(*screen_point)
 
     def screenshot(self, path):
+        self._verified_geometry()
         self.pg.screenshot().save(path)
         return str(path)
