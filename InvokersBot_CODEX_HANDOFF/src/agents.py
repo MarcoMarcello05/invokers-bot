@@ -1,3 +1,6 @@
+"""Legacy capabilities retained for compatibility; new Actor owns all execution.
+All legacy live capabilities are disabled.
+"""
 from dataclasses import dataclass
 
 # EINZIGE Laufzeit-Wahrheit darüber, was der Bot tatsächlich ausführen kann.
@@ -5,9 +8,9 @@ from dataclasses import dataclass
 # executable=False bedeutet: Knowledge kennt die Aufgabe, aber es gibt keinen verifizierten Aktor.
 # Solche Quests werden vom Planner nie gewählt und nie per LOS gestartet.
 CAPABILITIES={
- 'campaign':     ('CampaignAgent','exact chapter/stage farming + replay',True),
- 'summon':       ('SummonAgent','green Wild Star only; smallest safe spend',True),
- 'invoker':      ('DevelopmentAgent','invoker level routing (Automatische Auswahl -> LEVELN)',True),
+ 'campaign':     ('CampaignAgent','exact chapter/stage farming + replay',False),
+ 'summon':       ('SummonAgent','green Wild Star only; smallest safe spend',False),
+ 'invoker':      ('DevelopmentAgent','invoker level routing (Automatische Auswahl -> LEVELN)',False),
  'arena':        ('ArenaAgent','arena quest/event routing',False),
  'awaken':       ('DevelopmentAgent','awakening routing',False),
  'relic_sell':   ('RelicAgent','relic sell task',False),

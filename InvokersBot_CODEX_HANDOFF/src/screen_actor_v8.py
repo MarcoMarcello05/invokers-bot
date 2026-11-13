@@ -5,7 +5,7 @@ from enum import Enum,auto
 import cv2,numpy as np,pyautogui
 try:
  from rapidocr_onnxruntime import RapidOCR
- OCR_ENGINE=RapidOCR()
+ OCR_ENGINE=RapidOCR(intra_op_num_threads=1,inter_op_num_threads=1)
 except Exception:
  OCR_ENGINE=None
 from config import *
@@ -327,7 +327,7 @@ class Bot:
    return
   if st==Screen.BATTLE:
    p=match('auto_off',s)
-   if p: click(p,'🤖 AUTO einschalten',1.5)
+   if p: log('AUTO bleibt AUS; der Arena-Autopilot aktiviert AUTO niemals')
    return
   if st==Screen.TEAM:
    k=word(rows,'KÄMPFEN',region=(1450,650,1910,1030))
@@ -428,17 +428,8 @@ def stop():
   import keyboard;keyboard.wait('f8');RUN=False;log('STOP F8')
  except Exception:pass
 def main():
- global RUN
- LOG.write_text('',encoding='utf-8')
- sw,sh=pyautogui.size()
- if (sw,sh)!=(SCREEN_W,SCREEN_H):
-  log(f'🛑 Bildschirm {sw}x{sh}; erwartet {SCREEN_W}x{SCREEN_H}. Bot startet aus Sicherheitsgründen nicht.')
-  return
- log(f'Invokers Bot v{VERSION} gestartet | QuestScanner -> Knowledge -> Planner -> Spezial-Agent -> Safe Actor')
- log('🧠 OCR sammelt Daten; Knowledge bewertet; Aktor klickt nur bestätigte Controls')
- threading.Thread(target=overlay,daemon=True).start();threading.Thread(target=stop,daemon=True).start();b=Bot()
- while RUN:
-  try:b.step()
-  except pyautogui.FailSafeException:log('NOT-AUS: Maus oben links');break
-  except Exception as e:log('Fehler: '+repr(e));time.sleep(2)
-if __name__=='__main__':main()
+ print('Legacy OCR-driven live loop disabled. Use arena_runner.py; its default is a no-input DRY RUN.')
+ return 2
+
+if __name__=='__main__':
+ raise SystemExit(main())

@@ -1,56 +1,111 @@
-# Invokers Autonomous Bot — Master Status
-Updated: 2026-11-12
+# Invokers Bot — Master Status
+Updated: 2026-11-13
 
-## Source of truth
-This file controls project direction. Do not create release ZIPs for isolated fixes. Work in consolidated milestones.
+## Active scope: Arena Integration Sprint 01
 
-## Non-negotiable policy
-- Data/state first: live snapshots > static data/dump > UIA if exposed > small screen regions/templates > OCR fallback.
-- Gems/premium purchases: NEVER automatic.
-- Wild Star automatic summon: allowed.
-- Send away only grey/green, keep >=30 Invokers.
-- First six UI Invokers are main team and get development priority.
-- Campaign push stops after first defeat; remember safe highest win.
-- Daily > Progress > Weekly > occasional Monthly > passive Achievements.
-- Avoid repeated failed actions / infinite retries.
-- Quest rewards only actual ANNEHMEN button; never reward icon guessing.
+The current user instruction supersedes the earlier broad architecture/GUI
+expansion. Reuse existing Handoff and Arena V4 components. No additional GUI,
+publication workflow or unrelated reverse engineering is part of this sprint.
+GitHub is the authoritative code base; completed source/tests/status must be
+committed, pushed and verified. Do not commit new private captures, account
+manifests, local configs, logs, screenshots or credentials.
 
-## Current milestone D1 — unified structured GameState
-### DONE / validated against real snapshots
-- [x] PlayerArenaModel opponent extraction: 27 opponents + exact CombatPower.
-- [x] Arena candidate ordering from data.
-- [x] Arena UI target-priority bug fixed in working tree: visible unrelated opponent cannot replace selected weakest target.
-- [x] PlayerModel Resources current dictionary decoded structurally.
-- [x] PlayerModel ResourcesGained decoded structurally.
-- [x] PlayerModel ResourcesSpent decoded structurally.
-- [x] Resource accounting invariant validated: gained - spent == current for Gold/Energy/Memorium/ArenaToken/WildStar; Gems have no spent entry and gained == current.
-- [x] ResourceTypeId enum extracted from dump.
-- [x] PlayerBattleModel LevelProgressionIdentifier recognized as 16-byte sequential key.
-- [x] LevelStats primitive fields decoded: victories, defeats, best time.
-- [x] Campaign Normal state proven: Chapter 7-5 won; Chapter 7-6 has 0 wins / 2 defeats.
-- [x] Campaign planner implication: safe level 7-5, do not blindly retry 7-6.
-- [x] GlobalEvents tournament dictionary count observed: 6; candidate keys isolated: 935,939,991,1000,1006,1007.
+## Non-negotiable rules
 
-### IN PROGRESS
-- [ ] Decode TeamPresetData / AsyncPvpPreset into hero inventory IDs.
-- [ ] Determine reliable own Arena CombatPower source. Current stored snapshots do NOT contain literal 9368; test whether formation-screen state updates a snapshot before battle. Until proven, tiny OCR ROI remains fallback.
-- [ ] Decode GlobalEvents TournamentParticipationState fields and map tournament IDs to static definitions/names.
-- [ ] Add hero/quest/relic readers to unified GameState object.
-- [ ] Add confidence/provenance per field (structured / inferred / OCR).
+- Current Arena candidates come only from PlayerArenaModel field 12, reread
+  before consequential actions and after refresh/battle; never the pooled cache.
+- Own Arena power is the positive manual UserConfig.arena_combat_power. UI may
+  corroborate/reject it, never raise it or choose opponents by OCR strength.
+- Choose the weakest eligible structured candidate. Search that identity with
+  bounded scrolls; never substitute a randomly visible stronger opponent.
+- Gems/premium purchases and unknown-dialog confirmations are forbidden.
+- AUTO stays OFF. The old AUTO-enable branch is removed from the reused helper.
+- PyAutoGUI Fail-Safe stays enabled; F8/STOP/Ctrl+C support safe cancellation.
+- Dry-run, nonspending navigation audit, simulation and explicitly activated live
+  are distinct. No claim that simulation/offline screenshots prove Windows live.
 
-### NEXT after D1
-- [ ] D2 Planner consumes only GameState, not raw UI/OCR.
-- [ ] Resource budgets + hard premium safety gates.
-- [ ] Campaign progression policy using LevelStats.
-- [ ] Arena policy using exact opponent data and own power source.
-- [ ] Event-aware priority modifiers.
-- [ ] Main-six development policy.
-- [ ] Relic value model only after bonuses/costs are decoded.
+## Implemented integration
 
-## Release gate
-No new ZIP until:
-1. D1 GameState combines resources + campaign + arena + quests/heroes + event basics.
-2. Automated offline tests pass against saved real snapshots.
-3. Arena target navigation regression test passes.
-4. Premium/gem safety tests pass.
-5. One concise PC test can validate multiple improvements at once.
+- [x] Compared arena_actor, arena_snapshot, arena_runner, screen_actor_v8,
+  autonomy_bridge and policy against the supplied V4 code; retained Handoff
+  per-candidate priority instead of V4's visible-first bug.
+- [x] Existing bounded top/down search reused for the selected identity only;
+  strict full normalized name matching and ambiguous-row/button rejection.
+- [x] Arena-only bridge planner, small coherent Arena/resource reader, age/future/
+  corruption/duplicate identity checks. Existing state_reader/resource enum reused.
+- [x] OBSERVE → PLAN → ACT → VERIFY → RECOVER → REPLAN with explicit deadlines,
+  cycle limits, stable-target rechecks, bounded recovery and per-target memory.
+- [x] Windows adapter uses the existing screen_actor OCR/template helpers; checks
+  foreground window, geometry, known state, fresh/stable controls, formation
+  identity, configured power and fixed recognized one-token start cost.
+- [x] Victory/defeat needs UI plus exactly one structured offense-counter delta
+  and exact token delta. Unexpected resource decrease, including Gems, stops.
+- [x] Return to Arena and fresh read before next plan; wins/defeats excluded for
+  the current run. Persistent identity cooldown cannot be bypassed by CP changes.
+- [x] Optional free refresh only with explicit free label, zero spend, changed
+  current list and max budget3; default0, no refresh in dry-run.
+- [x] Default dry-run sends no inputs. `--navigate` can open/scroll/inspect formation
+  but never start battle. Live requires two explicit gates: activation plus a
+  successful matching navigation report no older than five minutes.
+- [x] Error codes, JSONL phase journal, reports and best-effort real failure PNG;
+  no fake simulation screenshot or false live-success label.
+- [x] Python launchers and portable tests; reproducible source-build script reads
+  committed HEAD only and excludes private game/runtime data.
+
+## Validation
+
+**Executed: 104 automated tests passed, zero skipped, including 22 Arena sprint
+tests.** Two consecutive simulated cycles completed successfully. Real OCR/template
+smoke on the existing list/formation images passed, including own power, token
+symbol/cost, control-label umlaut variants, and rejection of an unknown blank image.
+See [the sprint guide](../docs/ARENA_SPRINT_01.md) for exact commands. Automated coverage includes priority, bounded scroll/missing/ambiguous
+identities, stale/missing/corrupt snapshots, UI errors/dialogs/focus loss,
+formation/cost/power mismatches, AUTO state, timeouts, premium delta rejection,
+free refresh/reread, bounded recovery, stop handling and consecutive simulated
+wins/defeats. Full existing regression suite is also required.
+
+Actual offline OCR/template checks use the already versioned Arena-list and
+formation screenshots, with no physical input. German control-label OCR variants
+are tolerated separately from strict opponent identity. Blank/unknown images
+must remain unactionable.
+
+## Real Windows gate — next test
+
+1. Install pinned arena requirements and configure actual game root/manual power.
+2. Check 1920x1080 geometry, foreground title and calibration ROIs.
+3. Run no-input dry-run, then explicitly requested navigation-only dry-run.
+4. Expected: correct lowest suitable field-12 target, correct formation identity,
+   own power and one-token cost; no battle/refresh/Gem/token expenditure.
+5. Inspect the local report/failure image. Only after this succeeds should an
+   explicitly activated **single** live cycle be considered.
+
+Not executed here: physical Windows input/F8 hook, current client navigation,
+real AUTO-off/battle/result/return transitions and real reward/resource timings.
+Missing recognition or delayed snapshots stop safely, not retries/confirmation.
+An actual successful live test is still outstanding.
+
+## Existing foundation retained, not expanded in this sprint
+
+The prior work supplies modular GameState/Planner/Safety/Verification/Memory and
+persistent UserConfig, with structural heroes/quests/relics and clan metadata.
+Old heuristics missed hero and quest records; current structural readers preserve
+unknowns and explicit provenance. Main Six UI ordering is not inferred from ID
+sorting. Relic valuation/cost scale and runtime event definitions remain unknown.
+The general actor's production registry stays empty; only the narrowly gated
+Arena integration runner is eligible for a later explicit Windows live test.
+
+## Evidence and privacy
+
+Source comparison rationale, command guide, test evidence and Open-Source
+references: docs/ARENA_SPRINT_01.md. Private uploaded archives stay outside the
+checkout/commit. Public tests can run without them using generated fixtures.
+A small non-personal token icon template and resource enum suffice for the
+source build; complete dumps and account screenshots are not bundled.
+
+## Git/build acceptance
+
+All completed source, tests and this status are committed together. The source build
+is generated from that committed HEAD and validated after extraction; it contains
+no new private game data. The final chat report records the actual repository,
+remote branch, commit SHA and verified push outcome; this file does not assert a
+push before the remote check has succeeded.

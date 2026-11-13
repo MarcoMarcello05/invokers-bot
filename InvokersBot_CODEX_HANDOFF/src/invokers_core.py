@@ -309,22 +309,9 @@ def relic_summary(relics):
         equipped += r['equipped_hero_id'] is not None
     return {'count':len(relics),'equipped':equipped,'unequipped':len(relics)-equipped,'by_rarity':by_rarity}
 
-def planner_preview(quests,relics):
-    active=[q for q in quests if q.get('state')!='Completed' and q.get('action')]
-    # Category weights enforce the user's priority order. Synergy rewards one action helping several quests.
-    weights={'Daily':1000,'Weekly':500,'Monthly':150,'Clan':100}
-    buckets={}
-    for q in active:
-        key=(q.get('action'),q.get('target_de'))
-        x=buckets.setdefault(key,{'action':q.get('action'),'target':q.get('target_de'),'quests':[],'score':0})
-        x['quests'].append({'quest_id':q['quest_id'],'prototype_id':q['prototype_id'],'group':q.get('group'),'remaining':q.get('remaining')})
-        x['score'] += weights.get(q.get('group'),50)
-    for x in buckets.values(): x['score'] += max(0,len(x['quests'])-1)*75
-    plans=sorted(buckets.values(),key=lambda x:(-x['score'],str(x['action'])))
-    # Safety facts available already from live inventory.
-    rs=relic_summary(relics)
-    return {'top_actions':plans[:10],'relic_safety':{'inventory_count':rs['count'],'equipped_protected':rs['equipped'],
-            'sell_rule':'Never sell equipped; Common/Uncommon unequipped are first candidates only after resource/value checks.'}}
+def planner_preview(*args, **kwargs):
+    raise RuntimeError('Legacy quest-only scoring retired; use Planner.plan with the complete GameState')
+
 
 def print_relics(relics):
     s=relic_summary(relics)
@@ -349,47 +336,9 @@ def resource_capabilities():
             'hard_blocks':['Gem','premium purchases'],'explicit_auto_allow':['WildStar'],
             'note':'Resource IDs are known; balances are intentionally not guessed.'}
 
-def build_account_strategy(heroes,quests,relics,policy,failure_memory=None):
-    failure_memory=failure_memory or {}
-    main_team=heroes[:6]  # user rule: first six Invokers in UI/list are the main team
-    active=[q for q in quests if q.get('state')!='Completed' and q.get('action')]
-    group_weight={'Daily':10000,'Weekly':3500,'Monthly':800,'Clan':500}
-    action_map={}
-    for q in active:
-        action=q.get('action'); target=q.get('target_de')
-        key=action+'|'+str(target or '')
-        item=action_map.setdefault(key,{'kind':'quest_action','action':action,'target':target,'score':0,'reasons':[],'quest_ids':[],'blocked':False,'block_reason':None})
-        item['score'] += group_weight.get(q.get('group'),250)
-        item['quest_ids'].append(q['quest_id'])
-        item['reasons'].append(f"{q.get('group') or 'Other'} {q.get('progress_text','')} {q.get('objective_de') or action}")
-    for item in action_map.values():
-        if len(item['quest_ids'])>1: item['score'] += 600*(len(item['quest_ids'])-1)
-        # Never let the autonomous core spend premium currency while balances/cost are unverified.
-        if item['action'] in ('ShopPurchase',):
-            item['blocked']=True; item['block_reason']='purchase cost/currency not yet verified; gems/premium spending forbidden'
-        failkey=item['action']+'|'+str(item.get('target') or '')
-        fails=int(failure_memory.get(failkey,0))
-        if fails:
-            item['score']-=min(5000,fails*1500); item['reasons'].append(f'failure-memory: {fails} recent failure(s)')
-    # Account-development jobs exist independently from quests.
-    jobs=list(action_map.values())
-    if main_team:
-        weakest=min(main_team,key=lambda h:(h['level'],h['rank'],h['total_experience']))
-        jobs.append({'kind':'account_development','action':'DevelopMainTeam','target':weakest['inventory_id'],'score':1200,'blocked':False,
-                     'reasons':[f'first-six main team rule; lowest level is ID {weakest["inventory_id"]} Lv{weakest["level"]}'], 'quest_ids':[]})
-    jobs.append({'kind':'campaign_progress','action':'PushCampaignUntilFirstDefeat','target':'highest_available','score':1000,'blocked':False,
-                 'reasons':['account progression rule; stop immediately after first defeat and remember safe level'],'quest_ids':[]})
-    rs=relic_summary(relics)
-    sell_candidates=[r for r in relics if r.get('equipped_hero_id') is None and r.get('rarity_id',99)<=2 and r['inventory_id'] not in policy.get('relics',{}).get('protected_inventory_ids',[])]
-    jobs.append({'kind':'inventory','action':'RelicCleanup','target':'Common/Uncommon unequipped','score':300 if sell_candidates else 0,'blocked':True,
-                 'block_reason':'preview only until stat/value parser is complete','reasons':[f'{len(sell_candidates)} preliminary low-rarity candidates; {rs["equipped"]} equipped relics protected'],'quest_ids':[]})
-    jobs.sort(key=lambda x:(x.get('blocked',False),-x.get('score',0)))
-    return {'main_team':[{'inventory_id':h['inventory_id'],'level':h['level'],'rank':h['rank']} for h in main_team],
-            'next_action':next((j for j in jobs if not j.get('blocked')),None),'queue':jobs[:12],
-            'safety':{'actor_enabled':False,'gems_allowed':False,'premium_spend_allowed':False,'wild_star_auto_allowed':True,
-                      'min_heroes_after_send_away':policy.get('safety',{}).get('min_heroes_after_send_away',30),
-                      'campaign_stop_on_first_defeat':True,'equipped_relics_protected':True},
-            'resource_capabilities':resource_capabilities()}
+def build_account_strategy(*args, **kwargs):
+    raise RuntimeError('Legacy list-based planner retired; use Planner.plan(GameState, UserConfig, FailureMemory, now)')
+
 
 def print_strategy(strategy):
     print('=== AUTONOMOUS PLANNER V1 (READ-ONLY) ===')
@@ -464,62 +413,9 @@ def print_heroes(heroes,names=None):
     print('NOTE: InternalName is the static config code, not yet the localized German display name.\n')
 
 def main():
-    ap=argparse.ArgumentParser(description='Invokers v9 read-only live-state core + validated Hero reader')
-    ap.add_argument('--root',type=Path,default=DEFAULT_ROOT); ap.add_argument('--interval',type=float,default=.75)
-    ap.add_argument('--once',action='store_true'); args=ap.parse_args()
-    base=Path(__file__).resolve().parent; policy=load_policy(base/'policy.json')
-    print('Invokers v9 CORE READER - READ ONLY'); print('Root:',args.root)
-    print('Actor enabled:',policy.get('safety',{}).get('actor_enabled',False),'(must stay False in this core)')
-    prev={}; prev_heroes=[]; prev_quests=[]
-    while True:
-        now=snapshot(args.root); stamp=datetime.now().strftime('%H:%M:%S')
-        hp=args.root/'aggregate_snapshots'/'PlayerHeroesModel.dat'
-        heroes=decode_heroes(hp) if hp.exists() else []
-        qp=args.root/'aggregate_snapshots'/'PlayerQuestsModel.dat'
-        quests=decode_quests(qp) if qp.exists() else []
-        static_path=find_static_data(args.root)
-        hero_names=map_hero_internal_names(heroes,static_path)
-        quest_prototypes=decode_quest_prototypes(static_path,[q['prototype_id'] for q in quests])
-        quests=enrich_quests(quests,quest_prototypes)
-        rp=args.root/'aggregate_snapshots'/'PlayerRelicsModel.dat'
-        relics=decode_relics(rp) if rp.exists() else []
-        plan=planner_preview(quests,relics)
-        failure_path=base/'failure_memory.json'
-        try: failure_memory=json.loads(failure_path.read_text(encoding='utf-8')) if failure_path.exists() else {}
-        except Exception: failure_memory={}
-        strategy=build_account_strategy(heroes,quests,relics,policy,failure_memory)
-        if not prev:
-            print(f'[{stamp}] {len(now)} live sources found')
-            for k,v in now.items(): print(f'  {k:16} {v["size"]:8} bytes  {v["file"]}')
-            print_heroes(heroes,hero_names)
-            print_quests(quests)
-            print_relics(relics)
-            print_planner(plan)
-            print_strategy(strategy)
-            print('Static data:', static_path if static_path else 'not found (names stay ?)')
-        else:
-            changed=[]
-            for k,v in now.items():
-                old=prev.get(k)
-                if old is None or old['sha256']!=v['sha256']: changed.append((k,old['size'] if old else None,v['size']))
-            if changed:
-                print(f'[{stamp}] STATE CHANGE')
-                for k,a,b in changed: print(f'  {k}: {a} -> {b} bytes')
-                if any(k=='heroes' for k,_,__ in changed):
-                    hd=hero_diff(prev_heroes,heroes)
-                    for line in hd: print('   ',line)
-                    if not hd: print('    Hero model changed; decoded primitive fields unchanged.')
-                if any(k=='quests' for k,_,__ in changed):
-                    qd=quest_diff(prev_quests,quests)
-                    for line in qd: print('   ',line)
-                    if not qd: print('    Quest model changed; decoded quest fields unchanged.')
-                state={'timestamp':datetime.now().isoformat(),'root':str(args.root),'sources':now,
-                       'decoded':{'heroes':heroes,'hero_count':len(heroes),'hero_internal_names':hero_names,
-                                  'quests':quests,'quest_count':len(quests),'quest_prototypes':quest_prototypes,
-                                  'relics':relics,'relic_summary':relic_summary(relics),'planner_preview':plan,'autonomous_planner_v1':strategy,'resources':resource_capabilities()},'policy':policy}
-                (base/'latest_state.json').write_text(json.dumps(state,indent=2),encoding='utf-8')
-        prev=now; prev_heroes=heroes; prev_quests=quests
-        if args.once: break
-        time.sleep(max(.2,args.interval))
+    # Legacy CLI remains available; all decisions now belong to Planner/GameState.
+    from runtime import main as runtime_main
+    return runtime_main()
 
-if __name__=='__main__': main()
+if __name__=='__main__':
+    raise SystemExit(main())

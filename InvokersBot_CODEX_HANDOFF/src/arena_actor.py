@@ -2,12 +2,19 @@
 from __future__ import annotations
 import json,re,time
 from pathlib import Path
-import pyautogui
+pyautogui=None
 from arena_snapshot import read_opponents, signature, wait_for_change
-try:
- from rapidocr_onnxruntime import RapidOCR
- OCR=RapidOCR()
-except Exception: OCR=None
+OCR=None
+
+def _ensure_desktop():
+ global pyautogui,OCR
+ if pyautogui is None:
+  import pyautogui as pg
+  pyautogui=pg;pyautogui.FAILSAFE=True
+ if OCR is None:
+  from rapidocr_onnxruntime import RapidOCR
+  OCR=RapidOCR()
+
 ROOT=Path(__file__).resolve().parent; RUNTIME=ROOT/'runtime'; STATE=RUNTIME/'arena_state.json'
 MAX_REFRESHES_PER_JOB=3; MIN_CONF=.55; MAX_SCROLL_STEPS=14; SCROLL_CLICKS=5
 
@@ -18,7 +25,7 @@ def _save(s): RUNTIME.mkdir(exist_ok=True); STATE.write_text(json.dumps(s,indent
 def reset_job(): s=_load(); s['refreshes']=0; s['session_rejected']=[]; _save(s)
 
 def _ocr_screen():
- if OCR is None:return []
+ _ensure_desktop()
  im=pyautogui.screenshot(); import numpy as np
  a=np.array(im); gray=(a[:,:,0]*.299+a[:,:,1]*.587+a[:,:,2]*.114).astype('uint8')
  try:r=OCR(gray); r=r[0] if isinstance(r,tuple) else r
@@ -33,22 +40,19 @@ def _ocr_screen():
   except:pass
  return out
 
-def _norm(s): return re.sub(r'[^a-z0-9]','',str(s).lower())
+def _norm(s):
+ import unicodedata
+ s=re.sub(r'^\s*\[[^]]+\]\s*','',str(s))
+ return ''.join(c for c in unicodedata.normalize('NFKC',s).casefold() if c.isalnum())
+
 def _match_score(name,text):
  a,b=_norm(name),_norm(text)
- if len(a)<3 or len(b)<3:return 0
- if a==b:return 100
- if a in b or b in a:return 85-min(abs(len(a)-len(b)),20)
- # tolerate OCR dropping clan tags/punctuation: compare suffix/prefix chunks
- if len(a)>=5 and len(b)>=5 and (a[-5:]==b[-5:] or a[:5]==b[:5]):return 65
- return 0
+ return 100 if a and a==b else 0
 
 def locate_name(name, rows):
- c=[]
- for r in rows:
-  sc=_match_score(name,r['text'])
-  if sc:c.append((sc,r['conf'],r))
- return max(c,key=lambda z:(z[0],z[1]))[2] if c else None
+ matches=[r for r in rows if _match_score(name,r.get('text','')) and r.get('conf',0)>=.85]
+ return matches[0] if len(matches)==1 else None
+
 
 def visible_snapshot_items(items,rows):
  out=[]
@@ -86,6 +90,7 @@ def parse_own_power(rows):
  return min(cand)[2] if cand else None
 
 def _scroll(direction):
+ _ensure_desktop()
  w,h=pyautogui.size(); pyautogui.moveTo(int(w*.70),int(h*.63),duration=.08)
  pyautogui.scroll(SCROLL_CLICKS if direction=='up' else -SCROLL_CLICKS)
  time.sleep(.45)
@@ -142,39 +147,41 @@ def _reject_for_session(name):
  _save(s)
 
 def live_once(log=print):
- items=read_opponents()
- if not items:return {'status':'SAFE_STOP','reason':'arena_snapshot_no_opponents'}
- pick,seen,meta=find_candidate_on_scrollable_list(items,dry=False)
- if not pick:return {'status':'NEED_REFRESH','reason':'no_candidate_found_on_scrollable_list','search':meta}
- rows=_ocr_screen(); hit=locate_name(pick['name'],rows)
- if not hit:return {'status':'SAFE_STOP','reason':'candidate_disappeared_before_click','candidate':pick}
- # click KÄMPFEN on same row; x is stable relative to game window width
- w,h=pyautogui.size(); pyautogui.click(int(w*.91),hit['y']); time.sleep(1.4)
- rows2=_ocr_screen(); own=parse_own_power(rows2)
- if own is None:
-  pyautogui.hotkey('alt','left'); time.sleep(.8)
-  return {'status':'SAFE_STOP','reason':'own_power_not_confirmed','candidate':pick}
- if pick['combat_power'] >= own:
-  pyautogui.hotkey('alt','left'); time.sleep(.8); _reject_for_session(pick['name'])
-  return {'status':'CANDIDATE_TOO_STRONG','own_power':own,'candidate':pick}
- # bottom-right formation fight button
- pyautogui.click(int(w*.83),int(h*.88)); s=_load(); s['last_opponent']=pick; _save(s)
- return {'status':'BATTLE_STARTED','own_power':own,'candidate':pick}
+ return {'status':'SAFE_STOP','reason':'Legacy live execution retired; use the tested Actor/Verification boundary. No production handler is enabled.'}
 
 def refresh_live():
- s=_load()
- if s.get('refreshes',0)>=MAX_REFRESHES_PER_JOB:return {'status':'SAFE_STOP','reason':'refresh_limit'}
- # Return near top so refresh control is visible.
- for _ in range(5): _scroll('up')
- old=read_opponents(); oldsig=signature(old); rows=_ocr_screen(); r=locate_refresh(rows)
- if not r:return {'status':'SAFE_STOP','reason':'refresh_button_not_found'}
- pyautogui.click(r['x'],r['y']); s['refreshes']=s.get('refreshes',0)+1; s['session_rejected']=[]; _save(s)
- new=wait_for_change(oldsig,8.0)
- if not new:return {'status':'SAFE_STOP','reason':'snapshot_did_not_change_after_refresh','refreshes':s['refreshes']}
- return {'status':'REFRESHED','refreshes':s['refreshes'],'opponent_count':len(new),'weakest':ranked_candidates(new)[:5]}
+ return {'status':'SAFE_STOP','reason':'Legacy refresh retired; verified costs and current-field-12 reread are required.'}
+
 
 def record_result(win:bool):
  s=_load(); p=s.get('last_opponent')
  if p and not win:s.setdefault('losses',{})[p['name']]=int(s.setdefault('losses',{}).get(p['name'],0))+1
  if win:s['refreshes']=0
  _save(s)
+
+
+def search_selected_candidate(candidate, observe, scroll, stopped=lambda:False, max_steps=14):
+    """Handoff top-normalization + bounded downward pass for one planned target.
+
+    Never substitutes a stronger visible opponent. observe must return a verified
+    list-screen observation; caller owns state/modal/foreground validation.
+    """
+    if not 0 <= max_steps <= 30:
+        raise ValueError('Scroll limit must be between 0 and 30')
+    seen=[]
+    for direction in ('up','down'):
+        stable=0;previous=None
+        for step in range(max_steps+1):
+            if stopped():return None,{'reason':'STOP_REQUESTED','screens':len(seen)}
+            view=observe()
+            rows=view.rows
+            signature=tuple(sorted((str(r.get('text','')),r.get('x'),r.get('y')) for r in rows))
+            seen.append(signature)
+            hit=locate_name(candidate['name'],rows)
+            # Search the selected candidate even while normalizing to the top.
+            if hit:return (view,hit),{'direction':direction,'steps':step,'screens':len(seen)}
+            stable=stable+1 if signature==previous else 0
+            previous=signature
+            if stable>=2:break
+            if step<max_steps:scroll(direction)
+    return None,{'reason':'TARGET_NOT_FOUND','screens':len(seen)}

@@ -1,3 +1,7 @@
+> Current scope: Arena Integration Sprint 01. Follow research/MASTER_STATUS.md
+> and docs/ARENA_SPRINT_01.md. Earlier D1 assignments below are historical context;
+> do not expand GUI/release work or unrelated reverse engineering for this sprint.
+
 # Invokers Bot — Codex Handoff
 
 ## Read this first

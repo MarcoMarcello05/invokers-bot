@@ -1,69 +1,60 @@
 from __future__ import annotations
 from pathlib import Path
-import struct, json, re
+import json, re, zipfile, sys
+from memorypack import DecodeError, field, model
 
-RESOURCE_NAMES={}
-
-def _i32(b,o): return struct.unpack_from('<i',b,o)[0]
-
-def load_resource_enum(dump_root: Path):
-    p=next(dump_root.rglob('ResourceTypeId.cs'))
-    text=p.read_text(errors='ignore')
+def load_resource_enum(dump_root: Path | None = None):
+    if dump_root is None:
+        dump_root = Path(getattr(sys, '_MEIPASS', Path(__file__).resolve().parents[1]))/'raw/dumps/InvokersDump(2).zip'
+        if not dump_root.is_file():
+            dump_root = Path(__file__).resolve().parent/'schemas/ResourceTypeId.cs'
+    if dump_root.suffix == '.cs':
+        text=dump_root.read_text(encoding='utf-8')
+    elif dump_root.is_dir():
+        p=next(dump_root.rglob('ResourceTypeId.cs'))
+        text=p.read_text(errors='ignore')
+    else:
+        with zipfile.ZipFile(dump_root) as archive:
+            names=[n for n in archive.namelist() if Path(n).name=='ResourceTypeId.cs']
+            if len(names)!=1: raise DecodeError('ResourceTypeId schema is ambiguous/missing')
+            text=archive.read(names[0]).decode()
     out={}
     for name,val in re.findall(r'^\s*([A-Za-z0-9_]+)\s*=\s*(-?\d+),?\s*$',text,re.M): out[int(val)]=name
     return out
 
-def find_resource_maps(path:Path, known_ids:set[int]):
-    b=path.read_bytes(); candidates=[]
-    for off in range(0,len(b)-4):
-        n=_i32(b,off)
-        if not 5<=n<=256 or off+4+n*8>len(b): continue
-        pairs=[struct.unpack_from('<ii',b,off+4+i*8) for i in range(n)]
-        keys=[k for k,v in pairs]
-        if keys!=sorted(keys) or len(set(keys))!=n: continue
-        if not all(k in known_ids and v>=0 for k,v in pairs): continue
-        # Player resource maps always have core currency; current/gained include Gems, spent may not.
-        if not {2,3}.issubset(keys): continue
-        candidates.append((off,dict(pairs)))
-    # remove overlapping/subset false positives by keeping maps with maximal useful cardinality per region
-    clean=[]
-    for off,m in candidates:
-        if any(abs(off-o)<32 and len(m)<len(mm) for o,mm in candidates): continue
-        clean.append((off,m))
-    return clean
-
-def read_player_resources(path:Path,dump_root:Path):
-    names=load_resource_enum(dump_root); maps=find_resource_maps(path,set(names))
-    # top-level order in PlayerModel: Resources, ResourcesGained, ResourcesSpent
-    maps=sorted(maps,key=lambda x:x[0])[:3]
-    labels=['current','gained','spent']
+def read_player_resources(path:Path,dump_root:Path | None = None):
+    names=load_resource_enum(dump_root)
+    fields=model(path.read_bytes(),1)
     result={}
-    for label,(off,m) in zip(labels,maps):
-        result[label]={'offset':off,'count':len(m),'values':{names.get(k,str(k)):v for k,v in m.items()}}
+    # Retired members occupy wire slots; do not use backing-field list indices.
+    for label,index in [('current',9),('gained',10),('spent',11)]:
+        span=field(field(fields,index).object(),0)
+        reader=span.reader(); values={}; previous=None
+        for _ in range(reader.count(8)):
+            key,value=reader.integer(),reader.integer()
+            if (previous is not None and key<=previous) or value<0:
+                raise DecodeError('Invalid resource dictionary')
+            values[names.get(key,str(key))]=value; previous=key
+        reader.finish()
+        result[label]={'offset':span.offset,'count':len(values),'values':values}
     return result
 
 
 def read_level_stats(path:Path):
-    b=path.read_bytes(); rows=[]; seen=set()
-    valid_areas={1,2,3,4,5,6,7,8}; valid_diffs={1,2,3,9}
-    for o in range(0,len(b)-64):
-        a,r,d,n=struct.unpack_from('<iiii',b,o)
-        if a not in valid_areas or not (-1<=r<=501) or d not in valid_diffs or not (1<=n<=100): continue
-        if b[o+16:o+22] != b'\x08\x00\x04\x04\x08\x04': continue
-        h=b[o+16:o+32]; parsed=None
-        for rel in range(6,16):
-            if h[rel] != 4: continue
-            start=o+16+rel+1
-            victories,defeats=struct.unpack_from('<ii',b,start)
-            best=struct.unpack_from('<i',b,start+16)[0]
-            if 0<=victories<=1000 and 0<=defeats<=1000 and 0<=best<=100000:
-                parsed=(victories,defeats,best); break
-        if not parsed: continue
-        key=(a,r,d,n)
-        if key in seen: continue
+    fields=model(path.read_bytes(),7)
+    reader=field(fields,1).reader(); rows=[]; seen=set()
+    for _ in range(reader.count(17)):
+        offset=reader.offset+reader.pos
+        key=tuple(reader.integer() for _ in range(4))
+        if key in seen: raise DecodeError('Duplicate level identifier')
         seen.add(key)
-        v,df,bt=parsed
-        rows.append({'offset':o,'area':a,'region':r,'difficulty':d,'number':n,'victories':v,'defeats':df,'best_time_seconds':bt})
+        stats=reader.object()
+        v,df,bt=(field(stats,i).integer() for i in (1,2,4))
+        if min(v,df,bt)<0: raise DecodeError('Negative level statistics')
+        a,r,d,n=key
+        rows.append({'offset':offset,'area':a,'region':r,'difficulty':d,'number':n,
+                     'victories':v,'defeats':df,'best_time_seconds':bt})
+    reader.finish()
     return rows
 
 def campaign_summary(rows):
@@ -79,7 +70,11 @@ def campaign_summary(rows):
     return out
 
 def main():
-    root=Path('/mnt/data/workdeep/live/Invokers_LiveData'); dump=Path('/mnt/data/workdeep/dump')
+    import argparse
+    parser=argparse.ArgumentParser(description='Read structured resources and campaign state')
+    parser.add_argument('--snapshots',type=Path,default=Path(__file__).resolve().parents[1]/'tests/fixtures')
+    parser.add_argument('--dump',type=Path)
+    args=parser.parse_args(); root=args.snapshots; dump=args.dump
     levels=read_level_stats(root/'PlayerBattleModel.dat')
     out={'resources':read_player_resources(root/'PlayerModel.dat',dump),'level_stats':levels,'campaign':campaign_summary(levels)}
     print(json.dumps(out,indent=2,ensure_ascii=False))

@@ -1,10 +1,51 @@
 {
   "mode": "DRY_RUN",
   "actor_enabled": false,
-  "priorities": {"daily": 10000, "progress": 7000, "weekly": 3500, "monthly": 800, "clan": 500, "account_development": 1200, "campaign_push": 1000},
-  "resources": {"allow_gems": false, "allow_premium_spend": false, "allow_wild_star_summon": true},
-  "heroes": {"main_team_rule": "first_six", "auto_level_main_team": true, "send_away_grey": true, "send_away_green": true, "send_away_blue_or_higher": false},
-  "relics": {"protect_equipped": true, "protect_rare_or_higher": true, "auto_sell": false, "auto_upgrade": false},
-  "campaign": {"push_highest_available": true, "stop_on_first_defeat": true, "farm_last_safe_after_defeat": true},
-  "safety": {"min_heroes_after_send_away": 30, "max_same_action_failures": 2, "unknown_screen_stop_after": 3, "require_state_confirmation": true}
+  "priorities": {
+    "daily": 10000,
+    "progress": 7000,
+    "weekly": 3500,
+    "monthly": 800,
+    "clan": 500,
+    "account_development": 1200,
+    "campaign_push": 1000
+  },
+  "resources": {
+    "allow_gems": false,
+    "allow_premium_spend": false,
+    "allow_wild_star_summon": true
+  },
+  "heroes": {
+    "main_team_rule": "first_six",
+    "auto_level_main_team": true,
+    "send_away_grey": true,
+    "send_away_green": true,
+    "send_away_blue_or_higher": false
+  },
+  "relics": {
+    "protect_equipped": true,
+    "protect_rare_or_higher": true,
+    "auto_sell": false,
+    "auto_upgrade": false
+  },
+  "campaign": {
+    "push_highest_available": true,
+    "stop_on_first_defeat": true,
+    "farm_last_safe_after_defeat": true
+  },
+  "safety": {
+    "min_heroes_after_send_away": 30,
+    "max_same_action_failures": 2,
+    "unknown_screen_stop_after": 3,
+    "require_state_confirmation": true
+  },
+  "arena_autopilot": {
+    "max_cycles": 10,
+    "max_recovery": 1,
+    "max_free_refreshes": 3,
+    "max_scroll_steps": 14,
+    "ui_timeout": 10,
+    "battle_timeout": 180,
+    "snapshot_timeout": 10
+  }
 }
