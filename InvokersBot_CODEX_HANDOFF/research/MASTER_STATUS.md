@@ -109,3 +109,16 @@ is generated from that committed HEAD and validated after extraction; it contain
 no new private game data. The final chat report records the actual repository,
 remote branch, commit SHA and verified push outcome; this file does not assert a
 push before the remote check has succeeded.
+
+
+## Sprint 02 — Windows client-area geometry gate (2026-11-13)
+
+Implemented in `src/arena_windows.py`:
+- Win32 GetClientRect + ClientToScreen obtain physical client bounds; focus, visible/non-minimized window, desktop coordinate compatibility and exact calibrated client dimensions are required.
+- Baseline HWND/client rectangle is pinned on adapter initialization; changes stop subsequent observations and inputs.
+- OCR/template screenshots are cropped to the verified client, keeping existing ROIs client-relative.
+- Navigation coordinates are translated from validated client-local points, constrained to expected control ROIs where known; scroll location derives from calibrated list region instead of a hardcoded desktop point.
+- F8, STOP file, PyAutoGUI failsafe, premium restrictions, battle gates and arena target selection remain unchanged.
+- `tests/test_arena_geometry.py` adds isolated geometry and point-boundary regression tests.
+
+**Validation status:** Source committed to GitHub. Automated tests were **not executed** in this session because the runtime could not clone the GitHub repository (DNS unavailable); Windows physical validation also pending. Do not label this sprint fully validated until tests run. Exact 1920x1080 *client* size is required; maximized window with a smaller client must safely stop, not auto-scale. Test on the user's actual maximized window before allowing navigation.
