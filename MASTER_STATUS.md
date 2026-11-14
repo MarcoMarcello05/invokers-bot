@@ -52,3 +52,12 @@ Work directly from `MASTER_CHECKLIST.md`, starting with the universal core/data/
 - ABGESCHLOSSEN: ResourceTypeId structured resource model confirmed.
 - IN ANALYSE: snapshot serialization/formatter contract needed before parser handoff.
 - Schema findings: `IL2CPP_SCHEMA_0.62.1621.md`.
+
+
+## Snapshot serialization milestone
+
+- ABGESCHLOSSEN: IAggregateSnapshotDTO MemoryPack union tags mapped for all 12 aggregate files.
+- ABGESCHLOSSEN: generic 3-member VersionTolerant envelope verified byte-for-byte across all supplied snapshots.
+- BEREIT ZUR ENTWICKLUNG: read-only aggregate-envelope parser (DATA-003 phase 1).
+- IN ANALYSE: exact inner-model MemoryPackOrder/reserved-slot maps for AccountState decoding.
+- Details: `SNAPSHOT_SERIALIZATION_0.62.1621.md`.
