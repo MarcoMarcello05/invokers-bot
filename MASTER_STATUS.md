@@ -224,3 +224,15 @@ Work directly from `MASTER_CHECKLIST.md`, starting with the universal core/data/
 ## LIVE-001B
 
 - TEST AUSSTEHEND: first AccountState-driven Arena eligibility and refresh goal; generic semantic resource predicates, decision trace and runtime goal gate implemented. CI pending. Real-client timing/cost/cap not verified.
+
+
+## LIVE-001B acceptance and domain pivot
+
+- ABGESCHLOSSEN: LIVE-001B AccountState-driven Goal eligibility + semantic resource verification.
+- commit: `6c12332548ff3c0e6d0d536fda7250156732f0ad`
+- Windows CI run: `43643490286`
+- result: `242 passed, 1 warning in 0.95s`
+- VERIFIED: blocked Goals do not send live input.
+- VERIFIED: Arena token semantic predicates distinguish real token deltas from unrelated PlayerModel changes.
+- VERIFIED: Goal domain logic remains outside BotEngine.
+- NEXT: pivot away from deeper Arena work. LIVE-002A = PlayerBattleModel + first Campaign Goal.
