@@ -1,193 +1,165 @@
 # DEVELOPER HANDOFF
 
-## Current package: DATA-003 Phase 4 — PlayerRelicsModel + PlayerRelic
+## Current package: LIVE-001A — Action-scoped AccountState invalidation and verification
 
 Status: BEREIT ZUR ENTWICKLUNG
 
 Read first:
 - PROJECT_WORKFLOW.md
-- MASTER_CHECKLIST.md
 - MASTER_STATUS.md
+- MASTER_CHECKLIST.md
 - TEST_RESULTS.md
-- SNAPSHOT_SERIALIZATION_0.62.1621.md
-- RELICS_MEMORYPACK_MAP_0.62.1621.md
-- HEROES_MEMORYPACK_MAP_0.62.1621.md
-- current shared parser code under src/invokers_bot
+- LIVE_ACCOUNTSTATE.md
+- PLANNER_POLICY.md
+- ACCOUNTSTATE_PLANNER_CONTRACT.md
+- src/invokers_bot/account_state.py
+- src/invokers_bot/engine.py
 
 ## Context
 
-DATA-003 phases 1-3 are complete and CI-verified.
+Phase 4 is complete and live AccountState integration exists.
 
-Phase 3:
-- commit: `09a3c33638abbede74ad1063e26baf3b02a87b54`
-- Actions run: `43641550108`
-- result: `129 passed, 1 warning`
+Verified live integration:
+- commit: `371ab08015cb0bd9ec3e2a3ca4723a187133e80f`
+- Actions run: `43642665870`
+- result: `179 passed, 1 warning`
 
-Reuse the existing:
-- envelope parser
-- VersionTolerant member-span reader
-- nested-object reader
+ANALYSER review found one architectural issue that should be fixed before AccountState-driven Goal selection:
 
-Do not duplicate these layers.
+After every real input, `AccountObserver.invalidate()` currently invalidates ALL tracked aggregates.
+
+This is too coarse.
+
+Example:
+- user/bot opens a menu
+- no Hero or Relic data changes
+- Heroes and Relics become awaiting_change anyway
+- because the files may never change, fresh Hero/Relic state can remain unavailable unnecessarily
 
 ## Goal
 
-Implement strictly read-only parsing for:
+Replace blanket invalidation with ACTION-SCOPED invalidation and verification expectations.
 
-- PlayerRelicsModel
-- RelicsById
-- PlayerRelic
+## Required design
 
-Do NOT implement PlayerRelicBonus internals yet unless the exact schema is independently verified from current data/docs during this task.
+Each live action/Skill should be able to declare:
 
-## Verified PlayerRelicsModel
+- `invalidates_sources`
+- `expects_source_change`
+- `expects_visual_transition`
+- optional `verification_timeout`
 
-Current model is VersionTolerant with 3 slots:
+Examples:
 
-0 LastId
-1 RelicsById
-2 Randoms
+Navigation-only click:
+- invalidates_sources = []
+- expects_source_change = []
 
-Current analyzed snapshot:
-- LastId = 361
-- RelicsById contains 180 PlayerRelic entries
+Start Arena battle:
+- likely invalidates player/resources and arena when Arena parser exists
+- does NOT invalidate heroes/relics unless the action itself can change them
 
-## Verified PlayerRelic
+Equip Relic:
+- invalidates heroes + relics
+- expects source change in both or whichever exact model changes
 
-Current PlayerRelic has 9 slots with no observed reserved gaps:
+Claim reward:
+- invalidates only the aggregate(s) that contain the claim/resource state
 
-0 InventoryId
-1 Slot
-2 Rank
-3 Rarity
-4 Set
-5 EquippedHeroId
-6 Level
-7 IsSeen
-8 Bonuses
+Unknown legacy flow without metadata:
+- use a conservative compatibility default, but do not permanently poison unrelated sources
 
-Types:
+## AccountObserver API
 
-- InventoryId: int32
-- Slot: RelicSlot / int32
-- Rank: RelicRank / int32
-- Rarity: RelicRarity / int32
-- Set: RelicSet / int32
-- EquippedHeroId: nullable int32
-- Level: int32
-- IsSeen: bool
-- Bonuses: list of PlayerRelicBonus
+Support scoped invalidation, e.g.:
+`invalidate({"player", "relics"})`
 
-## Required implementation
+Do not require all sources to change before unrelated sources remain usable.
 
-Expose immutable state objects with at minimum:
+A source marked awaiting_change should become fresh again only after:
+- changed content is observed, OR
+- verification policy explicitly says no source change was required and visual success is sufficient
 
-PlayerRelicsState:
-- version
-- updated_at_utc
-- last_id
-- relics_by_id
-- opaque/randoms raw data if not decoded
+Do not use unchanged bytes as proof of a state-changing action.
 
-RelicState:
-- inventory_id
-- slot
-- rank
-- rarity
-- set
-- equipped_hero_id
-- level
-- is_seen
-- bonuses_raw or safely preserved bonus entries if exact bonus schema is not yet verified
+## Verification model
 
-## Cross-model integrity
+Introduce a small explicit action verification contract rather than ad-hoc checks in BotEngine.
 
-Where practical, add optional validation helpers/tests that can later join:
+Suggested concept:
 
-PlayerHero.RelicIdBySlot -> PlayerRelic.InventoryId
+ActionExpectation:
+- invalidates_sources
+- expects_changed_sources
+- expected_visual_states
+- timeout
+- success_mode
 
-Do not create hard parser dependency on heroes_model.py if that would couple parsers unnecessarily.
+Possible success modes:
+- VISUAL_ONLY
+- STRUCTURED_ONLY
+- VISUAL_AND_STRUCTURED
+- VISUAL_OR_STRUCTURED
 
-Parser layer should remain model-focused; cross-model joins belong in AccountState/adapters later.
+Keep implementation minimal and deterministic.
 
-## Validation
+Do not build full planner/Goal scoring yet.
 
-Strictly validate:
-- correct aggregate union/model
-- root member count
-- RelicsById dictionary count
-- duplicate relic dictionary keys
-- Relic.InventoryId equals dictionary key
-- exact scalar widths
-- bool values only 0/1
-- nullable int32 layout for EquippedHeroId
-- member spans stay in bounds
-- malformed/truncated nested objects rejected
-- trailing bytes rejected inside known structures
-- additional future root/relic slots may be skipped only if the chosen parser policy explicitly allows additive VersionTolerant members safely
-- unknown enum numeric values preserved, not rejected
+## Engine behavior
 
-For Bonuses:
-- if exact PlayerRelicBonus binary schema is not confirmed, preserve slot 8 safely as opaque bytes or a bounded raw list representation
-- do not guess bonus member order
+Before action:
+- capture pre-action relevant source versions/digests
+- keep unrelated sources fresh
+
+After action:
+- wait for expected visual transition and/or relevant structured source change
+- only poll/force-refresh relevant sources aggressively
+- do not globally invalidate all AccountState
+
+If verification fails:
+- return a failure result/reason
+- do not silently assume success
+- main loop may re-observe/recover
 
 ## Tests
 
 Add synthetic tests for at minimum:
 
-1. empty relic dictionary
-2. one relic
-3. multiple relics
-4. inventory-id/dictionary-key agreement
-5. mismatch rejection
-6. duplicate dictionary key rejection
-7. Slot/Rank/Rarity/Set/Level
-8. EquippedHeroId null
-9. EquippedHeroId value
-10. IsSeen false/true
-11. invalid bool
-12. empty bonuses
-13. opaque/non-empty bonuses preserved safely if exact schema deferred
-14. malformed root member count
-15. malformed PlayerRelic member count
-16. truncated delta table
-17. out-of-bounds member
-18. wrong scalar width
-19. malformed nullable int32
-20. trailing bytes
-21. wrong aggregate union tag
-22. read-only file behavior
-23. additive future slots if supported
+1. navigation action invalidates nothing
+2. player-only action invalidates only player
+3. hero/relic action leaves player untouched
+4. unrelated unchanged source remains fresh
+5. expected source change satisfies structured verification
+6. unchanged expected source does not satisfy structured verification
+7. visual-only success does not wait for irrelevant files
+8. structured-only success
+9. visual+structured success
+10. timeout/failure reason
+11. corrupt changed source produces verification failure, not success
+12. compatibility behavior for old flow actions
+13. read-only behavior remains intact
 
-If a current real snapshot is locally available, validate it without committing private data.
+Run full pytest, push to main, verify Windows GitHub Actions, update status/docs.
 
 ## Out of scope
 
-Do not implement yet:
-- PlayerAccessory
-- PlayerAnima
-- Quests
-- Arena
-- Battle
-- Clan
-- Events
-- Shop
-- gear optimization logic
-- sell/crush/equip actions
-- any mutation/write API
+Do NOT yet implement:
+- full Goal utility scoring
+- Arena parser
+- Battle parser
+- automatic account-directory discovery
+- filesystem watcher dependency
+- snapshot writes
+- packet/injection behavior
 
-## Completion
+## Completion report
 
-1. run full pytest suite
-2. push to main
-3. verify remote HEAD
-4. verify Windows GitHub Actions
-5. update TEST_RESULTS.md and MASTER_STATUS.md
-6. report:
-   - commit SHA
-   - branch
-   - push result
-   - pytest result/count
-   - GitHub Actions run ID/result
-   - changed files
-   - unresolved assumptions
+Report:
+- commit SHA
+- branch
+- push result
+- full pytest result/count
+- Actions run/result
+- changed files
+- exact compatibility default for legacy flow actions
+- unresolved assumptions
