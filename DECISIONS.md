@@ -69,3 +69,13 @@ Domain Goals request permission to spend a resource; they do not implement reser
 
 ### D031 — Visual success may require later structured reconciliation
 If a state-changing live action reaches its expected visual state before the relevant snapshot persists, the runtime must not immediately retry the action. It reconciles structured state first and may remain INCONCLUSIVE/PENDING rather than risking duplicate spend.
+
+
+### D032 — Finish Arena end-to-end before starting the next domain
+Arena remains the first complete vertical slice. Campaign work is deferred until Arena includes opponent discovery, selection, battle/result handling and recovery. This gives one fully proven autonomous domain rather than several half-finished ones.
+
+### D033 — Scrollable lists require bounded verified traversal
+The Arena opponent list is scrollable. The bot must use generic SendInput wheel actions, verify list-ROI change, de-duplicate overlapping observations, detect end-of-list semantically where possible, and enforce max-scroll/time bounds. A fixed blind scroll count alone is insufficient.
+
+### D034 — Scrolling is navigation, not account mutation
+Arena list scrolling is R1/reversible UI navigation. It must not invalidate Player/Arena/account snapshots merely because a wheel input was sent. Structured state is invalidated only by actions that can change account state.
