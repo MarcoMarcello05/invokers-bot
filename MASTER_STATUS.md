@@ -130,3 +130,14 @@ Work directly from `MASTER_CHECKLIST.md`, starting with the universal core/data/
 
 - TEST AUSSTEHEND: read-only PlayerHeroesModel and PlayerHero parser; bounded nested objects reuse the shared slot reader. Windows CI pending.
 - Root slots 6 onward remain opaque. ReceivedHeroesCount uses inferred Int64 key + Int32 count (900 bytes consistent with 4 + 74*12); real snapshot verification pending.
+
+
+## Planner policy milestone
+
+- ABGESCHLOSSEN: research-backed planner policy defined for Goal eligibility, utility scoring, freshness, risk, hysteresis, recovery and circuit breakers.
+- ABGESCHLOSSEN: AccountState-to-Planner contract defined, including model joins, provenance/versioning and derived-fact dependencies.
+- ENTSCHEIDUNG: use a hybrid planner now: hard gates -> utility Goal selection -> deterministic Task/Skill execution -> reactive replan.
+- ENTSCHEIDUNG: defer full GOAP search until cross-domain quest routing proves it is actually needed.
+- Details:
+  - `PLANNER_POLICY.md`
+  - `ACCOUNTSTATE_PLANNER_CONTRACT.md`
