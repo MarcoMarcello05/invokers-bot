@@ -112,3 +112,16 @@ Live client observation on 2026-11-14 showed 12/10 Arena Tokens. Therefore polic
 ### D043 — Opening Arena formation does not populate LastMetaBattleSetup in observed client path
 
 A/B/C live capture on 2026-11-14 showed PlayerBattleModel byte-identical across Arena list -> formation -> back, with slot 2 LastMetaBattleSetup null in all captures while UI own Team Power was 9368. Therefore LastMetaBattleSetup cannot be treated as a reliable pre-start OwnPower source for this navigation path. Keep structured source blocked until independently observed; next live fallback is calibrated tiny numeric ROI or an exact locally validated calculator.
+
+
+### D044 — Live Arena offense battle cost is exactly 1 Arena Token for observed current client path
+
+A controlled real Arena offense battle on 2026-11-14 showed UI 12/10 -> 11/10 and structured PlayerModel ResourceTypeId 21 delta -1, with ResourcesSpent[21] +1. This is sufficient current-build live evidence to configure expected_battle_cost=1 for the observed standard offense path. Keep the value policy-versioned/configurable; do not turn it into a parser fact or assume special modes can never differ.
+
+### D045 — Arena victory result is already persisted on the result screen
+
+PRE -> result-screen POST showed Arena Points +9, Arena Coin +50, Bronze Arena Medal +1, total offense battles +1, total offense wins +1, weekly offense battles/wins +1, and one new FinishedOpponent with the exact selected Player-ID. POST and returned-to-Arena snapshots were byte-identical. Therefore result verification should begin on the result screen and must not require a return navigation step.
+
+### D046 — Result-screen displayed team power is not interchangeable with pre-start formation power
+
+Observed pre-start formation own power was 9368 while the victory result screen displayed 9425. Until the reason is schema-verified, these are distinct visual facts. Pre-start ranking/authorization must use the calibrated pre-start formation ROI, not the result-screen value.
