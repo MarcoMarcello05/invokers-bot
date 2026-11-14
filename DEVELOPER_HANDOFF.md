@@ -1,6 +1,6 @@
 # DEVELOPER HANDOFF
 
-## Current package: DATA-003 Phase 3 — PlayerHeroesModel + PlayerHero
+## Current package: DATA-003 Phase 4 — PlayerRelicsModel + PlayerRelic
 
 Status: BEREIT ZUR ENTWICKLUNG
 
@@ -10,189 +10,180 @@ Read first:
 - MASTER_STATUS.md
 - TEST_RESULTS.md
 - SNAPSHOT_SERIALIZATION_0.62.1621.md
-- HEROES_MEMORYPACK_MAP_0.62.1621.md
 - RELICS_MEMORYPACK_MAP_0.62.1621.md
-- PLAYERMODEL_RESOURCES_MAP_0.62.1621.md
+- HEROES_MEMORYPACK_MAP_0.62.1621.md
+- current shared parser code under src/invokers_bot
 
 ## Context
 
-Phase 1 and Phase 2 are complete and Windows-CI verified.
+DATA-003 phases 1-3 are complete and CI-verified.
 
-Phase 2 implementation:
-`2a9f1d5b508a321dc7553ea2a899eeff43cc3612`
+Phase 3:
+- commit: `09a3c33638abbede74ad1063e26baf3b02a87b54`
+- Actions run: `43641550108`
+- result: `129 passed, 1 warning`
 
-CI:
-`43640238110` — SUCCESS — 89 passed, 1 warning.
+Reuse the existing:
+- envelope parser
+- VersionTolerant member-span reader
+- nested-object reader
 
-Reuse:
-- existing snapshot envelope parser
-- existing generic VersionTolerant member-span reader
-
-Do not duplicate those layers.
+Do not duplicate these layers.
 
 ## Goal
 
-Implement read-only parsing for:
-- PlayerHeroesModel
-- HeroesById
-- PlayerHero
-- core hero progression/safety/equipment references
+Implement strictly read-only parsing for:
 
-No mutation APIs.
+- PlayerRelicsModel
+- RelicsById
+- PlayerRelic
 
-## Verified PlayerHeroesModel
+Do NOT implement PlayerRelicBonus internals yet unless the exact schema is independently verified from current data/docs during this task.
 
-10 slots:
+## Verified PlayerRelicsModel
+
+Current model is VersionTolerant with 3 slots:
 
 0 LastId
-1 HeroesById
-2 LobbyHeroIds
-3 SeenHeroConfigIds
-4 ReceivedHeroesCount
-5 StarterHeroId
-6 FusedHeroesCountByOutputGdId
-7 RemovableFuseMaterialGdIds
-8 HeroRating
-9 ReceivedChromaHeroConfigIds
+1 RelicsById
+2 Randoms
 
-Current analyzed snapshot contained 30 PlayerHero entries.
+Current analyzed snapshot:
+- LastId = 361
+- RelicsById contains 180 PlayerRelic entries
 
-## Verified PlayerHero
+## Verified PlayerRelic
 
-22 VersionTolerant slots:
+Current PlayerRelic has 9 slots with no observed reserved gaps:
 
 0 InventoryId
-1 ConfigId
+1 Slot
 2 Rank
-3 Level
-4 Experience
-5 TotalExperience
-6 Locked
-7 InStorage
-8 Marker
-9 RecentBattleTime
-10 RESERVED
-11 RelicIdBySlot
-12 AccessoryIdBySlot
-13 RESERVED
-14 RESERVED
-15 AwakeNodeIds
-16 AwakeLevel
-17 ChromaEnabled
-18 Skin
-19 RESERVED
-20 RESERVED
-21 SkillLevels
+3 Rarity
+4 Set
+5 EquippedHeroId
+6 Level
+7 IsSeen
+8 Bonuses
 
-Reserved slots 10, 13, 14, 19, 20 must be skipped by declared length.
+Types:
 
-## Required output
+- InventoryId: int32
+- Slot: RelicSlot / int32
+- Rank: RelicRank / int32
+- Rarity: RelicRarity / int32
+- Set: RelicSet / int32
+- EquippedHeroId: nullable int32
+- Level: int32
+- IsSeen: bool
+- Bonuses: list of PlayerRelicBonus
 
-Expose an immutable Hero state with at minimum:
-- inventory_id
-- config_id
-- rank
-- level
-- experience
-- total_experience
-- locked
-- in_storage
-- marker
-- recent_battle_time
-- relic_id_by_slot
-- accessory_id_by_slot
-- awake_node_ids
-- awake_level
-- chroma_enabled
-- skin
-- skill_levels
+## Required implementation
 
-PlayerHeroesModel result should expose:
+Expose immutable state objects with at minimum:
+
+PlayerRelicsState:
+- version
+- updated_at_utc
 - last_id
-- heroes_by_id
-- lobby_hero_ids
-- seen_hero_config_ids
-- starter_hero_id
-- received hero counters where schema is verified
+- relics_by_id
+- opaque/randoms raw data if not decoded
 
-## Validation requirements
+RelicState:
+- inventory_id
+- slot
+- rank
+- rarity
+- set
+- equipped_hero_id
+- level
+- is_seen
+- bonuses_raw or safely preserved bonus entries if exact bonus schema is not yet verified
+
+## Cross-model integrity
+
+Where practical, add optional validation helpers/tests that can later join:
+
+PlayerHero.RelicIdBySlot -> PlayerRelic.InventoryId
+
+Do not create hard parser dependency on heroes_model.py if that would couple parsers unnecessarily.
+
+Parser layer should remain model-focused; cross-model joins belong in AccountState/adapters later.
+
+## Validation
 
 Strictly validate:
-- root union/model is PlayerHeroesModel
-- member counts and deltas
-- dictionary/list lengths stay within slot span
-- PlayerHero.InventoryId equals its HeroesById dictionary key
-- duplicate dictionary keys rejected
-- invalid bool bytes rejected
-- known fixed-width scalar widths validated
-- RelicIdBySlot dictionary keys/values decoded as int32
-- AccessoryIdBySlot likewise
-- UpgradeableSkill list entries are exact pairs of int32 values
-- unknown future enum values remain numeric rather than crashing
-- additional future PlayerHero slots may be skipped safely by declared length
-- no trailing bytes inside known members
+- correct aggregate union/model
+- root member count
+- RelicsById dictionary count
+- duplicate relic dictionary keys
+- Relic.InventoryId equals dictionary key
+- exact scalar widths
+- bool values only 0/1
+- nullable int32 layout for EquippedHeroId
+- member spans stay in bounds
+- malformed/truncated nested objects rejected
+- trailing bytes rejected inside known structures
+- additional future root/relic slots may be skipped only if the chosen parser policy explicitly allows additive VersionTolerant members safely
+- unknown enum numeric values preserved, not rejected
+
+For Bonuses:
+- if exact PlayerRelicBonus binary schema is not confirmed, preserve slot 8 safely as opaque bytes or a bounded raw list representation
+- do not guess bonus member order
 
 ## Tests
 
-Synthetic tests at minimum:
-1. empty hero dictionary
-2. one minimal valid hero
-3. multiple heroes
+Add synthetic tests for at minimum:
+
+1. empty relic dictionary
+2. one relic
+3. multiple relics
 4. inventory-id/dictionary-key agreement
 5. mismatch rejection
-6. rank/level/xp scalars
-7. locked/in-storage booleans
-8. recent-battle nullable DateTime
-9. empty relic/accessory maps
-10. 8 relic slot mappings
-11. accessory mappings
-12. awake nodes
-13. awake level
-14. chroma / skin
-15. 6-skill list
-16. 7-skill list
-17. reserved slots ignored safely
-18. malformed root count
-19. malformed PlayerHero count
-20. truncated delta tables
-21. out-of-bounds members
-22. duplicate dictionary keys
-23. invalid bool
-24. malformed skill list
-25. trailing bytes
-26. wrong aggregate union tag
-27. read-only file behavior
+6. duplicate dictionary key rejection
+7. Slot/Rank/Rarity/Set/Level
+8. EquippedHeroId null
+9. EquippedHeroId value
+10. IsSeen false/true
+11. invalid bool
+12. empty bonuses
+13. opaque/non-empty bonuses preserved safely if exact schema deferred
+14. malformed root member count
+15. malformed PlayerRelic member count
+16. truncated delta table
+17. out-of-bounds member
+18. wrong scalar width
+19. malformed nullable int32
+20. trailing bytes
+21. wrong aggregate union tag
+22. read-only file behavior
+23. additive future slots if supported
 
-If a current real snapshot is locally available, verify it without committing any private data.
-
-## Optional cleanup
-
-The current CI has one non-blocking pytest warning:
-`tests/test_snapshot_envelope.py::test_tags` passes an `enumerate` directly to parametrize.
-
-You may convert it to a tuple/list if convenient, but do not let this distract from Phase 3.
+If a current real snapshot is locally available, validate it without committing private data.
 
 ## Out of scope
 
 Do not implement yet:
-- full PlayerRelic parser
-- PlayerAccessory parser
-- PlayerAnima parser
+- PlayerAccessory
+- PlayerAnima
 - Quests
 - Arena
 - Battle
 - Clan
 - Events
-- writing/manipulation
+- Shop
+- gear optimization logic
+- sell/crush/equip actions
+- any mutation/write API
 
 ## Completion
 
 1. run full pytest suite
 2. push to main
-3. verify Remote HEAD
+3. verify remote HEAD
 4. verify Windows GitHub Actions
 5. update TEST_RESULTS.md and MASTER_STATUS.md
-6. report exact:
+6. report:
    - commit SHA
    - branch
    - push result
