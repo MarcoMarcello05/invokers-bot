@@ -392,3 +392,28 @@ Pure token pressure and pre-start authorization layer implemented, CI pending. D
 - VERIFIED: ALLOW still does not authorize SendInput; fight_authorized remains false.
 - VERIFIED: exact token delta contract and no blind retry.
 - LIVE BLOCKERS: exact own Team Power and actual battle token cost still require real-client measurement.
+
+
+## LIVE Arena client validation — 2026-11-14 A/B/C
+
+User supplied A/B/C snapshots from the real Windows client.
+
+Observed:
+- visible Arena token display: 12/10. Therefore 10 is a regeneration ceiling, not a hard maximum balance.
+- A -> B (Arena list -> formation, no battle start):
+  - PlayerArenaModel: byte-identical
+  - PlayerBattleModel: byte-identical
+  - PlayerHeroesModel: byte-identical
+  - PlayerRelicsModel: byte-identical
+  - PlayerAccessoriesModel: byte-identical
+  - PlayerModel: only slot 33 TodayTotalPlayedMinutes changed 0 -> 10
+- B -> C (formation -> back to Arena): all captured model payloads byte-identical.
+- PlayerBattleModel slot 2 LastMetaBattleSetup is null (0xFF) in A, B and C.
+- visible own formation Team Power reported by user: 9368.
+- no 9368 encoding found in PlayerBattleModel capture.
+- Arena list top-to-bottom required 3 normal mouse-wheel steps in this live session.
+
+Conclusion:
+- Preferred structured OwnPower source LastMetaBattleSetup is NOT produced by simply opening Arena formation in this live client path.
+- Existing structured OwnPower source stays unvalidated/blocked.
+- Tiny pre-battle numeric ROI becomes the practical next live fallback candidate unless a separate exact structured/calculator source is proven.
