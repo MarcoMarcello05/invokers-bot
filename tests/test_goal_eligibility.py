@@ -94,7 +94,10 @@ def test_semantic(kind,tokens,error,success):
 
 def test_configured_predicate():
     exp=ActionExpectation.from_action(CFG["flows"]["formation"]["actions"][0])
-    assert exp.semantic_predicates[0].kind=="resource_decreased"
+    assert len(exp.semantic_predicates)==1
+    predicate=exp.semantic_predicates[0]
+    assert (predicate.kind,predicate.resource_id,predicate.delta)==("resource_delta",21,-1)
+    assert predicate.source=="player"
     assert exp.timeout==5
 
 
@@ -104,9 +107,13 @@ def test_invalid_predicate():
 
 
 
-def test_unknown_cap_allows_opportunity_but_not_spend():
-    trace=decide(account(3),CFG,observer_available=True)
-    assert trace.selected == ARENA and trace.evaluations[1].cap is None
+def test_regeneration_ceiling_does_not_clamp_wallet_or_enable_spend():
+    trace=decide(account(12),CFG,observer_available=True)
+    assert trace.selected == ARENA and trace.evaluations[1].eligible
+    assert trace.evaluations[1].cap == 10
+    assert trace.evaluations[1].token_balance == 12
+    assert CFG["planner"]["arena"]["allow_test_battle_start"] is False
+    assert CFG["flows"]["formation"]["actions"][0]["enabled"] is False
     assert authorize_action(CFG["flows"]["formation"]["actions"][0],trace,CFG) == "GOAL_BLOCKED:TEST_FLOW_NOT_ENABLED"
 
 
@@ -115,10 +122,21 @@ def test_explicit_cost_required_and_predicate_matches():
     policy=config["planner"]["arena"]
     policy["allow_test_battle_start"]=True
     action=config["flows"]["formation"]["actions"][0]
+    assert policy["cost"]==1
+    trace=decide(account(3),config,observer_available=True)
+    assert authorize_action(action,trace,config) is None
+    policy["cost"]=None  # Synthetic unknown-cost scenario only.
     trace=decide(account(3),config,observer_available=True)
     assert authorize_action(action,trace,config)=="GOAL_BLOCKED:DENY_UNKNOWN_COST"
     policy["cost"]=1
     trace=decide(account(3),config,observer_available=True)
-    assert authorize_action(action,trace,config)=="GOAL_BLOCKED:COST_PREDICATE_MISMATCH"
-    action["semantic_predicates"]=[{"kind":"resource_delta","resource_id":21,"delta":-1}]
+    for predicate in ({"kind":"resource_decreased","resource_id":21},
+                      {"kind":"resource_delta","resource_id":21,"delta":-2},
+                      {"kind":"resource_delta","resource_id":22,"delta":-1},
+                      {"kind":"resource_delta","source":"arena","resource_id":21,"delta":-1}):
+        action["semantic_predicates"]=[predicate]
+        assert authorize_action(action,trace,config)=="GOAL_BLOCKED:COST_PREDICATE_MISMATCH"
+    action["semantic_predicates"]=[{"kind":"resource_delta","source":"player","resource_id":21,"delta":-1}]
     assert authorize_action(action,trace,config) is None
+    assert action["enabled"] is False
+    assert CFG["planner"]["arena"]["allow_test_battle_start"] is False
