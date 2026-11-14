@@ -85,13 +85,13 @@ Rules:
 
 - [ ] ARENA-001 | IN ENTWICKLUNG | Live Arena state implemented; real-client visual calibration pending
 - [ ] ARENA-002 | TEST AUSSTEHEND | Scrollable opponent-list traversal implemented; live ROI/template/scroll calibration pending
-- [ ] ARENA-003 | IN ENTWICKLUNG | ArenaOpponent semantics + structured opponent CombatPower + own-power provenance
-- [ ] ARENA-004 | IN ANALYSE | Team/formation selection: own Team Power source probe defined
+- [ ] ARENA-003 | IN ENTWICKLUNG | Opponent semantics/CombatPower verified; own Team Power provenance + first ranking next
+- [ ] ARENA-004 | IN ENTWICKLUNG | Own Team Power validation + first deterministic opponent ranking
 - [ ] ARENA-005 | IN ANALYSE | Arena token awareness: live ResourceTypeId source + configurable eligibility policy specified
 - [ ] ARENA-006 | OFFEN | Start battle
 - [ ] ARENA-007 | OFFEN | Battle/result verification
 - [ ] ARENA-008 | OFFEN | Win/loss handling
-- [ ] ARENA-009 | IN ENTWICKLUNG | Semantic opponent-set refresh fingerprint + cache invalidation; Gem refresh blocked
+- [ ] ARENA-009 | IN ENTWICKLUNG | Semantic opponent-set refresh fingerprint verified; manual Gem refresh remains blocked
 - [ ] ARENA-010 | OFFEN | Defense team management
 
 ## G. Boss Mode
