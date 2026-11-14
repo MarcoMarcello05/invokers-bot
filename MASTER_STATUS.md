@@ -197,3 +197,14 @@ Work directly from `MASTER_CHECKLIST.md`, starting with the universal core/data/
 ## LIVE-001A implementation
 
 - TEST AUSSTEHEND: action-scoped invalidation, explicit four-mode evidence contracts, baseline checks and failure results integrated into existing BotEngine. Navigation no longer invalidates unrelated aggregates. Arena start requires player change plus visual transition; real-client timing unverified. CI pending.
+
+
+## LIVE-001A acceptance
+
+- ABGESCHLOSSEN: action-scoped AccountState invalidation and explicit action verification contracts.
+- commit: `43f665f37ec15b7d4b448f785184274e76b721ce`
+- Windows CI run: `43643095273`
+- result: `215 passed, 1 warning in 0.75s`
+- VERIFIED: navigation-only actions preserve unrelated account sources.
+- VERIFIED: all four verification modes, corrupt-source failure handling, scoped invalidation, baseline checks, cancellation and legacy compatibility.
+- OPEN LIVE ASSUMPTION: Arena start currently requires a PlayerModel digest change within 5s. Real client persistence timing and the precise Arena-token semantic delta are not yet measured.
