@@ -475,3 +475,15 @@ All failures are stale legacy expectations in tests/test_goal_eligibility.py:
 - cap None vs current regeneration ceiling 10
 - cost None vs live-validated current cost 1
 Production policy changes are retained; tests must migrate to current verified behavior.
+
+
+## ARENA-LIVE-006A acceptance
+
+- ABGESCHLOSSEN (CODE/CI)
+- implementation commit: `d0432a49479578afa0ac7d1847cb0544044c90bf`
+- CI-fix commit: `f3e0e6d702e155c27d8fad5a6e6b57161ae74efe`
+- Windows CI run: `43650628167`
+- result: `359 passed, 1 warning in 1.31s`
+- VERIFIED: current policy cost 1, regeneration ceiling 10 without wallet clamp, exact resource_delta -1.
+- VERIFIED: synthetic formation reader architecture remains disabled until real glyph/DPI calibration.
+- VERIFIED: live-victory regression remains green and battle start/replay/Gem refresh stay disabled.
