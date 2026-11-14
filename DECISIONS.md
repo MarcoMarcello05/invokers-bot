@@ -12,3 +12,7 @@
 - D010: Modes are implemented as reusable skills and navigation graphs, not separate bots.
 - D011: Every world-changing action requires fresh verification before further action.
 - D012: Structured account/task data should drive planning whenever it can be read reliably.
+
+- D013: ANALYSER plans/researches/reviews; DEVELOPER implements production code from explicit prompts.
+- D014: Every new technical/architecture topic requires current web/GitHub research before implementation decisions.
+- D015: Raw player/account snapshot data is never pushed to the public repository; only sanitized derived analysis is committed.
