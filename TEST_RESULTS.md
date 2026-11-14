@@ -172,3 +172,12 @@ Original run 43645108504 failed (275 passed, 3 failed, 1 warning). The fixture u
 ## ARENA-LIVE-004
 
 Synthetic tests cover provenance gates, deterministic ratio and tie-break, policy bounds, stale source, cache invalidation and small ROI diagnostic contract. Full Windows CI pending. Live A/B/C and UI parity not executed.
+
+
+### ARENA-LIVE-004 code/CI acceptance
+
+- commit: `047c99ac78ddc377d09e9beddabe8e4cb23ed478`
+- Actions run: `43645551854`
+- result: `304 passed, 1 warning in 0.69s`
+- conclusion: SUCCESS
+- ranking remains diagnostic only until own Team Power is exact + validated on the real client.
