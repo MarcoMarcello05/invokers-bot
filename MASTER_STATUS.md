@@ -417,3 +417,46 @@ Conclusion:
 - Preferred structured OwnPower source LastMetaBattleSetup is NOT produced by simply opening Arena formation in this live client path.
 - Existing structured OwnPower source stays unvalidated/blocked.
 - Tiny pre-battle numeric ROI becomes the practical next live fallback candidate unless a separate exact structured/calculator source is proven.
+
+
+## LIVE Arena battle validation — 2026-11-14
+
+A single real Arena offense battle was captured PRE / result-screen POST / returned-to-Arena.
+
+Observed UI:
+- pre-battle Arena Token display: 12/10
+- result: victory
+- visible formation own power before battle: 9368
+- result-screen own team power: 9425 (must not be assumed equivalent to pre-start power)
+- visible rewards: +9 Arena Points, +50 Arena Coin, +1 Bronze Arena Medal
+- returned Arena Token display: 11/10
+
+Structured PRE -> POST:
+- PlayerModel Arena_Token (21): 12 -> 11
+- PlayerModel Arena_Coin (22): +50
+- PlayerModel ArenaMedal_Bronze (23): +1
+- ResourcesSpent Arena_Token: +1
+- ResourcesGained Arena_Coin: +50
+- ResourcesGained ArenaMedal_Bronze: +1
+- PlayerArenaModel Points: 534 -> 543
+- total offense battles: 13 -> 14
+- total offense wins: 13 -> 14
+- attack battles this week: 13 -> 14
+- attack wins this week: 13 -> 14
+- league battle accounting increased by one in current league bucket
+- FinishedOpponents count: 23 -> 24
+- newly added FinishedOpponent has the exact same Player-ID as the selected pre-battle opponent
+- semantic current opponent set remains the same 10 identities; opaque opponent payload bytes changed
+- PlayerBattleModel LastMetaBattleSetup remains null
+- Battle snapshot changed in several unrelated/opaque slots; do not use them for result classification without schema evidence
+
+Persistence timing:
+- D_POST and E_RETURN PlayerModel/ArenaModel/BattleModel are byte-identical.
+- Therefore the resource/result/stat/history persistence is already present on the result screen and does not require returning to Arena.
+
+Live conclusions:
+- exact observed offense battle cost is 1 Arena Token, corroborated by current balance delta and ResourcesSpent delta.
+- 005A ArenaBattleStats offense mapping is live validated for a victory.
+- 005B FinishedOpponents exact Player-ID correlation is live validated.
+- result reconciliation can confirm this victory from offense counters + exact selected FinishedOpponent + exact token spend, independently corroborated by visual victory.
+- own pre-start power still requires numeric ROI or another exact source; LastMetaBattleSetup is not populated in this path.
