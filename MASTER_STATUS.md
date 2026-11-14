@@ -342,3 +342,17 @@ Original CI run 43645108504: 275 passed, 3 failed, 1 warning. Root fixture encod
 ## ARENA-LIVE-005A implementation
 
 TEST AUSSTEHEND: ArenaStats captured-profile parser and offline reconciliation core; actual offensive transition and source timestamp labels still require live validation. No changes to own-power rules or battle-start authorization. CI pending.
+
+
+## ARENA-LIVE-005A acceptance
+
+- ABGESCHLOSSEN (CODE/CI): ArenaBattleStats parsing + read-only post-battle reconciliation core.
+- commit: `779d5b4106f031b24fa5361763ac716b206eabcf`
+- Windows CI run: `43646254157`
+- result: `323 passed, 1 warning in 1.06s`
+- VERIFIED: offense/defense counters parsed from the archived verified profile.
+- VERIFIED: win/loss confirmation requires offense-counter deltas plus compatible supporting evidence.
+- VERIFIED: points/coins/token/digest channels alone never prove win/loss.
+- VERIFIED: delayed persistence remains pending/inconclusive; replay is never authorized.
+- VERIFIED: defense-only and weekly-reset-like changes do not confirm an Offense result.
+- OPEN LIVE ASSUMPTION: historical timestamp naming conflict remains unresolved and may conservatively reject valid outcomes until real-client A/B/C/post-battle data is captured.
