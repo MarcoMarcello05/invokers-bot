@@ -1,0 +1,23 @@
+{
+  "window":{"title_contains":"Invokers"},
+  "runtime":{"fps":4,"stable_frames":2,"post_action_delay":0.9,"unknown_dump_after":8},
+  "safety":{"allow_purchase_actions":false},
+  "states":{
+    "main":{"template":"assets/states/main.png","threshold":0.88,"scales":[0.9,1.0,1.1]},
+    "arena_list":{"template":"assets/states/arena_list.png","threshold":0.88,"scales":[0.9,1.0,1.1]},
+    "formation":{"template":"assets/states/formation.png","threshold":0.88,"scales":[0.9,1.0,1.1]},
+    "battle":{"template":"assets/states/battle.png","threshold":0.88,"scales":[0.9,1.0,1.1]},
+    "victory":{"template":"assets/states/victory.png","threshold":0.88,"scales":[0.9,1.0,1.1]},
+    "defeat":{"template":"assets/states/defeat.png","threshold":0.88,"scales":[0.9,1.0,1.1]},
+    "popup":{"template":"assets/states/popup.png","threshold":0.90,"scales":[0.9,1.0,1.1]}
+  },
+  "flows":{
+    "main":{"actions":[{"type":"click_template","template":"assets/targets/arena_button.png","threshold":0.88}]},
+    "arena_list":{"actions":[{"type":"click_template","template":"assets/targets/fight_button.png","threshold":0.88}]},
+    "formation":{"actions":[{"type":"click_template","template":"assets/targets/start_battle_button.png","threshold":0.88}]},
+    "battle":{"actions":[{"type":"wait","seconds":2.0,"recapture":false}]},
+    "victory":{"actions":[{"type":"click_template","template":"assets/targets/continue_button.png","threshold":0.88}]},
+    "defeat":{"actions":[{"type":"click_template","template":"assets/targets/continue_button.png","threshold":0.88}]},
+    "popup":{"actions":[{"type":"click_template","template":"assets/targets/close_popup.png","threshold":0.90}]}
+  }
+}

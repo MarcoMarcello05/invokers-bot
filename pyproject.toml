@@ -1,0 +1,18 @@
+[build-system]
+requires = ["setuptools>=75", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "invokers-live-bot"
+version = "0.1.0"
+requires-python = ">=3.11"
+dependencies = ["numpy>=2.1","opencv-python>=4.10","dxcam>=0.0.5","mss>=10.0","pywin32>=308"]
+
+[project.scripts]
+invokers-bot = "invokers_bot.app:main"
+
+[tool.setuptools]
+package-dir = {"" = "src"}
+
+[tool.setuptools.packages.find]
+where = ["src"]

@@ -1,9 +1,39 @@
-# Invokers Bot
+# Invokers Live Bot
 
-Der aktuelle Python-Arena-Autopilot liegt in `InvokersBot_CODEX_HANDOFF`.
+Clean-room Windows live-bot foundation for **Invokers: Titan Legacy**.
 
-- [Windows-Start und sicherer PC-Test](InvokersBot_CODEX_HANDOFF/docs/ARENA_SPRINT_01.md)
-- [Master-Status](InvokersBot_CODEX_HANDOFF/research/MASTER_STATUS.md)
+## What it does
 
-Standard ist Dry-Run. Simulation belegt keinen erfolgreichen Windows-Live-Test.
-Private Konfigurationen, Spielaufnahmen und Laufzeitberichte nicht committen.
+- Finds the Invokers window and client area.
+- Reads DPI and uses client-relative geometry.
+- Captures the game with DXcam, with MSS fallback.
+- Detects known states via OpenCV template matching.
+- Requires stable recognition across frames.
+- Executes real Windows mouse/keyboard input in `live` mode.
+- Re-observes after actions.
+- Saves diagnostic screenshots for persistent UNKNOWN states.
+- Never clicks while the state is UNKNOWN.
+- F12 stops the bot globally.
+
+## Install
+
+```bat
+py -3.11 -m venv .venv
+.venv\Scripts\activate
+pip install -U pip
+pip install -e .
+```
+
+## Dry run
+
+```bat
+python -m invokers_bot.app --config config/arena.json --mode dry
+```
+
+## LIVE
+
+```bat
+python -m invokers_bot.app --config config/arena.json --mode live
+```
+
+The clean rebuild deliberately contains no guessed coordinates and no copied legacy templates. Fresh current-game screenshots/templates are the final requirement before a practical autonomous Arena run can be validated.
