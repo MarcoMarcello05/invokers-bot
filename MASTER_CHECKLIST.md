@@ -29,7 +29,7 @@ Rules:
 
 - [ ] DATA-001 | OFFEN | Fresh global UI screenshot inventory
 - [ ] DATA-002 | IN ANALYSE | Fresh local Invokers data inventory
-- [ ] DATA-003 | IN ANALYSE | Structured snapshot readers
+- [ ] DATA-003 | IN ANALYSE | Structured snapshot readers (IL2CPP v39 schemas mapped; serialization contract next)
 - [ ] DATA-004 | OFFEN | Action/event file watchers
 - [ ] DATA-005 | IN ENTWICKLUNG | Window/client/DPI detection
 - [ ] DATA-006 | IN ENTWICKLUNG | DXcam/MSS capture
