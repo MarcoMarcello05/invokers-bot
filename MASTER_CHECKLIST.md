@@ -276,7 +276,10 @@ Rules:
 - [ ] OPS-003 | OFFEN | Failure screenshot/log bundle
 - [ ] OPS-004 | OFFEN | Metrics: success/failure/recovery rates
 - [ ] OPS-005 | OFFEN | Long-run stability test
-- [ ] OPS-006 | OFFEN | CPU/RAM/capture performance targets
+- [ ] OPS-006 | IN ENTWICKLUNG | CPU/RAM/capture performance targets
+- [ ] OPS-010 | TEST AUSSTEHEND | Reactive input pipeline: SendInput + 60 FPS capture + state-driven transition waits
+- [ ] OPS-011 | OFFEN | ROI-only transition verification for hot paths
+- [ ] OPS-012 | OFFEN | Per-action confidence policy: fast normal actions, stricter irreversible actions
 - [ ] OPS-007 | OFFEN | Windows scaling/resolution matrix
 - [ ] OPS-008 | OFFEN | Installer/portable launcher later
 - [ ] OPS-009 | OFFEN | Safe configuration/version migration
