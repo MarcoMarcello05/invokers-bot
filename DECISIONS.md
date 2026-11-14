@@ -96,3 +96,10 @@ ARENA-LIVE-004A requires the real Windows client and remains pending. Developmen
 
 ### D039 — Arena outcome is multi-evidence, not one-field inference
 A completed Arena Offense battle is classified from offense-specific counters plus compatible visual/resource/opponent evidence. Arena Points, Arena Coins, token deltas or generic snapshot changes alone do not prove win/loss. Conflicting evidence stops the Arena loop rather than guessing.
+
+
+### D040 — Current official Arena token pressure facts are policy inputs, not immutable schema
+Current official Arena documentation states Arena Tokens regenerate +1 per hour and stop at 10. These values may be used as versioned/configurable policy defaults for token-pressure scoring, not as hardwired parser facts. Exact per-battle token cost remains unknown until verified; unknown cost continues to block autonomous spend authorization.
+
+### D041 — Pre-start authorization is a pure decision object before any SendInput
+Arena battle start authorization must be computed from a fresh selected candidate, exact validated OwnPower, fresh PlayerModel token balance, immutable attempt baseline, current opponent-set fingerprint and explicit expected token cost. The authorization object itself cannot send input.
