@@ -76,3 +76,17 @@ Work directly from `MASTER_CHECKLIST.md`, starting with the universal core/data/
 - ABGESCHLOSSEN: Resources / ResourcesGained / ResourcesSpent binary structure decoded and cross-validated arithmetically.
 - BEREIT ZUR ENTWICKLUNG: DATA-003 Phase 2 can decode selected PlayerModel scalars and ResourceTypeId values while safely skipping nested slots.
 - Details: `PLAYERMODEL_RESOURCES_MAP_0.62.1621.md`.
+
+
+## Structured-data analysis milestones
+
+- ABGESCHLOSSEN: PlayerHeroesModel / PlayerHero current MemoryPack layout mapped and cross-validated against PlayerRelicsModel.
+- ABGESCHLOSSEN: PlayerRelicsModel / PlayerRelic current MemoryPack layout mapped.
+- ABGESCHLOSSEN: PlayerQuestsModel and IQuestState union layout mapped, including periodic/achievement/book quest state structure.
+- ABGESCHLOSSEN: PlayerAnimasModel / PlayerAnima current MemoryPack layout mapped.
+- IN ANALYSE: remaining structured models and cross-model AccountState source matrix.
+- New schema documents:
+  - `HEROES_MEMORYPACK_MAP_0.62.1621.md`
+  - `RELICS_MEMORYPACK_MAP_0.62.1621.md`
+  - `QUESTS_MEMORYPACK_MAP_0.62.1621.md`
+  - `ANIMAS_MEMORYPACK_MAP_0.62.1621.md`
