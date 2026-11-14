@@ -232,3 +232,11 @@ Synthetic UI glyphs, strict German numeric normalization, geometry/state/age rej
 - conclusion: FAILURE
 - failures: legacy goal-eligibility expectations for predicate/cap/cost
 - status: fix required, package not accepted
+
+
+### ARENA-LIVE-006A final acceptance
+
+- CI-fix commit: `f3e0e6d702e155c27d8fad5a6e6b57161ae74efe`
+- Actions run: `43650628167`
+- result: `359 passed, 1 warning in 1.31s`
+- conclusion: SUCCESS
