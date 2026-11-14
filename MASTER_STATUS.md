@@ -6,7 +6,10 @@ Date: 2026-11-14
 
 **Universal fully autonomous Invokers autopilot.**
 
-Arena is no longer treated as the final scope or central architecture. It is one skill/domain among quests, campaign, clan, rewards, events and other routine progression systems.
+The canonical project target list is now:
+`MASTER_CHECKLIST.md`
+
+All future planning, implementation and status updates must reference that checklist by stable feature ID. New systems discovered through research must be appended there instead of living only in chat or scattered documentation.
 
 ## State
 
@@ -19,14 +22,15 @@ Arena is no longer treated as the final scope or central architecture. It is one
 - ABGESCHLOSSEN: Stable-state gate, UNKNOWN=no-input, F12 abort.
 - IN ENTWICKLUNG: Universal Goal -> Task -> State -> Action architecture.
 - IN ENTWICKLUNG: Central scheduler and reusable skill registry.
+- ABGESCHLOSSEN: Permanent full-project checklist established in `MASTER_CHECKLIST.md`.
 - OFFEN: Fresh global UI/state inventory.
-- OFFEN: Quest/task discovery.
-- OFFEN: Campaign skill.
-- OFFEN: Clan skill.
-- OFFEN: Reward collection skill.
-- OFFEN: Event/progression skills.
+- OFFEN: Full account/game automation implementation across checklist domains.
 - TEST AUSSTEHEND: Real Windows dry/live validation.
+
+## Working rule
+
+Never mark a major capability as complete only because code exists. A checklist item reaches `ABGESCHLOSSEN` only when its acceptance behavior has been verified.
 
 ## Immediate next objective
 
-Build the universal scheduler + world-state model first, then feed it multiple skills. Do not grow separate hard-coded bots for each mode.
+Work directly from `MASTER_CHECKLIST.md`, starting with the universal core/data/navigation foundations required by many later systems.
