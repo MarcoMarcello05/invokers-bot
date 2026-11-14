@@ -180,3 +180,16 @@ Work directly from `MASTER_CHECKLIST.md`, starting with the universal core/data/
 - CI for live integration commit `371ab08015cb0bd9ec3e2a3ca4723a187133e80f`: SUCCESS, run `43642665870`, `179 passed, 1 warning`.
 - REVIEW FINDING: current live input path invalidates all account aggregate observations after every real input. This is too coarse and can make unchanged Heroes/Relics unavailable after unrelated UI actions.
 - REQUIRED NEXT: action-scoped invalidation + action-specific verification predicates before AccountState-driven goal selection.
+
+
+## Live action verification milestone
+
+- ABGESCHLOSSEN: action -> affected source -> verification matrix defined.
+- ABGESCHLOSSEN: live Skill verification contract defined.
+- ENTSCHEIDUNG: `invalidates_sources` and `expects_changed_sources` are separate concepts.
+- ENTSCHEIDUNG: navigation-only actions must not invalidate structured account sources.
+- ENTSCHEIDUNG: pre-action source digest/version baselines should be captured for state-changing actions.
+- ENTSCHEIDUNG: verification results need explicit SUCCESS / FAILURE / TIMEOUT / CANCELLED / INCONCLUSIVE states.
+- Details:
+  - `ACTION_SOURCE_VERIFICATION_MATRIX.md`
+  - `LIVE_SKILL_VERIFICATION_CONTRACT.md`
