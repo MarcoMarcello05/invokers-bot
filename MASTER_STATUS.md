@@ -302,3 +302,13 @@ Engineering rule: scrolling uses generic SendInput wheel support, visual ROI cha
 ## ARENA-LIVE-003 fixture repair
 
 Original CI run 43645108504: 275 passed, 3 failed, 1 warning. Root fixture encoded slot 12 length 138 as a single byte 0x8a (signed -118); production reader correctly rejected it. Fixture now follows upstream WriteVarInt(int) for all object and envelope lengths. No production parser or slot map changed. Added literal wire vectors, boundary cases, invalid original fixture regression and large nested objects. CI pending.
+
+
+## ARENA-LIVE-003 acceptance
+
+- ABGESCHLOSSEN: nested ArenaOpponent semantics, exact opponent CombatPower, 16-byte identity, semantic set fingerprint and refresh invalidation.
+- final commit: `bca993439fae721158939b22f2e92559c39e6ffc`
+- Windows CI run: `43645342539`
+- result: `289 passed, 1 warning in 0.99s`
+- original red run was caused by an invalid synthetic fixture member-length encoder; production reader/schema stayed unchanged.
+- NEXT: ARENA-LIVE-004 own Team Power provenance + first opponent ranking.
