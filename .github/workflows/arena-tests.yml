@@ -26,6 +26,10 @@ jobs:
         run: python -m pip install -r requirements-arena.txt
       - name: Full regression suite
         run: python -m unittest discover -s tests -v
+      - name: Offline reference recognition
+        run: python tests/check_arena_reference_ui.py
+      - name: Synthetic recognition benchmark
+        run: python src/recognition_benchmark.py
       - name: Offline arena simulation
         run: |
           python src/arena_runner.py --simulate --cycles 2 --output-dir "$env:RUNNER_TEMP/arena-ci"
