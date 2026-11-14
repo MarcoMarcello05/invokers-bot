@@ -15,7 +15,7 @@ Rules:
 ## A. Universal core
 
 - [ ] CORE-001 | IN ENTWICKLUNG | Universal WorldState / Blackboard: live AccountState observation integrated; scoped invalidation implemented, CI pending
-- [ ] CORE-002 | IN ENTWICKLUNG | Goal model: connect live AccountState eligibility + deterministic decision trace
+- [ ] CORE-002 | IN ENTWICKLUNG | Goal model: Arena slice verified; Campaign slice next
 - [ ] CORE-003 | BEREIT ZUR ENTWICKLUNG | Central TaskScheduler: tiers, hysteresis, preemption and acceptance scenarios specified
 - [ ] CORE-004 | IN ENTWICKLUNG | Skill registry
 - [ ] CORE-005 | OFFEN | Persistent run memory
@@ -23,7 +23,7 @@ Rules:
 - [ ] CORE-007 | IN ANALYSE | Recovery engine: retry/timeout/circuit-break policy specified
 - [ ] CORE-008 | BEREIT ZUR ENTWICKLUNG | Resource planner: reserves, caps, event-save, spend authorization and semantic verification specified
 - [ ] CORE-009 | IN ANALYSE | Irreversible-action policy: risk classes and hard gates specified
-- [ ] CORE-010 | IN ENTWICKLUNG | Event-aware priority engine: first AccountState-driven replanning slice next
+- [ ] CORE-010 | IN ENTWICKLUNG | Event-aware priority engine: first AccountState-driven Arena slice verified; multi-domain expansion next
 
 ## B. Perception / data
 
@@ -254,7 +254,7 @@ Rules:
 
 ## Q. Battle intelligence
 
-- [ ] BATTLE-001 | IN ANALYSE | Pre-battle team selection
+- [ ] BATTLE-001 | IN ENTWICKLUNG | Pre-battle team selection
 - [ ] BATTLE-002 | OFFEN | Invoker filtering/sorting
 - [ ] BATTLE-003 | OFFEN | Titan binding
 - [ ] BATTLE-004 | OFFEN | Tactics selection
