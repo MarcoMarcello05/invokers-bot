@@ -61,3 +61,14 @@ The warning is an existing pytest deprecation in `tests/test_snapshot_envelope.p
 ## DATA-003 Phase 3
 
 Synthetic tests added for roster, identity, equipment, skills, reserved/additive slots, nullable timestamps, malformed input and read-only access. Command: `pytest -q`. CI outcome pending; no real user snapshot execution claimed. Native nullable DateTime layout (16 bytes, flag at 0, value at 8) corroborated by archived additional_readers.py. Root collection widths: lobby Int32, seen config Int64, received counts Int64/Int32 inferred from schema and lengths; root slots 6 onward opaque. No private data committed.
+
+
+### DATA-003 Phase 3 CI verification
+
+- commit: `09a3c33638abbede74ad1063e26baf3b02a87b54`
+- workflow run: `43641550108`
+- command: `pytest -q`
+- result: `129 passed, 1 warning in 0.30s`
+- conclusion: SUCCESS
+
+The remaining warning is the existing pytest parametrize deprecation in the envelope test and is non-blocking.
