@@ -85,13 +85,13 @@ Rules:
 
 - [ ] ARENA-001 | IN ENTWICKLUNG | Detect/navigate Arena and live Arena state
 - [ ] ARENA-002 | IN ENTWICKLUNG | Scrollable opponent-list traversal + observation inventory
-- [ ] ARENA-003 | IN ANALYSE | Opponent scoring follows verified ArenaOpponent semantic mapping
-- [ ] ARENA-004 | OFFEN | Team/formation selection
+- [ ] ARENA-003 | IN ANALYSE | Opponent scoring: requires structured opponent power + verified own Team Power provenance
+- [ ] ARENA-004 | IN ANALYSE | Team/formation selection: own Team Power source probe defined
 - [ ] ARENA-005 | IN ANALYSE | Arena token awareness: live ResourceTypeId source + configurable eligibility policy specified
 - [ ] ARENA-006 | OFFEN | Start battle
 - [ ] ARENA-007 | OFFEN | Battle/result verification
 - [ ] ARENA-008 | OFFEN | Win/loss handling
-- [ ] ARENA-009 | OFFEN | Refresh logic
+- [ ] ARENA-009 | IN ANALYSE | Refresh logic: auto-refresh detection + opponent-set invalidation; Gem refresh blocked by default
 - [ ] ARENA-010 | OFFEN | Defense team management
 
 ## G. Boss Mode
