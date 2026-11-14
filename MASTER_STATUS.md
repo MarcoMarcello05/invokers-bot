@@ -171,3 +171,12 @@ Work directly from `MASTER_CHECKLIST.md`, starting with the universal core/data/
 
 - ABGESCHLOSSEN: Phase 4 parser CI run 43642110801, 174 passed, 1 warning; commit ca2dc5bdc3251b3a8b05724ef893a90d7093e08a.
 - TEST AUSSTEHEND: optional live AccountObserver and WorldState bridge; polling plus post-input refresh. Planner integration and real client verification remain open.
+
+
+## Live AccountState review
+
+- ABGESCHLOSSEN: Phase 4 PlayerRelicsModel/PlayerRelic implementation and CI verification.
+- ABGESCHLOSSEN: first live AccountState observation channel integrated into BotEngine.
+- CI for live integration commit `371ab08015cb0bd9ec3e2a3ca4723a187133e80f`: SUCCESS, run `43642665870`, `179 passed, 1 warning`.
+- REVIEW FINDING: current live input path invalidates all account aggregate observations after every real input. This is too coarse and can make unchanged Heroes/Relics unavailable after unrelated UI actions.
+- REQUIRED NEXT: action-scoped invalidation + action-specific verification predicates before AccountState-driven goal selection.
