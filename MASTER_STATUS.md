@@ -141,3 +141,13 @@ Work directly from `MASTER_CHECKLIST.md`, starting with the universal core/data/
 - Details:
   - `PLANNER_POLICY.md`
   - `ACCOUNTSTATE_PLANNER_CONTRACT.md`
+
+
+## DATA-003 Phase 3 verification
+
+- ABGESCHLOSSEN: PlayerHeroesModel / PlayerHero read-only parser.
+- CI verified on commit `09a3c33638abbede74ad1063e26baf3b02a87b54`.
+- GitHub Actions run `43641550108`: SUCCESS.
+- Test result: `129 passed, 1 warning in 0.30s`.
+- Remaining schema assumption: ReceivedHeroesCount interpreted as Int64->Int32 mapping; non-blocking for core Hero parsing.
+- NEXT: DATA-003 Phase 4 PlayerRelicsModel + PlayerRelic.
