@@ -96,3 +96,19 @@ Work directly from `MASTER_CHECKLIST.md`, starting with the universal core/data/
 - TEST AUSSTEHEND: selected PlayerModel scalars and all three Resources dictionaries implemented using bounded VersionTolerant slot spans and the existing envelope parser.
 - Full 181-name ResourceTypeId mapping ported from the verified archive; integer keys remain canonical.
 - No other model decoding or game writes. Windows CI verification pending.
+
+
+## Architecture benchmark / structured-domain milestone
+
+- ABGESCHLOSSEN: external architecture benchmark covering OpenKore, RuneLite, BehaviorTree.CPP and Robot Framework patterns.
+- ENTSCHEIDUNG: retain Invokers' own deterministic architecture; adopt event bus, freshness-aware WorldState facts, explicit task statuses, bounded recovery, plugin-like Skills and structured action traces.
+- ABGESCHLOSSEN: PlayerArenaModel current top-level MemoryPack layout mapped.
+- ABGESCHLOSSEN: PlayerBattleModel and MultiBattleSession current MemoryPack layouts mapped.
+- IN ANALYSE: PlayerAccessory exact inner slot order remains unverified because current snapshot contains zero accessories.
+- ABGESCHLOSSEN: initial AccountState source matrix created.
+- Details:
+  - `BOT_ARCHITECTURE_BENCHMARK.md`
+  - `ARENA_MEMORYPACK_MAP_0.62.1621.md`
+  - `BATTLE_MULTIBATTLE_MAP_0.62.1621.md`
+  - `ACCESSORIES_MEMORYPACK_MAP_0.62.1621.md`
+  - `ACCOUNTSTATE_SOURCE_MATRIX.md`
