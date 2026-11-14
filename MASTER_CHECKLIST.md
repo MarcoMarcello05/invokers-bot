@@ -89,8 +89,8 @@ Rules:
 - [ ] ARENA-004 | TEST AUSSTEHEND | Deterministic ranking implemented; real-client own Team Power validation required
 - [ ] ARENA-005 | IN ANALYSE | Arena token awareness: live ResourceTypeId source + configurable eligibility policy specified
 - [ ] ARENA-006 | OFFEN | Start battle
-- [ ] ARENA-007 | OFFEN | Battle/result verification
-- [ ] ARENA-008 | OFFEN | Win/loss handling
+- [ ] ARENA-007 | IN ENTWICKLUNG | Structured post-battle result verification + ArenaBattleStats
+- [ ] ARENA-008 | IN ENTWICKLUNG | Evidence-based win/loss classification, no replay yet
 - [ ] ARENA-009 | IN ENTWICKLUNG | Semantic opponent-set refresh fingerprint verified; manual Gem refresh remains blocked
 - [ ] ARENA-010 | OFFEN | Defense team management
 
