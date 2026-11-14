@@ -28,8 +28,8 @@ Rules:
 ## B. Perception / data
 
 - [ ] DATA-001 | OFFEN | Fresh global UI screenshot inventory
-- [ ] DATA-002 | OFFEN | Fresh local Invokers data inventory
-- [ ] DATA-003 | OFFEN | Structured snapshot readers
+- [ ] DATA-002 | IN ANALYSE | Fresh local Invokers data inventory
+- [ ] DATA-003 | IN ANALYSE | Structured snapshot readers
 - [ ] DATA-004 | OFFEN | Action/event file watchers
 - [ ] DATA-005 | IN ENTWICKLUNG | Window/client/DPI detection
 - [ ] DATA-006 | IN ENTWICKLUNG | DXcam/MSS capture
