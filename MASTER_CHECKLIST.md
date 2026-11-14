@@ -83,7 +83,7 @@ Rules:
 
 ## F. Arena
 
-- [ ] ARENA-001 | OFFEN | Detect Arena screen
+- [ ] ARENA-001 | IN ANALYSE | Detect Arena screen
 - [ ] ARENA-002 | OFFEN | Opponent list parsing
 - [ ] ARENA-003 | OFFEN | Opponent scoring
 - [ ] ARENA-004 | OFFEN | Team/formation selection
@@ -188,7 +188,7 @@ Rules:
 ## M. Relics
 
 - [ ] RELIC-001 | IN ANALYSE | Inventory inspection
-- [ ] RELIC-002 | OFFEN | Evaluate rarity/rank/type/stats/set
+- [ ] RELIC-002 | IN ANALYSE | Evaluate rarity/rank/type/stats/set
 - [ ] RELIC-003 | OFFEN | Equip / replace
 - [ ] RELIC-004 | OFFEN | Auto Equip
 - [ ] RELIC-005 | OFFEN | Preview/loadout evaluation
@@ -254,7 +254,7 @@ Rules:
 
 ## Q. Battle intelligence
 
-- [ ] BATTLE-001 | OFFEN | Pre-battle team selection
+- [ ] BATTLE-001 | IN ANALYSE | Pre-battle team selection
 - [ ] BATTLE-002 | OFFEN | Invoker filtering/sorting
 - [ ] BATTLE-003 | OFFEN | Titan binding
 - [ ] BATTLE-004 | OFFEN | Tactics selection
