@@ -281,3 +281,16 @@ Engineering rule: scrolling uses generic SendInput wheel support, visual ROI cha
 ## ARENA-LIVE-002
 
 - TEST AUSSTEHEND: Arena root live source, opaque bounded opponent entries, wheel input, diagnostic traversal and pre/post envelope probes implemented. Live calibration and actual coverage remain unverified; spending remains disabled. CI pending.
+
+
+## ARENA-LIVE-002 acceptance
+
+- ABGESCHLOSSEN: ARENA-LIVE-002 PlayerArenaModel live source + bounded scroll traversal.
+- commit: `84eadeb436e707c3e9157252fc6b3f66c5fa009c`
+- Windows CI run: `43644672629`
+- result: `269 passed, 1 warning in 0.66s`
+- VERIFIED: Arena source staleness cancels traversal.
+- VERIFIED: list traversal de-duplicates overlaps and stops on unchanged/no-new/max-scroll/timeout/cancel.
+- VERIFIED: generic wheel input is bounded and scrolling does not invalidate account sources.
+- OPEN LIVE CALIBRATION: opponent-list ROI, card template, top-of-list recognition and real wheel step remain unmeasured.
+- NEXT: ARENA-LIVE-003 opponent semantics + exact CombatPower + refresh fingerprint + own-power probe.
