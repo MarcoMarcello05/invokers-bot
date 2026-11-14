@@ -16,3 +16,13 @@
 - D013: ANALYSER plans/researches/reviews; DEVELOPER implements production code from explicit prompts.
 - D014: Every new technical/architecture topic requires current web/GitHub research before implementation decisions.
 - D015: Raw player/account snapshot data is never pushed to the public repository; only sanitized derived analysis is committed.
+
+
+### D016 — Research patterns, do not import a bot framework
+Current bot/automation architectures were reviewed before extending the planner. The project keeps its own deterministic Sensors -> WorldState -> Goal -> Task -> Skill -> SafetyGate -> Executor -> Verification pipeline. We adopt proven patterns selectively: event publication, blackboard-style state, reactive precondition re-checks, explicit execution statuses, bounded retry/timeout/circuit-breaker behavior, plugin-like skill lifecycle, and decision tracing. We do not introduce a third-party behavior-tree/RPA framework as a runtime dependency.
+
+### D017 — WorldState facts require provenance and freshness
+Future normalized AccountState/WorldState facts should carry source/provenance and observation freshness (including aggregate version where available). Structured account state and visual screen state are complementary, not interchangeable. Planner actions may reject stale prerequisites.
+
+### D018 — Structured state decides; vision navigates/verifies
+Where a confirmed local structured source exists, it is the preferred source for ownership, progress, resources and candidate selection. Vision remains authoritative for currently visible UI state, navigation targets, blocking dialogs and transition verification. OCR is a gap-filler, not the primary account database.
