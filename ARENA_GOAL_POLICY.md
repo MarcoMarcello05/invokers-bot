@@ -228,3 +228,25 @@ F. tokens available and daily Arena quest later applies
 
 G. visual battle starts but token snapshot has not persisted yet
 => do not click Start again; reconcile first.
+
+
+## Scrollable opponent-list behavior
+
+User-confirmed UI fact:
+- the opponent list can be scrolled downward
+- the initial viewport does not necessarily contain all available opponents
+
+Arena opponent selection must therefore operate on a traversed list, not only the currently visible cards.
+
+Traversal policy:
+- use generic SendInput wheel support
+- observe a configured opponent-list ROI before/after each scroll
+- wait for visual stabilization
+- accumulate unique opponent observations
+- de-duplicate overlaps between consecutive viewports
+- stop on unchanged ROI / repeated no-new-observation condition
+- also enforce max-scroll and total-time safety bounds
+- UNKNOWN/unexpected screen cancels traversal
+- actual battle start remains a separate R2 action
+
+Final opponent scoring must consume the union of discovered candidates from the traversal, ideally joined to structured PlayerArenaModel/ArenaOpponent IDs once verified.
