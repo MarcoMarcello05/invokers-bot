@@ -42,3 +42,18 @@ Therefore the earlier developer-session DNS block is no longer a project blocker
 Added synthetic pytest coverage for selected scalars, reserved and additive slots, all three dictionaries, unknown IDs, malformed headers, lengths, counts, duplicates, trailing bytes and file read-only behavior. Full suite command: `python -m pytest -q`. Local execution and Windows CI outcome not yet verified. No private snapshots committed.
 
 Schema references: PLAYERMODEL_RESOURCES_MAP_0.62.1621.md and RESOURCE_TYPE_ID_0.62.1621.md; upstream MemoryPack collection formatter: https://github.com/Cysharp/MemoryPack/blob/main/src/MemoryPack.Core/Formatters/CollectionFormatters.cs . Timestamp conversion reuses Phase 1 UTC policy and preserves ticks. Revision fields interpreted as signed Int64; reserved historical bytes skipped, additive slots allowed, null dictionaries rejected rather than treated as empty.
+
+
+### DATA-003 Phase 2 CI verification
+
+GitHub Actions independently executed the exact implementation commit:
+
+- commit: `2a9f1d5b508a321dc7553ea2a899eeff43cc3612`
+- workflow run: `43640238110`
+- job: `test`
+- platform: Windows / Python 3.11.9
+- command: `pytest -q`
+- result: `89 passed, 1 warning in 0.38s`
+- conclusion: SUCCESS
+
+The warning is an existing pytest deprecation in `tests/test_snapshot_envelope.py::test_tags`: an `enumerate` object is passed directly to `parametrize`. It is non-blocking and can be cleaned up opportunistically.
