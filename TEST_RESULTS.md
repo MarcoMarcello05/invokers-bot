@@ -100,3 +100,16 @@ ANALYSER review note: CI is green, but current post-input invalidation is intent
 ## LIVE-001A
 
 Added synthetic observer/evidence and mocked engine tests: scoped refresh, unrelated freshness, four verification modes, invalid contracts, corrupt sources, missing baseline, timeout, cancellation, no chained action after failure and read-only files. Command: `pytest -q`. CI pending; actual client not exercised. See LIVE_ACCOUNTSTATE.md for legacy behavior and assumptions.
+
+
+### LIVE-001A CI verification
+
+- commit: `43f665f37ec15b7d4b448f785184274e76b721ce`
+- Actions run: `43643095273`
+- command: `pytest -q`
+- result: `215 passed, 1 warning in 0.75s`
+- conclusion: SUCCESS
+
+ANALYSER code review confirms scoped invalidation and explicit verification behavior match the architecture contract. Note: the developer report expected 214 tests; CI actually discovered and passed 215.
+
+Live caveat: `config/arena.json` currently requires `player` to change for the start-battle action. This must be validated against real-client save timing before treating the five-second timeout as production truth.
