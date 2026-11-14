@@ -1,178 +1,137 @@
 # DEVELOPER HANDOFF
 
-## Current package: ARENA-LIVE-005C — Pre-start authorization + token pressure policy
+## Current package: ARENA-LIVE-006A — live-validated cost + pre-start OwnPower ROI + victory fixtures
 
 Status: BEREIT ZUR ENTWICKLUNG
 
-ARENA-LIVE-004A remains blocked on real-client Own Team Power validation.
-ARENA-LIVE-005A/005B are code/CI accepted.
+## Newly verified live evidence
 
-## Verified baseline
+A real Windows-client offense battle was captured PRE / result-screen POST / return.
 
-- 005B commit `4b4ced808b9fb00553c86e81c02dbc46a6467d63`
-- Windows CI `43646510502`
-- `329 passed, 1 warning in 0.71s`
-- immutable ArenaBattleAttemptContext exists
-- exact opponent ID correlation exists
-- battle start still disabled
-- fight authorization still false
+### Exact live deltas
+- Arena Token ResourceTypeId 21: 12 -> 11
+- ResourcesSpent[21]: +1
+- Arena Coin ResourceTypeId 22: +50
+- ArenaMedal_Bronze ResourceTypeId 23: +1
+- Arena Points: 534 -> 543
+- total offense battles: 13 -> 14
+- total offense wins: 13 -> 14
+- weekly offense battles: 13 -> 14
+- weekly offense wins: 13 -> 14
+- FinishedOpponents: +1 exact selected Player-ID
+- POST == RETURN byte-for-byte for Player/Arena/Battle
+- LastMetaBattleSetup stayed null
 
-## Current official policy facts
+UI:
+- pre-start formation own power: 9368
+- result-screen own team power: 9425
+- do NOT treat those values as equivalent
+- Arena list top -> bottom: 3 normal wheel steps
+- live token display can exceed regen ceiling: 12/10
 
-Current official Arena documentation states:
-- Arena Tokens regenerate +1 per hour
-- regeneration stops at 10 Tokens
-- extra tokens may come from Playtime Rewards / Gem Shop
+## Goals
 
-Treat 10-cap and +1/hour as versioned/configurable policy defaults, not parser constants.
-
-The exact token cost for one Arena Offense battle is still not verified in current project evidence. Do not guess it.
-
-## Goal
-
-Build the pure pre-start decision layer that can say whether an already-selected Arena opponent is eligible to start, without sending any input.
-
-## Part A — ArenaTokenPolicy
-
-Create a versioned policy object with configurable:
-- token_cap default 10
-- regeneration_seconds default 3600
-- pressure_start configurable
-- reserve default 0
-- expected_battle_cost nullable
-- max_balance_age
-- policy_version
+### Part A — configure exact observed battle cost
+Update ArenaTokenPolicy default expected_battle_cost from null to 1 for current policy version.
 
 Requirements:
-- cap/regeneration defaults are policy values
-- expected_battle_cost=None => spending BLOCKED
-- no Gem refill behavior
+- remain configurable/versioned
+- document live evidence
+- do not make 1 a parser constant
+- no Gem refill
+- reserve semantics unchanged
 
-## Part B — token pressure
+### Part B — calibrated pre-start OwnPower numeric ROI
+Implement the existing PREBATTLE_NUMERIC_ROI fallback as a real read-only sensor for the formation screen.
 
-Create deterministic pressure state:
-- UNKNOWN
-- NORMAL
-- HIGH
-- AT_CAP
+Reference capture:
+- screen resolution: 1536x864
+- own pre-start power text: 9.368
+- normalized ROI approximately:
+  - x 0.521 .. 0.651
+  - y 0.139 .. 0.255
+Use the narrowest robust ROI around the own 'Stärke' numeric value.
 
-Inputs:
-- fresh Arena Token balance
-- configured cap
-- optional last-change/regeneration timing if actually available
+Requirements:
+- targeted digits only, no broad OCR
+- accept German thousands punctuation and normalize 9.368 -> 9368
+- exact integer output only
+- confidence must be 1.0 only after strict parse/template validation
+- source PREBATTLE_NUMERIC_ROI
+- exact=True only when strict ROI recognition succeeds
+- validated=True only when calibrated screen/client geometry matches
+- reject malformed/multiple-number/ambiguous ROI
+- reject if screen state is not confirmed formation
+- no result-screen ROI reuse
+- result-screen 9425 must not contaminate pre-start OwnPower
+- keep structured source preferred if ever independently validated in future
 
-No inferred balance from wall-clock regeneration alone.
+### Part C — live victory regression fixture
+Do NOT commit raw user snapshots.
+Create sanitized synthetic fixtures reproducing the verified deltas:
+- token -1
+- coin +50
+- Bronze medal +1
+- points +9
+- offense battle +1
+- offense win +1
+- weekly offense battle/win +1
+- new FinishedOpponent exact selected Player-ID
+- POST/RETURN equivalence behavior
 
-Pressure can affect Goal priority but cannot override:
-- unknown cost
-- stale balance
-- reserve
-- invalid selected target
-- unknown/unvalidated Own Power
+Expected result:
+- WIN_CONFIRMED
+- exact token spend true
+- finished_added true
+- replay_allowed false
+- one terminal record only
 
-## Part C — PreStartAuthorization
+### Part D — result timing contract
+Update docs/tests so result verification may reconcile on result screen.
+Returning to Arena is not required for persistence.
+Delayed persistence remains supported conservatively.
 
-Create immutable result with:
-- allowed bool
-- reason code
-- selected opponent id
-- candidate fingerprint/version
-- own power provenance/version
-- token balance
-- expected cost
-- reserve
-- resulting balance
-- attempt id if created
-- policy version
-
-Reason codes at minimum:
-- ALLOW
-- BLOCK_OWN_POWER_UNKNOWN
-- BLOCK_OWN_POWER_STALE
-- BLOCK_TARGET_MISSING
-- BLOCK_TARGET_STALE
-- BLOCK_ARENA_STALE
-- BLOCK_TOKEN_BALANCE_STALE
-- BLOCK_TOKEN_COST_UNKNOWN
-- BLOCK_INSUFFICIENT_TOKENS
-- BLOCK_RESERVE
-- BLOCK_ATTEMPT_BASELINE
-- BLOCK_POLICY
-
-## Part D — attempt creation
-
-Only when every pre-start gate passes:
-- create ArenaBattleAttemptContext from current fresh state
-- bind selected opponent ID
-- bind current opponent-set fingerprint
-- bind exact expected token cost
-
-Still do NOT send input.
-
-If any dependency changes between authorization and future click:
-- authorization invalid
-- attempt must be recreated/revalidated
-
-## Part E — token semantic verification contract
-
-Prepare the future start-action expectation:
-- exact token delta must equal -expected_battle_cost
-- unrelated PlayerModel digest change is not sufficient
-- visual transition to battle alone is not sufficient for structured spend confirmation
-- delayed PlayerModel persistence => PENDING/INCONCLUSIVE, no blind second click
-
-Do not enable the start action.
-
-## Part F — current official behavior note
-
-Document that current official docs say:
-- token cap 10
-- +1/hour regeneration
-- extra tokens can come from rewards/shop
-
-Do not assume token balance can only change by regeneration.
-Do not implement automatic Gem purchase/refill.
+### Part E — token cap semantics
+Ensure 10 means regeneration ceiling/pressure threshold, not wallet clamp.
+Observed balance 12 must remain valid and classify AT_CAP.
+Never clamp to 10.
 
 ## Tests
 
 At minimum:
-1. cap=10 produces AT_CAP at balance 10
-2. balance below cap produces NORMAL/HIGH per config
-3. unknown/stale balance -> UNKNOWN
-4. unknown battle cost blocks
-5. insufficient tokens blocks
-6. reserve violation blocks
-7. UNKNOWN/unvalidated OwnPower blocks
-8. stale candidate/fingerprint blocks
-9. fresh exact candidate + exact own power + exact known cost can produce ALLOW object
-10. allowed authorization creates immutable attempt context
-11. dependency change invalidates previous authorization
-12. exact token delta predicate requires exact negative cost
-13. delayed token persistence does not authorize retry
-14. Gem refill remains absent/blocked
-15. battle start config remains disabled
-16. existing 329+ suite remains green
+1. expected current policy cost == 1
+2. observed token balance 12 remains 12, pressure AT_CAP
+3. formation ROI parses 9.368 -> 9368
+4. integer 9368 produces exact validated PREBATTLE_NUMERIC_ROI under calibrated geometry
+5. malformed/ambiguous ROI rejected
+6. wrong visual state rejected
+7. result-screen 9425 cannot be consumed as pre-start own power
+8. stale/unmatched geometry rejected
+9. authorization with exact ROI power + fresh target + cost 1 can ALLOW planning
+10. spend verification 12 -> 11 confirms exact -1 only with required visual/structured contract
+11. sanitized live-victory fixture => WIN_CONFIRMED
+12. selected FinishedOpponent exact Player-ID supports result
+13. same-name/different-ID remains rejected
+14. POST==RETURN does not generate duplicate terminal
+15. no raw client snapshots in Git
+16. no SendInput/battle-start/replay/Gem refresh enabled
+17. existing 342+ suite green
 
 ## Constraints
-
-- pure policy/decision layer only
-- no SendInput
-- no battle start enablement
-- no Gem spending
-- no guessed token cost
+- read-only sensing/policy/tests only
+- no battle-start activation yet
+- no raw user data committed
 - no broad OCR
-- no snapshot writes
+- no result-screen power substitution
 - BotEngine remains generic
 
 ## Completion report
-
-Report:
+Include:
 - commit SHA
-- policy defaults/config
-- authorization reason codes
-- token pressure behavior
-- attempt creation rules
-- exact spend-verification contract
-- full pytest count
-- Windows CI result
-- remaining live blockers
+- exact cost policy change
+- ROI coordinates/normalization and recognition method
+- OwnPower provenance flags
+- live victory fixture behavior
+- pytest count
+- Windows CI run/result
+- remaining live blocker(s), especially loss-path validation and final start-action integration
