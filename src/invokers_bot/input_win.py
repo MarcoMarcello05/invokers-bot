@@ -42,6 +42,7 @@ INPUT_KEYBOARD = 1
 MOUSEEVENTF_MOVE = 0x0001
 MOUSEEVENTF_LEFTDOWN = 0x0002
 MOUSEEVENTF_LEFTUP = 0x0004
+MOUSEEVENTF_WHEEL = 0x0800
 MOUSEEVENTF_ABSOLUTE = 0x8000
 MOUSEEVENTF_VIRTUALDESK = 0x4000
 KEYEVENTF_KEYUP = 0x0002
@@ -77,6 +78,15 @@ class InputController:
         down = INPUT(type=INPUT_MOUSE, mi=MOUSEINPUT(0, 0, 0, MOUSEEVENTF_LEFTDOWN, 0, 0))
         up = INPUT(type=INPUT_MOUSE, mi=MOUSEINPUT(0, 0, 0, MOUSEEVENTF_LEFTUP, 0, 0))
         _send([move, down, up])
+
+    def scroll_screen(self, x, y, delta):
+        from .wheel import validate_wheel
+        validate_wheel(delta, (0,0,1,1))
+        ax, ay = self._absolute(x, y)
+        move = INPUT(type=INPUT_MOUSE, mi=MOUSEINPUT(
+            ax, ay, 0, MOUSEEVENTF_MOVE | MOUSEEVENTF_ABSOLUTE | MOUSEEVENTF_VIRTUALDESK, 0, 0))
+        wheel = INPUT(type=INPUT_MOUSE, mi=MOUSEINPUT(0, 0, delta & 0xffffffff, MOUSEEVENTF_WHEEL, 0, 0))
+        _send([move, wheel])
 
     def key(self, name):
         keys = {"esc": win32con.VK_ESCAPE, "enter": win32con.VK_RETURN, "space": win32con.VK_SPACE}

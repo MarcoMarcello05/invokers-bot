@@ -6,7 +6,26 @@
     "fps": 30,
     "capture_fps": 60,
     "stable_frames": 2,
-    "unknown_dump_after": 8
+    "unknown_dump_after": 8,
+    "transition_probes": [
+      {
+        "id": "arena_own_power",
+        "from": "arena_list",
+        "to": "formation",
+        "sources": [
+          [
+            "arena",
+            "PlayerArenaModel.dat",
+            9
+          ],
+          [
+            "battle",
+            "PlayerBattleModel.dat",
+            7
+          ]
+        ]
+      }
+    ]
   },
   "safety": {
     "allow_purchase_actions": false
@@ -98,19 +117,24 @@
     "arena_list": {
       "actions": [
         {
-          "type": "click_template",
-          "template": "assets/targets/fight_button.png",
-          "threshold": 0.88,
-          "expect": [
-            "formation"
-          ],
-          "transition_timeout": 1.5,
+          "type": "skill",
+          "skill": "arena_traversal",
+          "required_goal": "G-RES-001",
           "invalidates_sources": [],
           "expects_source_change": [],
-          "expects_visual_transition": true,
-          "success_mode": "VISUAL_ONLY",
-          "required_goal": "G-RES-001",
-          "requires_spend_authorization": true
+          "calibrated": false,
+          "starts_at_top": false,
+          "roi": null,
+          "card_template": null,
+          "bounds": {
+            "delta": -120,
+            "max_scrolls": 30,
+            "max_seconds": 25,
+            "settle_seconds": 1.5,
+            "unchanged_frames": 3,
+            "no_new_limit": 3,
+            "interval": 0.1
+          }
         }
       ]
     },
@@ -142,7 +166,8 @@
             }
           ],
           "requires_spend_authorization": true,
-          "spends_resource": true
+          "spends_resource": true,
+          "enabled": false
         }
       ]
     },

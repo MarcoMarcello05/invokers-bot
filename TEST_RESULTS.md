@@ -131,3 +131,7 @@ ANALYSER review:
 - blocked Goal paths are covered by no-input regression tests.
 - semantic resource verification rejects unchanged/wrong-direction token values.
 - Arena-specific policy remains outside BotEngine.
+
+## ARENA-LIVE-002
+
+Synthetic arena root, malformed members, opaque entry hashes, observer, wheel contract and traversal termination tests added. CI pending. No client or private data exercised.

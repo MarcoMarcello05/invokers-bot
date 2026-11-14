@@ -22,7 +22,7 @@ def observer(tmp_path, monkeypatch):
 def test_initial_and_change(observer):
     obs, root = observer
     initial = obs.refresh(force=True)
-    assert initial.changed == {"player","heroes","relics"}
+    assert initial.changed == {"player","heroes","relics","arena"}
     assert initial.resources == {2:1}
     assert initial.heroes.version == initial.relics.version == 1
     (root/"PlayerModel.dat").write_bytes(b"2")

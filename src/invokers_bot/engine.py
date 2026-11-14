@@ -7,6 +7,8 @@ import cv2
 from .account_state import AccountObserver
 from .action_verification import ActionExpectation, ActionResult, baseline_valid, evaluate
 from .world_state import WorldState
+from .runtime_skills import invoke, account_updated
+from .wheel import validate_wheel
 from .goal_eligibility import decide, authorize_action, REFRESH
 from .capture import ScreenCapture
 from .input_win import InputController, f12_pressed
@@ -36,6 +38,8 @@ class BotEngine:
         if self.account_observer is not None:
             state = self.account_observer.refresh(force=force, sources=sources, poll_now=poll_now)
             self.world_state.facts['account'] = state
+            if account_updated(self.world_state.facts, state):
+                self.handled_state = GameState.UNKNOWN
             return state
         return None
 
@@ -50,7 +54,29 @@ class BotEngine:
         self.world_state.confidence = match.score if match else 0.0
         self.world_state.observed_at = time.time()
         self._refresh_account()
+        self._transition_diagnostics(state)
         return rect, frame, match, state
+
+    def _transition_diagnostics(self, state):
+        # Generic config-driven envelope-only probes, including manual transitions.
+        probes = self.config.raw.get("runtime", {}).get("transition_probes", [])
+        previous = self.world_state.facts.get("probe_screen")
+        if self.account_observer is not None:
+            for probe in probes:
+                key = "probe:" + probe["id"]
+                if state.value == probe["from"]:
+                    self.world_state.facts[key] = {
+                        name: self.account_observer.envelope_metadata(filename, tag)
+                        for name, filename, tag in probe["sources"]}
+                elif previous == probe["from"] and state.value == probe["to"]:
+                    event = {"before": self.world_state.facts.pop(key,{}),
+                             "after": {name: self.account_observer.envelope_metadata(filename,tag)
+                                       for name,filename,tag in probe["sources"]}}
+                    self.world_state.facts["diagnostic:"+probe["id"]] = event
+                    print("[transition_probe]",json.dumps(event,sort_keys=True))
+                elif state.value != probe["from"]:
+                    self.world_state.facts.pop(key,None)
+        self.world_state.facts["probe_screen"] = state.value
 
     def _stable(self, state):
         if state == self.last_state:
@@ -105,6 +131,18 @@ class BotEngine:
             time.sleep(float(action.get("seconds", 0.05)))
             return True
 
+        if kind == "scroll_wheel":
+            delta, roi = validate_wheel(action.get("delta"),action.get("roi"))
+            if f12_pressed():
+                return False
+            if self.live:
+                self.window.activate()
+                if f12_pressed():
+                    return False
+                self.input.scroll_screen(rect.left + min(rect.width-1,round(rect.width*(roi[0]+roi[2])/2)),
+                                         rect.top + min(rect.height-1,round(rect.height*(roi[1]+roi[3])/2)),delta)
+            return True
+
         if kind == "click_template":
             hit = self.vision.find_target(frame, action)
             if not hit:
@@ -154,10 +192,16 @@ class BotEngine:
                 self._refresh_account(poll_now=True)
             if blocked:
                 return ActionResult(False, blocked)
+        if action.get("enabled", True) is not True:
+            return ActionResult(False, "ACTION_DISABLED")
         if not baseline_valid(expectation, baseline):
             return ActionResult(False, "BASELINE_UNAVAILABLE")
         if f12_pressed():
             return ActionResult(False, "CANCELLED")
+        if action.get("type") == "skill":
+            return invoke(self, action, f12_pressed)
+        if action.get("type") == "scroll_wheel":
+            return ActionResult(False,"SCROLL_REQUIRES_VERIFIED_SKILL")
         try:
             acted = self._perform(action, rect, frame)
         except OSError:
@@ -238,6 +282,9 @@ class BotEngine:
                         if result.reason.startswith("GOAL_BLOCKED"):
                             # Re-evaluate blocked eligibility without issuing input;
                             # bounded cadence avoids repeated refresh/logging at FPS.
+                            time.sleep(min(0.5, period * 15))
+                        elif result.reason == "TRAVERSAL_STALE":
+                            self.handled_state = GameState.UNKNOWN
                             time.sleep(min(0.5, period * 15))
                         else:
                             self.handled_state = state

@@ -277,3 +277,7 @@ Engineering rule: scrolling uses generic SendInput wheel support, visual ROI cha
 - POLICY: manual Gem refresh remains blocked by default.
 - NEXT: ARENA-LIVE-002 builds live arena source + scroll traversal; ARENA-LIVE-003 maps opponent semantics + refresh fingerprint + own-power probe.
 - Details: `ARENA_REFRESH_POWER_SCORING_PLAN.md`
+
+## ARENA-LIVE-002
+
+- TEST AUSSTEHEND: Arena root live source, opaque bounded opponent entries, wheel input, diagnostic traversal and pre/post envelope probes implemented. Live calibration and actual coverage remain unverified; spending remains disabled. CI pending.

@@ -11,17 +11,19 @@ from .snapshot_envelope import parse_snapshot, SnapshotFormatError
 from .player_model import PlayerModelState, parse_player_model
 from .heroes_model import PlayerHeroesState, parse_heroes_model
 from .relics_model import PlayerRelicsState, parse_relics_model
+from .arena_model import ArenaState, parse_arena_model
 
 _SOURCES = {
     "player": ("PlayerModel.dat", parse_player_model),
     "heroes": ("PlayerHeroesModel.dat", parse_heroes_model),
     "relics": ("PlayerRelicsModel.dat", parse_relics_model),
+    "arena": ("PlayerArenaModel.dat", parse_arena_model),
 }
 
 
 @dataclass(frozen=True, slots=True)
 class Observation:
-    model: PlayerModelState | PlayerHeroesState | PlayerRelicsState | None
+    model: PlayerModelState | PlayerHeroesState | PlayerRelicsState | ArenaState | None
     file_stamp: tuple[int, ...] | None
     digest: str | None
     checked_at: float
@@ -59,6 +61,11 @@ class AccountState:
     @property
     def relics(self):
         return self.get_fresh("relics")
+
+
+    @property
+    def arena(self):
+        return self.get_fresh("arena")
 
 
 def _stamp(stat):
@@ -115,6 +122,21 @@ class AccountObserver:
     def _publish(self, changed):
         self.state = AccountState(MappingProxyType(dict(self._items)), frozenset(changed))
         return self.state
+
+    def envelope_metadata(self, filename, expected_tag):
+        """Diagnostics only: do not publish a Battle model or raw data."""
+        try:
+            path = self.directory / filename
+            before = _stamp(path.stat())
+            data = path.read_bytes()
+            if before != _stamp(path.stat()) or len(data) != before[2]:
+                raise OSError("snapshot changed during read")
+            envelope = parse_snapshot(data)
+            if envelope.union_tag != expected_tag:
+                raise SnapshotFormatError("wrong diagnostic model")
+            return {"version": envelope.version, "digest": sha256(data).hexdigest()}
+        except (OSError, SnapshotFormatError) as exc:
+            return {"error": type(exc).__name__}
 
     def refresh(self, *, force=False, sources=None, poll_now=False):
         names = self._names(sources)
