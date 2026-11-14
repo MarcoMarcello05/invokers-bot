@@ -250,3 +250,20 @@ Traversal policy:
 - actual battle start remains a separate R2 action
 
 Final opponent scoring must consume the union of discovered candidates from the traversal, ideally joined to structured PlayerArenaModel/ArenaOpponent IDs once verified.
+
+
+## Opponent refresh and ranking invalidation
+
+A new opponent list invalidates every derived candidate artifact built from the previous set:
+- viewport traversal inventory
+- opponent row/position mapping
+- ranking
+- selected target
+
+Automatic refresh is detected from structured Arena source changes where possible.
+Manual refresh may cost Gems and is blocked by default under current premium-spend policy.
+
+Current official game updates also state that displayed Arena Team Power includes Trophy Room bonuses. Any future own-power calculator must include these bonuses or it is not considered exact.
+
+Detailed policy:
+- `ARENA_REFRESH_POWER_SCORING_PLAN.md`
