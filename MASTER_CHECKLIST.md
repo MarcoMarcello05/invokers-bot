@@ -15,7 +15,7 @@ Rules:
 ## A. Universal core
 
 - [ ] CORE-001 | IN ENTWICKLUNG | Universal WorldState / Blackboard: live AccountState observation integrated; scoped invalidation implemented, CI pending
-- [ ] CORE-002 | IN ENTWICKLUNG | Goal model: Arena slice verified; Campaign slice next
+- [ ] CORE-002 | IN ENTWICKLUNG | Goal model: Arena slice being completed end-to-end before next domain
 - [ ] CORE-003 | BEREIT ZUR ENTWICKLUNG | Central TaskScheduler: tiers, hysteresis, preemption and acceptance scenarios specified
 - [ ] CORE-004 | IN ENTWICKLUNG | Skill registry
 - [ ] CORE-005 | OFFEN | Persistent run memory
@@ -45,7 +45,7 @@ Rules:
 - [ ] NAV-003 | OFFEN | Close generic popup
 - [ ] NAV-004 | OFFEN | Detect/loading wait logic
 - [ ] NAV-005 | OFFEN | Claim generic visible reward
-- [ ] NAV-006 | OFFEN | Scroll/list handling
+- [ ] NAV-006 | IN ENTWICKLUNG | Generic bounded wheel-scroll/list traversal; Arena first consumer
 - [ ] NAV-007 | OFFEN | Tabs/submenus
 - [ ] NAV-008 | OFFEN | Confirmation dialogs
 - [ ] NAV-009 | OFFEN | Error/reconnect handling
@@ -83,9 +83,9 @@ Rules:
 
 ## F. Arena
 
-- [ ] ARENA-001 | IN ANALYSE | Detect Arena screen
-- [ ] ARENA-002 | OFFEN | Opponent list parsing
-- [ ] ARENA-003 | IN ANALYSE | Opponent scoring deferred until live PlayerArenaModel/opponent source exists
+- [ ] ARENA-001 | IN ENTWICKLUNG | Detect/navigate Arena and live Arena state
+- [ ] ARENA-002 | IN ENTWICKLUNG | Scrollable opponent-list traversal + observation inventory
+- [ ] ARENA-003 | IN ANALYSE | Opponent scoring follows verified ArenaOpponent semantic mapping
 - [ ] ARENA-004 | OFFEN | Team/formation selection
 - [ ] ARENA-005 | IN ANALYSE | Arena token awareness: live ResourceTypeId source + configurable eligibility policy specified
 - [ ] ARENA-006 | OFFEN | Start battle
@@ -254,7 +254,7 @@ Rules:
 
 ## Q. Battle intelligence
 
-- [ ] BATTLE-001 | IN ENTWICKLUNG | Pre-battle team selection
+- [ ] BATTLE-001 | OFFEN | Pre-battle team selection
 - [ ] BATTLE-002 | OFFEN | Invoker filtering/sorting
 - [ ] BATTLE-003 | OFFEN | Titan binding
 - [ ] BATTLE-004 | OFFEN | Tactics selection
