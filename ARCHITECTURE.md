@@ -104,3 +104,28 @@ No task is considered complete because an input was sent. Completion requires fr
 - Purchase-like actions blocked unless explicitly permitted.
 - Persistent UNKNOWN saves diagnostics and triggers recovery/replan.
 - Planner never emits raw arbitrary input; it selects registered skills.
+
+
+## Reactive input/performance policy
+
+The runtime must not use fixed post-click sleeps as its normal synchronization mechanism.
+
+Preferred hot path:
+
+```
+recognized state
+ -> registered action
+ -> SendInput
+ -> immediately observe buffered DXcam frames
+ -> look for expected successor state
+ -> continue as soon as fresh evidence appears
+```
+
+Performance rules:
+- DXcam runs as a buffered stream at 60 FPS by default.
+- Decision loop runs independently from capture rate.
+- Post-action synchronization is state-driven with a timeout only as a failure bound.
+- Expected successor states should be declared per transition.
+- Future optimization: verify only small ROIs for known hot transitions.
+- Irreversible actions remain deliberately slower/stricter and require stronger evidence.
+- Windows input uses SendInput rather than obsolete mouse_event/keybd_event paths.
