@@ -150,7 +150,7 @@ class WindowsArenaDesktop:
         user32.GetWindowTextLengthW.argtypes = (wintypes.HWND,)
         user32.GetWindowTextW.argtypes = (wintypes.HWND, wintypes.LPWSTR, ctypes.c_int)
         hwnd = user32.GetForegroundWindow()
-        if not hwnd or not self.foreground():
+        if not hwnd or not self.foreground() or user32.GetForegroundWindow() != hwnd:
             raise ArenaError('FOREGROUND_LOST')
         if user32.IsIconic(hwnd) or not user32.IsWindowVisible(hwnd):
             raise ArenaError('WINDOW_NOT_VISIBLE')
@@ -186,7 +186,7 @@ class WindowsArenaDesktop:
     def _client_image(self):
         _, (left, top, right, bottom) = self._verified_geometry()
         image = self.screen.shot()
-        if image.shape[0] < bottom or image.shape[1] < right:
+        if tuple(image.shape[:2][::-1]) != tuple(self.pg.size()) or image.shape[0] < bottom or image.shape[1] < right:
             raise ArenaError('SCREENSHOT_GEOMETRY_MISMATCH')
         self._verified_geometry()
         return image[top:bottom, left:right]
@@ -292,6 +292,8 @@ class WindowsArenaDesktop:
             self._verified_geometry()
             if self.stopped():
                 raise ArenaError('STOP_REQUESTED')
+            if tuple(self.pg.position()) != point:
+                raise ArenaError('SCROLL_POINTER_MOVED')
             self.pg.scroll(5 if direction == 'up' else -5)
             time.sleep(.45)
         found, meta = search_selected_candidate(target, checked, scroll, self.stopped,
