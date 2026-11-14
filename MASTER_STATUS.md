@@ -330,3 +330,11 @@ Original CI run 43645108504: 275 passed, 3 failed, 1 warning. Root fixture encod
 - VERIFIED: selected target invalidates when Arena/team/policy provenance changes.
 - VERIFIED: fight_authorized remains false; battle start remains disabled.
 - LIVE VALIDATION STILL REQUIRED: obtain exact own Team Power from real A/B/C formation probe or validate a tiny numeric ROI fallback.
+
+
+## Parallel Arena package while Own-Power live test is blocked
+
+- ARENA-LIVE-004A remains BLOCKIERT until the user is at the real Windows client.
+- NEXT PARALLEL WORK: ARENA-LIVE-005A ArenaBattleStats + post-battle result verification core.
+- Purpose: prepare structured win/loss/result/reward verification without starting any battle.
+- Current official Arena behavior confirms Offense wins affect Arena Points and award Arena Coins/Trophies; result-screen behavior exists.
