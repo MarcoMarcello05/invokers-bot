@@ -360,3 +360,17 @@ TEST AUSSTEHEND: ArenaStats captured-profile parser and offline reconciliation c
 ## ARENA-LIVE-005B
 
 Implemented offline attempt binding, separate finished-entry parser and metadata-only terminal record. CI pending. No input path. Result slot/timestamp and live transition correlation remain unverified.
+
+
+## ARENA-LIVE-005B acceptance
+
+- ABGESCHLOSSEN (CODE/CI): immutable ArenaBattleAttemptContext + FinishedOpponents identity correlation.
+- commit: `4b4ced808b9fb00553c86e81c02dbc46a6467d63`
+- Windows CI run: `43646510502`
+- result: `329 passed, 1 warning in 0.71s`
+- VERIFIED: FinishedOpponents is List<ArenaOpponent> from archived schema evidence.
+- VERIFIED: exact Player-ID correlation; same name/different ID does not correlate.
+- VERIFIED: duplicate/ambiguous history does not falsely confirm a result.
+- VERIFIED: immutable attempt baseline survives post-start opponent-list refresh.
+- VERIFIED: terminal result latches; duplicate later observations do not create a second result.
+- OPEN: result slot/timestamp remain opaque and need live evidence.
