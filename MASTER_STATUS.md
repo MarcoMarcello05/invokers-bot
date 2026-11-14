@@ -494,3 +494,7 @@ Production policy changes are retained; tests must migrate to current verified b
 006B requires real client captures and remains blocked while user is mobile.
 Next offline package: ARENA-LIVE-006C shadow end-to-end Arena coordinator.
 Goal: integrate traversal/ranking/authorization/attempt/start-evidence/result-reconciliation into a pure attempt-scoped state machine with no SendInput and no battle-start activation.
+
+## ARENA-LIVE-006C
+
+Shadow coordinator implemented, CI pending. Single-use attempt, explicit preparation/start observation/result phases, no actor integration. 006B remains blocked. Loss synthetic only.

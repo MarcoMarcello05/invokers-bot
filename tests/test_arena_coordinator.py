@@ -1,0 +1,136 @@
+"""Shadow-only tests, no real game input. Loss fixture is not live validated."""
+from dataclasses import replace
+from types import SimpleNamespace
+import pytest
+from invokers_bot.arena_coordinator import ArenaRunCoordinator,Phase
+from invokers_bot.arena_authorization import ArenaTokenPolicy
+from invokers_bot.arena_ranking import OwnPower,PowerSource,RankingPolicy
+from invokers_bot.arena_attempt import AttemptObservation
+from invokers_bot.arena_outcome import capture,Outcome
+from invokers_bot.arena_traversal import Inventory
+from invokers_bot.account_state import AccountState
+from test_live_victory_fixture import fixture
+
+
+def inputs():
+    pre,post=fixture()
+    a=pre.sources["arena"]
+    pre=AccountState({**pre.sources,"heroes":a,"relics":a},frozenset())
+    ctx=tuple((n,pre.sources[n].digest,pre.sources[n].model.version) for n in ("arena","heroes","relics"))
+    power=OwnPower(9368,PowerSource.PREBATTLE_NUMERIC_ROI,10,"synthetic",None,1,True,True,ctx)
+    inv=Inventory("synthetic",a.digest,a.model.version,2,(),(),2,0,"COUNT_REACHED")
+    return pre,post,inv,power,ArenaTokenPolicy(),RankingPolicy()
+
+
+def prepared():
+    pre,post,inv,power,p,r=inputs()
+    c=ArenaRunCoordinator()
+    assert c.prepare(pre,inv,power,p,r,now=10)==Phase.PREPARED
+    return c,pre,post,power,p,r
+
+
+def window():
+    c,pre,post,power,p,r=prepared()
+    i=c.begin_observation_window(pre,c.auth.candidate,power,p,r,now=10)
+    assert i.resource_delta==-1 and not i.retry_allowed
+    return c,pre,post,i
+
+
+@pytest.mark.parametrize("win",[True,False])
+def test_end_to_end(win):
+    c,pre,post,i=window()
+    assert c.observe_start(i.attempt_id,post,visual_battle=True,now=11)==Phase.BATTLE_RUNNING
+    sample=capture(post,now=11)
+    if not win:
+        sample=replace(sample,stats=replace(sample.stats,total_offense_wins=13,attack_wins_this_week=13),
+                       points=534,coins=100)
+    record=c.observe_result(AttemptObservation(i.attempt_id,replace(sample,observed_at=12),"victory" if win else "defeat"))
+    assert record.outcome==(Outcome.WIN_CONFIRMED if win else Outcome.LOSS_CONFIRMED)
+    assert record.opponent_id==i.opponent_id and c.phase==Phase.TERMINAL
+    assert c.observe_result(AttemptObservation(i.attempt_id,replace(sample,observed_at=13))) is record
+    assert not c.retry_allowed and not record.result.replay_allowed
+
+
+def test_stale_arena():
+    pre,post,inv,power,p,r=inputs()
+    assert ArenaRunCoordinator().prepare(pre,inv,power,p,r,now=13)==Phase.BLOCKED
+
+
+@pytest.mark.parametrize("kind",["fingerprint","power","token","policy","candidate"])
+def test_invalidation(kind):
+    c,pre,post,power,p,r=prepared()
+    target=c.auth.candidate
+    if kind=="fingerprint":
+        a=pre.sources["arena"]
+        pre=AccountState({**pre.sources,"arena":replace(a,model=replace(a.model,opponent_set_fingerprint="new"))},frozenset())
+    elif kind=="power":
+        power=replace(power,validated=False)
+    elif kind=="token":
+        pre=AccountState({**pre.sources,"player":post.sources["player"]},frozenset())
+    elif kind=="policy":
+        p=replace(p,policy_version="changed")
+    else:
+        target=replace(target,fingerprint="wrong")
+    assert c.begin_observation_window(pre,target,power,p,r,now=10) is None
+    assert c.phase==Phase.BLOCKED and c.intent is None
+
+
+def test_visual_only_then_spend():
+    c,pre,post,i=window()
+    assert c.observe_start(i.attempt_id,pre,visual_battle=True,now=10.5)==Phase.START_OBSERVED
+    assert c.observe_start(i.attempt_id,post,now=11)==Phase.BATTLE_RUNNING
+
+
+def test_spend_only_then_visual():
+    c,pre,post,i=window()
+    assert c.observe_start(i.attempt_id,post,now=11)==Phase.START_OBSERVED
+    assert c.observe_start(i.attempt_id,post,visual_battle=True,now=11.5)==Phase.BATTLE_RUNNING
+
+
+def test_wrong_delta():
+    c,pre,post,i=window()
+    item=post.sources["player"]
+    bad=AccountState({**post.sources,"player":replace(item,model=SimpleNamespace(version=2,resources={21:10}))},frozenset())
+    assert c.observe_start(i.attempt_id,bad,visual_battle=True,now=11)==Phase.BLOCKED
+    assert c.reason=="START_CONFLICTED"
+
+
+def test_deadline():
+    c,pre,post,i=window()
+    assert c.tick(now=15)==Phase.BLOCKED and not c.retry_allowed
+    assert c.observe_start(i.attempt_id,post,visual_battle=True,now=16)==Phase.BLOCKED
+
+
+@pytest.mark.parametrize("started",[False,True])
+def test_cancel(started):
+    if started:
+        c,pre,post,i=window()
+        c.observe_start(i.attempt_id,post,visual_battle=True,now=11)
+    else:
+        c,pre,post,power,p,r=prepared()
+    assert c.cancel(now=12)==Phase.CANCELLED
+    with pytest.raises(ValueError):
+        c.prepare(pre,None,None,now=12)
+    assert not c.retry_allowed
+
+
+def test_wrong_id_and_single_attempt():
+    c,pre,post,i=window()
+    with pytest.raises(ValueError,match="wrong attempt"):
+        c.observe_start("bad",post,now=11)
+    with pytest.raises(ValueError):
+        c.prepare(pre,None,None,now=11)
+
+
+def test_result_timeout():
+    c,pre,post,i=window()
+    c.observe_start(i.attempt_id,post,visual_battle=True,now=11)
+    assert c.tick(now=71)==Phase.BLOCKED and c.record is None
+
+
+def test_refresh_after_start():
+    c,pre,post,i=window()
+    c.observe_start(i.attempt_id,post,visual_battle=True,now=11)
+    sample=replace(capture(post,now=11),observed_at=12,arena_digest="refreshed")
+    record=c.observe_result(AttemptObservation(i.attempt_id,sample,"victory"))
+    assert record.opponent_id==i.opponent_id and record.attempt_id==i.attempt_id

@@ -240,3 +240,7 @@ Synthetic UI glyphs, strict German numeric normalization, geometry/state/age rej
 - Actions run: `43650628167`
 - result: `359 passed, 1 warning in 1.31s`
 - conclusion: SUCCESS
+
+## ARENA-LIVE-006C
+
+Added shadow scenario tests for synthetic victory/loss, invalidation, start evidence, cancellation, wrong ID, deadlines and terminal latch. Windows CI pending. Loss not live validated.
