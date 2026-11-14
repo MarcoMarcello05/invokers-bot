@@ -265,3 +265,15 @@ Engineering rule: scrolling uses generic SendInput wheel support, visual ROI cha
 - FALLBACK: tiny pre-battle Team Power OCR/number ROI.
 - REQUIRED LIVE TEST BEFORE OPPONENT SCORING: snapshot diff before/after opening Arena formation without starting battle.
 - Details: `ARENA_OWN_POWER_SOURCE_ANALYSIS.md`
+
+
+## Arena refresh/power/scoring plan
+
+- ABGESCHLOSSEN: opponent-set refresh semantics defined.
+- ABGESCHLOSSEN: own Team Power source hierarchy defined.
+- CURRENT OFFICIAL FACT: Arena opponent list can refresh automatically over time; manual refresh can cost Gems.
+- CURRENT OFFICIAL FACT: Arena Team Power includes Trophy Room bonuses.
+- POLICY: any confirmed opponent-set refresh invalidates traversal inventory, ranking and selected target mapping.
+- POLICY: manual Gem refresh remains blocked by default.
+- NEXT: ARENA-LIVE-002 builds live arena source + scroll traversal; ARENA-LIVE-003 maps opponent semantics + refresh fingerprint + own-power probe.
+- Details: `ARENA_REFRESH_POWER_SCORING_PLAN.md`
