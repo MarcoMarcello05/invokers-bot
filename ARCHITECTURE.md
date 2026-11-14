@@ -157,3 +157,26 @@ new/changed evidence
 ```
 
 The current architecture deliberately does not use a generic GOAP runtime. Preconditions/effects/cost metadata are retained so bounded planning can be introduced later where it has clear value.
+
+
+## Live action verification
+
+Concrete runtime contracts are specified in:
+- `ACTION_SOURCE_VERIFICATION_MATRIX.md`
+- `LIVE_SKILL_VERIFICATION_CONTRACT.md`
+
+State-changing live flow:
+
+```
+fresh preconditions
+ -> capture relevant source digests/versions/semantic values
+ -> execute SendInput action
+ -> invalidate only affected sources
+ -> observe expected visual transition
+ -> poll relevant structured sources
+ -> evaluate visual/structured/semantic predicates
+ -> SUCCESS / FAILURE / TIMEOUT / CANCELLED / INCONCLUSIVE
+ -> Skill decides bounded recovery/retry/replan
+```
+
+Navigation-only actions skip structured invalidation entirely.
