@@ -1,6 +1,6 @@
 # DEVELOPER HANDOFF
 
-## Current package: DATA-003 Phase 2 — PlayerModel + Resources read-only parser
+## Current package: DATA-003 Phase 3 — PlayerHeroesModel + PlayerHero
 
 Status: BEREIT ZUR ENTWICKLUNG
 
@@ -8,175 +8,195 @@ Read first:
 - PROJECT_WORKFLOW.md
 - MASTER_CHECKLIST.md
 - MASTER_STATUS.md
-- IL2CPP_SCHEMA_0.62.1621.md
-- SNAPSHOT_SERIALIZATION_0.62.1621.md
-- PLAYERMODEL_RESOURCES_MAP_0.62.1621.md
 - TEST_RESULTS.md
+- SNAPSHOT_SERIALIZATION_0.62.1621.md
+- HEROES_MEMORYPACK_MAP_0.62.1621.md
+- RELICS_MEMORYPACK_MAP_0.62.1621.md
+- PLAYERMODEL_RESOURCES_MAP_0.62.1621.md
 
 ## Context
 
-DATA-003 Phase 1 is complete and CI-verified.
+Phase 1 and Phase 2 are complete and Windows-CI verified.
 
-Verified implementation commit:
-`ed11fb1f06373c72f394b6d06e35be7f039a70c1`
+Phase 2 implementation:
+`2a9f1d5b508a321dc7553ea2a899eeff43cc3612`
 
-Verified GitHub Actions run:
-`43602310052`
+CI:
+`43640238110` — SUCCESS — 89 passed, 1 warning.
 
-The existing outer envelope parser must be reused rather than duplicated.
+Reuse:
+- existing snapshot envelope parser
+- existing generic VersionTolerant member-span reader
+
+Do not duplicate those layers.
 
 ## Goal
 
-Implement a strictly read-only Phase 2 parser for selected `PlayerModel` fields and structured resources.
+Implement read-only parsing for:
+- PlayerHeroesModel
+- HeroesById
+- PlayerHero
+- core hero progression/safety/equipment references
 
-Do not attempt full nested decoding of Tutorial, LiveOps, DailyLoginPrograms, SummonResults, VipStatus or other complex members yet.
+No mutation APIs.
 
-## Verified PlayerModel layout
+## Verified PlayerHeroesModel
 
-The current PlayerModel is a MemoryPack VersionTolerant object with 53 serialized slots.
+10 slots:
 
-Reserved/removed zero-length slots:
-- 7
-- 12
-- 13
-- 14
+0 LastId
+1 HeroesById
+2 LobbyHeroIds
+3 SeenHeroConfigIds
+4 ReceivedHeroesCount
+5 StarterHeroId
+6 FusedHeroesCountByOutputGdId
+7 RemovableFuseMaterialGdIds
+8 HeroRating
+9 ReceivedChromaHeroConfigIds
 
-The complete verified slot map is in:
-`PLAYERMODEL_RESOURCES_MAP_0.62.1621.md`
+Current analyzed snapshot contained 30 PlayerHero entries.
 
-## Required decoded fields
+## Verified PlayerHero
 
-Decode at minimum:
+22 VersionTolerant slots:
 
-- slot 4: Level
-- slot 5: Experience
-- slot 6: TotalExperience
-- slot 8: EnergySyncTime
-- slot 9: Resources
-- slot 10: ResourcesGained
-- slot 11: ResourcesSpent
-- slot 33: TodayTotalPlayedMinutes
-- slot 34: ArenaTokenSyncTime
-- slot 43: DaysPlayed
-- slot 51: SupportRevision
-- slot 52: SupportLastReadRevision
+0 InventoryId
+1 ConfigId
+2 Rank
+3 Level
+4 Experience
+5 TotalExperience
+6 Locked
+7 InStorage
+8 Marker
+9 RecentBattleTime
+10 RESERVED
+11 RelicIdBySlot
+12 AccessoryIdBySlot
+13 RESERVED
+14 RESERVED
+15 AwakeNodeIds
+16 AwakeLevel
+17 ChromaEnabled
+18 Skin
+19 RESERVED
+20 RESERVED
+21 SkillLevels
 
-All other slots should be preserved as spans or safely skipped according to their declared VersionTolerant member lengths.
+Reserved slots 10, 13, 14, 19, 20 must be skipped by declared length.
 
-## Resources format
+## Required output
 
-`Resources` is a VersionTolerant MemoryPack object with one serialized member:
+Expose an immutable Hero state with at minimum:
+- inventory_id
+- config_id
+- rank
+- level
+- experience
+- total_experience
+- locked
+- in_storage
+- marker
+- recent_battle_time
+- relic_id_by_slot
+- accessory_id_by_slot
+- awake_node_ids
+- awake_level
+- chroma_enabled
+- skin
+- skill_levels
 
-`SortedDictionary<ResourceTypeId, int> RawValues`
+PlayerHeroesModel result should expose:
+- last_id
+- heroes_by_id
+- lobby_hero_ids
+- seen_hero_config_ids
+- starter_hero_id
+- received hero counters where schema is verified
 
-Verified binary structure:
-
-- object member count = 1
-- one MemoryPack VarInt member-length delta
-- Int32 collection count
-- repeated:
-  - ResourceTypeId as Int32
-  - value as Int32
-
-Implement a stable ResourceTypeId mapping from the current IL2CPP schema where identifiers have been verified.
-
-Unknown future resource IDs must not crash parsing. Preserve numeric ID even when no friendly enum/name is known.
-
-## Parser behavior
-
-Prefer an explicit immutable result model, for example:
-
-- PlayerModelState
-- ResourceEntry or mapping keyed by numeric ResourceTypeId
-
-Expose:
-- current resources
-- lifetime gained resources
-- lifetime spent resources
-- decoded scalar account fields above
-
-The parser must consume the `data` payload from the existing Phase 1 AggregateSnapshot parser.
-
-## Validation
+## Validation requirements
 
 Strictly validate:
-- PlayerModel member count is sufficient for every accessed slot
-- member-delta table is not truncated
-- negative lengths are rejected
-- each computed member span remains within the PlayerModel payload
-- reserved zero-length slots are accepted
-- Resources object member structure is valid
-- dictionary length cannot exceed remaining bytes
-- duplicate ResourceTypeId keys are rejected or handled explicitly according to SortedDictionary semantics
-- trailing bytes inside a known Resources member are rejected
-- unknown PlayerModel slots are skipped only by their declared length, never guessed offsets
+- root union/model is PlayerHeroesModel
+- member counts and deltas
+- dictionary/list lengths stay within slot span
+- PlayerHero.InventoryId equals its HeroesById dictionary key
+- duplicate dictionary keys rejected
+- invalid bool bytes rejected
+- known fixed-width scalar widths validated
+- RelicIdBySlot dictionary keys/values decoded as int32
+- AccessoryIdBySlot likewise
+- UpgradeableSkill list entries are exact pairs of int32 values
+- unknown future enum values remain numeric rather than crashing
+- additional future PlayerHero slots may be skipped safely by declared length
+- no trailing bytes inside known members
 
 ## Tests
 
-Add synthetic tests for at minimum:
+Synthetic tests at minimum:
+1. empty hero dictionary
+2. one minimal valid hero
+3. multiple heroes
+4. inventory-id/dictionary-key agreement
+5. mismatch rejection
+6. rank/level/xp scalars
+7. locked/in-storage booleans
+8. recent-battle nullable DateTime
+9. empty relic/accessory maps
+10. 8 relic slot mappings
+11. accessory mappings
+12. awake nodes
+13. awake level
+14. chroma / skin
+15. 6-skill list
+16. 7-skill list
+17. reserved slots ignored safely
+18. malformed root count
+19. malformed PlayerHero count
+20. truncated delta tables
+21. out-of-bounds members
+22. duplicate dictionary keys
+23. invalid bool
+24. malformed skill list
+25. trailing bytes
+26. wrong aggregate union tag
+27. read-only file behavior
 
-1. valid minimal 53-slot PlayerModel
-2. known scalar decoding
-3. all four reserved zero-length slots
-4. Resources with zero entries
-5. Resources with multiple entries
-6. ResourcesGained and ResourcesSpent
-7. unknown ResourceTypeId preserved numerically
-8. malformed PlayerModel member count
-9. truncated member-delta table
-10. negative member length
-11. member span out of bounds
-12. malformed Resources member count
-13. truncated dictionary count
-14. dictionary count greater than available pairs
-15. duplicate ResourceTypeId
-16. trailing bytes inside Resources member
+If a current real snapshot is locally available, verify it without committing any private data.
 
-If local access to the real user snapshot exists, verify the parser against it without committing the raw file.
+## Optional cleanup
 
-Expected real-snapshot consistency checks documented by ANALYSER include examples such as:
+The current CI has one non-blocking pytest warning:
+`tests/test_snapshot_envelope.py::test_tags` passes an `enumerate` directly to parametrize.
 
-- Gold: gained - spent = current
-- Energy: gained - spent = current
-- Memorium: gained - spent = current
-- Arena_Token: gained - spent = current
-
-Do not hardcode these user values into production code.
-
-## Safety
-
-- read-only only
-- no write APIs
-- no game process access
-- no LocalLow mutations
-- no packet/network manipulation
-- no private snapshot data committed
+You may convert it to a tuple/list if convenient, but do not let this distract from Phase 3.
 
 ## Out of scope
 
-Do NOT implement:
-- PlayerHeroesModel
-- PlayerHero
-- PlayerRelicsModel
-- PlayerArenaModel
-- PlayerQuestsModel
-- nested LiveOps/Tutorial/VIP parsing
-- any game-state modification
+Do not implement yet:
+- full PlayerRelic parser
+- PlayerAccessory parser
+- PlayerAnima parser
+- Quests
+- Arena
+- Battle
+- Clan
+- Events
+- writing/manipulation
 
-## Completion requirements
+## Completion
 
-1. Run full test suite.
-2. Ensure Windows GitHub Actions passes.
-3. Update TEST_RESULTS.md.
-4. Update MASTER_STATUS.md.
-5. Commit to main.
-6. Push to the existing GitHub repository.
-7. Verify remote HEAD / pushed commit.
-8. Report:
-   - exact commit SHA
+1. run full pytest suite
+2. push to main
+3. verify Remote HEAD
+4. verify Windows GitHub Actions
+5. update TEST_RESULTS.md and MASTER_STATUS.md
+6. report exact:
+   - commit SHA
    - branch
    - push result
-   - pytest command/result
-   - GitHub Actions run/result
+   - pytest result/count
+   - GitHub Actions run ID/result
    - changed files
-   - any schema assumptions still unresolved
+   - unresolved assumptions
