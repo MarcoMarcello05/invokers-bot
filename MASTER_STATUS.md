@@ -61,3 +61,9 @@ Work directly from `MASTER_CHECKLIST.md`, starting with the universal core/data/
 - BEREIT ZUR ENTWICKLUNG: read-only aggregate-envelope parser (DATA-003 phase 1).
 - IN ANALYSE: exact inner-model MemoryPackOrder/reserved-slot maps for AccountState decoding.
 - Details: `SNAPSHOT_SERIALIZATION_0.62.1621.md`.
+
+## DATA-003 Phase 1 implementation
+
+- TEST AUSSTEHEND: strict read-only outer envelope parser and synthetic regression tests implemented; inner models remain opaque.
+- Windows CI uses existing pytest discovery. No live input or snapshot writes.
+- Full DATA-003 remains open pending inner-model research and implementation.
