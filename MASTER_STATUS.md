@@ -125,3 +125,8 @@ Work directly from `MASTER_CHECKLIST.md`, starting with the universal core/data/
   - `GLOBAL_EVENTS_MEMORYPACK_MAP_0.62.1621.md`
   - `INBOX_MEMORYPACK_MAP_0.62.1621.md`
   - `SHOP_MEMORYPACK_MAP_0.62.1621.md`
+
+## DATA-003 Phase 3 implementation
+
+- TEST AUSSTEHEND: read-only PlayerHeroesModel and PlayerHero parser; bounded nested objects reuse the shared slot reader. Windows CI pending.
+- Root slots 6 onward remain opaque. ReceivedHeroesCount uses inferred Int64 key + Int32 count (900 bytes consistent with 4 + 74*12); real snapshot verification pending.

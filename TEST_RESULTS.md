@@ -57,3 +57,7 @@ GitHub Actions independently executed the exact implementation commit:
 - conclusion: SUCCESS
 
 The warning is an existing pytest deprecation in `tests/test_snapshot_envelope.py::test_tags`: an `enumerate` object is passed directly to `parametrize`. It is non-blocking and can be cleaned up opportunistically.
+
+## DATA-003 Phase 3
+
+Synthetic tests added for roster, identity, equipment, skills, reserved/additive slots, nullable timestamps, malformed input and read-only access. Command: `pytest -q`. CI outcome pending; no real user snapshot execution claimed. Native nullable DateTime layout (16 bytes, flag at 0, value at 8) corroborated by archived additional_readers.py. Root collection widths: lobby Int32, seen config Int64, received counts Int64/Int32 inferred from schema and lengths; root slots 6 onward opaque. No private data committed.
