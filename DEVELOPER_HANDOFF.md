@@ -229,3 +229,25 @@ Report:
 - end-of-list detection behavior
 - number of synthetic traversal cases
 - unresolved live-client assumptions
+
+
+## Additional diagnostics required by ANALYSER
+
+Do not expand this package into scoring yet, but add hooks needed for the next Arena package:
+
+### Opponent-set refresh awareness
+- expose enough arena source metadata to distinguish one opponent-set snapshot from another
+- if individual opponent entries remain opaque, preserve stable bounded raw-entry hashes so the next package can build an opponent-set fingerprint
+- list traversal inventory must carry the arena source digest/version it was built against
+- if arena source changes during traversal, cancel the traversal as stale and restart/replan rather than continuing with old row mapping
+
+### Formation own-power probe support
+Prepare diagnostics only:
+- when transitioning arena_list -> formation, record pre/post PlayerBattleModel and PlayerArenaModel source digest/version if those sources are available
+- do not require Battle parser implementation in this package
+- do not OCR own power yet unless explicitly needed for a manual diagnostic build
+- no battle start is authorized by this diagnostic
+
+Reference:
+- `ARENA_REFRESH_POWER_SCORING_PLAN.md`
+- `ARENA_OWN_POWER_SOURCE_ANALYSIS.md`
