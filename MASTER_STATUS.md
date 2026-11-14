@@ -316,3 +316,17 @@ Original CI run 43645108504: 275 passed, 3 failed, 1 warning. Root fixture encod
 ## ARENA-LIVE-004 implementation
 
 - TEST AUSSTEHEND: diagnostic ranking with exact validated own-power contract, deterministic ratio/points/identity ordering, dependency and policy invalidation. Own power remains unknown in live runtime; nested Battle path unverified. Tiny ROI reader interface disabled by default. No battle start. CI pending.
+
+
+## ARENA-LIVE-004 code acceptance
+
+- ABGESCHLOSSEN (CODE/CI): provenance-gated diagnostic opponent ranking.
+- commit: `047c99ac78ddc377d09e9beddabe8e4cb23ed478`
+- Windows CI run: `43645551854`
+- result: `304 passed, 1 warning in 0.69s`
+- VERIFIED: UNKNOWN/unvalidated own power blocks autonomous selection.
+- VERIFIED: PREBATTLE_NUMERIC_ROI samples remain non-exact/non-validated diagnostics.
+- VERIFIED: deterministic ranking by power ratio, bounded ArenaPoints secondary signal and Player-ID tie-break.
+- VERIFIED: selected target invalidates when Arena/team/policy provenance changes.
+- VERIFIED: fight_authorized remains false; battle start remains disabled.
+- LIVE VALIDATION STILL REQUIRED: obtain exact own Team Power from real A/B/C formation probe or validate a tiny numeric ROI fallback.
