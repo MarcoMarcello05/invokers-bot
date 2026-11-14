@@ -26,7 +26,7 @@ def main():
     for name,state in [('arena_list.png','ARENA_LIST'),('arena_formation.png','FORMATION')]:
         image=screen.cv2.imread(str(ROOT/'reference/screenshots'/name),0)
         if image is None:raise RuntimeError('Reference images unavailable; run this smoke from the Git checkout')
-        with patch.object(screen,'shot',return_value=image):frame=backend.observe()
+        with patch.object(backend,'_client_image',return_value=image):frame=backend.observe()
         assert frame.state==state,(name,frame.state)
         if state=='FORMATION':
             assert frame.own_power==9368
@@ -36,7 +36,7 @@ def main():
         print(name+': OCR/state/token checks passed (offline image, no Windows input)',flush=True)
     # A marker-free image must not accidentally become an actionable game screen.
     import numpy as np
-    with patch.object(screen,'shot',return_value=np.zeros((1080,1920),dtype=np.uint8)):
+    with patch.object(backend,'_client_image',return_value=np.zeros((1080,1920),dtype=np.uint8)):
         assert backend.observe().state=='UNKNOWN'
     print('Blank/unknown image rejected',flush=True)
 
