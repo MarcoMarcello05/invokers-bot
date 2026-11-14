@@ -151,3 +151,7 @@ ANALYSER review confirms:
 - visual overlap de-duplication
 - no AccountState invalidation from wheel scrolling
 - live calibration intentionally disabled by default
+
+## ARENA-LIVE-003
+
+Synthetic opponent field, malformed identity/power, fingerprint, cache invalidation and passive probe tests. Windows CI pending. No game input or raw snapshots used.

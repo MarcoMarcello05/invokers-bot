@@ -134,7 +134,16 @@ class AccountObserver:
             envelope = parse_snapshot(data)
             if envelope.union_tag != expected_tag:
                 raise SnapshotFormatError("wrong diagnostic model")
-            return {"version": envelope.version, "digest": sha256(data).hexdigest()}
+            result = {"version": envelope.version, "digest": sha256(data).hexdigest()}
+            if expected_tag == 7:
+                from .memorypack_slots import read_member_spans
+                slots = read_member_spans(envelope.data, minimum_count=28)
+                raw = bytes(slots[2])
+                result["last_meta_battle_setup_present"] = None if not raw else raw != b"\xff"
+                result["last_meta_battle_setup_digest"] = sha256(raw).hexdigest()
+                result["own_combat_power"] = None
+                result["power_status"] = "UNVERIFIED_NESTED_SLOT"
+            return result
         except (OSError, SnapshotFormatError) as exc:
             return {"error": type(exc).__name__}
 

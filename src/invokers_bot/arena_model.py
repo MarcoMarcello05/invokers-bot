@@ -1,4 +1,4 @@
-"""Build 0.62.1621 Arena root; no semantic opponent decoding."""
+"""Build 0.62.1621 Arena root; verified current opponent wire profile."""
 from dataclasses import dataclass
 from datetime import datetime
 from hashlib import sha256
@@ -7,6 +7,7 @@ from struct import unpack
 from types import MappingProxyType
 from typing import Mapping
 
+from .arena_opponent import ArenaOpponent, parse_opponent, opponent_set_fingerprint
 from .memorypack_slots import read_member_spans, read_member_spans_at
 from .snapshot_envelope import AggregateSnapshot, SnapshotFormatError, _datetime_utc, parse_snapshot, read_snapshot
 
@@ -45,6 +46,8 @@ class ArenaState:
     shop_state_by_period: OpaqueCollection
     last_weekly_reward_raw: bytes | None
     opaque_slots: Mapping[int, bytes]
+    current_opponents: tuple[ArenaOpponent, ...]
+    opponent_set_fingerprint: str
 
 
 def _scalar(data, fmt, width):
@@ -87,12 +90,15 @@ def parse_arena_model(snapshot: AggregateSnapshot) -> ArenaState:
     week, week_ticks = _datetime_utc(_scalar(s[5], "<Q", 8))
     refresh, refresh_ticks = _datetime_utc(_scalar(s[7], "<Q", 8))
     read_member_spans(s[10], minimum_count=18)
+    opponents = _collection(s[12], objects=True)
+    semantic = tuple(parse_opponent(entry) for entry in opponents.entries)
+    fingerprint = opponent_set_fingerprint(semantic)
     return ArenaState(snapshot.version, snapshot.updated_at_utc,
         _scalar(s[0], "<i", 4), bytes(s[1]), week, week_ticks, refresh, refresh_ticks,
         _scalar(s[8], "<i", 4), _collection(s[9]), bytes(s[10]),
-        _collection(s[12], objects=True), _nullable_object(s[14]),
+        opponents, _nullable_object(s[14]),
         _collection(s[15], objects=True), _collection(s[16]), _nullable_object(s[17]),
-        MappingProxyType({i: bytes(s[i]) for i in (2,3,4,6,11,13,*range(18,len(s)))}))
+        MappingProxyType({i: bytes(s[i]) for i in (2,3,4,6,11,13,*range(18,len(s)))}), semantic, fingerprint)
 
 
 def parse_arena_snapshot(data):

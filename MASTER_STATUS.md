@@ -294,3 +294,7 @@ Engineering rule: scrolling uses generic SendInput wheel support, visual ROI cha
 - VERIFIED: generic wheel input is bounded and scrolling does not invalidate account sources.
 - OPEN LIVE CALIBRATION: opponent-list ROI, card template, top-of-list recognition and real wheel step remain unmeasured.
 - NEXT: ARENA-LIVE-003 opponent semantics + exact CombatPower + refresh fingerprint + own-power probe.
+
+## ARENA-LIVE-003 implementation
+
+- TEST AUSSTEHEND: verified opponent fields, exact Int32 power, 16-byte identity, semantic fingerprint and conservative cache invalidation; passive A/B/C probe. Actual own power nested slot and real client parity remain unverified. CI pending.

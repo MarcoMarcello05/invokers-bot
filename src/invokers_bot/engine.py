@@ -9,6 +9,7 @@ from .action_verification import ActionExpectation, ActionResult, baseline_valid
 from .world_state import WorldState
 from .runtime_skills import invoke, account_updated
 from .wheel import validate_wheel
+from .transition_probe import observe_transition
 from .goal_eligibility import decide, authorize_action, REFRESH
 from .capture import ScreenCapture
 from .input_win import InputController, f12_pressed
@@ -58,25 +59,11 @@ class BotEngine:
         return rect, frame, match, state
 
     def _transition_diagnostics(self, state):
-        # Generic config-driven envelope-only probes, including manual transitions.
-        probes = self.config.raw.get("runtime", {}).get("transition_probes", [])
-        previous = self.world_state.facts.get("probe_screen")
         if self.account_observer is not None:
-            for probe in probes:
-                key = "probe:" + probe["id"]
-                if state.value == probe["from"]:
-                    self.world_state.facts[key] = {
-                        name: self.account_observer.envelope_metadata(filename, tag)
-                        for name, filename, tag in probe["sources"]}
-                elif previous == probe["from"] and state.value == probe["to"]:
-                    event = {"before": self.world_state.facts.pop(key,{}),
-                             "after": {name: self.account_observer.envelope_metadata(filename,tag)
-                                       for name,filename,tag in probe["sources"]}}
-                    self.world_state.facts["diagnostic:"+probe["id"]] = event
-                    print("[transition_probe]",json.dumps(event,sort_keys=True))
-                elif state.value != probe["from"]:
-                    self.world_state.facts.pop(key,None)
-        self.world_state.facts["probe_screen"] = state.value
+            probes=self.config.raw.get("runtime",{}).get("transition_probes",[])
+            for event in observe_transition(self.world_state.facts,state.value,probes,
+                                            self.account_observer.envelope_metadata):
+                print("[transition_probe]",json.dumps(event,sort_keys=True))
 
     def _stable(self, state):
         if state == self.last_state:

@@ -9,6 +9,9 @@ STAMP=pack("<Q",621355968000000000 | (1<<62))
 def obj(slots):
     return bytes([len(slots)])+bytes(map(len,slots))+b"".join(slots)
 
+def opponent(name, identity, power=6151):
+    return obj([pack("<i",len(name))+name.encode("utf-16-le"),pack("<i",7),b"opaque",pack("<i",534),obj([pack("<i",power),bytes([identity])*16,b"team-opaque"])])
+
 def root():
     s=[b""]*18
     s[0]=pack("<i",42)
@@ -16,7 +19,7 @@ def root():
     s[8]=pack("<i",12)
     s[9]=s[16]=bytes(4)
     s[10]=obj([b""]*18)
-    s[12]=pack("<i",2)+obj([b"abc"])+obj([b"def"])
+    s[12]=pack("<i",2)+opponent("same",1)+opponent("same",2)
     s[14]=s[17]=b"\xff"
     s[15]=pack("<i",1)+obj([b"finished"])
     return s
@@ -30,10 +33,10 @@ def test_arena():
     s=root()
     state=parse_arena_snapshot(envelope(obj(s)))
     assert (state.points,state.last_weekly_points,state.version)==(42,12,3)
-    assert state.opponents.count==2 and state.opponents.entries==(obj([b"abc"]),obj([b"def"]))
+    assert state.opponents.count==2 and state.opponents.entries==(opponent("same",1),opponent("same",2))
     assert state.finished_opponents.count==1 and state.current_battle_opponent_raw is None
     assert state.hall_bonuses.count==state.shop_state_by_period.count==0
-    s[12]=pack("<i",2)+obj([b"def"])+obj([b"abc"])
+    s[12]=pack("<i",2)+opponent("same",2)+opponent("same",1)
     assert parse_arena_snapshot(envelope(obj(s))).opponents.fingerprint==state.opponents.fingerprint
 
 @pytest.mark.parametrize("slot,value",[(0,b""),(5,b""),(12,pack("<i",3)+obj([b"a"])),(12,pack("<i",-1)),(15,bytes(4)+b"x"),(10,b""),(14,b"\xffx")])

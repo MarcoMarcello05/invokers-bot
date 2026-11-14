@@ -1,6 +1,8 @@
 """Skill registration boundary; engine dispatches generic configured skill ids."""
 from .arena_skill import run_arena_traversal, discard_stale_inventory
 
+from .arena_refresh import update_arena
+
 SKILLS = {"arena_traversal": run_arena_traversal}
 
 
@@ -13,4 +15,5 @@ def invoke(engine, action, cancelled):
 
 
 def account_updated(facts, account):
-    return discard_stale_inventory(facts, account)
+    changed = update_arena(facts, account)
+    return discard_stale_inventory(facts, account) or changed
