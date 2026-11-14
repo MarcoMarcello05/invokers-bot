@@ -59,3 +59,13 @@ The runtime must distinguish SUCCESS, FAILURE, TIMEOUT, CANCELLED and INCONCLUSI
 
 ### D028 — Retries occur at Skill level after re-observation
 A failed live action is not mechanically clicked again. The Skill re-observes screen/account state, re-checks preconditions, and only then decides whether a bounded retry is safe. This prevents duplicate spends and double confirmations.
+
+
+### D029 — Unknown resource caps and costs are never inferred
+Resource overflow logic may use only verified static/runtime data or explicit configuration. If a cap or action cost is unknown, the planner records that uncertainty and does not invent a value.
+
+### D030 — ResourcePlanner owns spend authorization
+Domain Goals request permission to spend a resource; they do not implement reserve/event-save/session-limit logic themselves. Decisions are explicit (ALLOW / limited allow / deny reason) and require fresh structured balance data.
+
+### D031 — Visual success may require later structured reconciliation
+If a state-changing live action reaches its expected visual state before the relevant snapshot persists, the runtime must not immediately retry the action. It reconciles structured state first and may remain INCONCLUSIVE/PENDING rather than risking duplicate spend.
