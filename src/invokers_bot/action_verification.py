@@ -5,6 +5,7 @@ from math import isfinite
 
 from .account_state import AccountObserver, AccountState
 from .models import GameState
+from .semantic_verification import ResourcePredicate, parse_predicates
 
 
 class VerificationStatus(str, Enum):
@@ -31,6 +32,7 @@ class ActionExpectation:
     timeout: float
     success_mode: SuccessMode
     legacy: bool = False
+    semantic_predicates: tuple[ResourcePredicate, ...] = ()
 
     @classmethod
     def from_action(cls, action):
@@ -45,7 +47,7 @@ class ActionExpectation:
         explicit = any(k in action for k in (
             "invalidates_sources", "expects_source_change", "expects_changed_sources",
             "expects_visual_transition", "expected_visual_states", "success_mode",
-            "verification_timeout",
+            "verification_timeout", "semantic_predicates",
         ))
         invalidates = names("invalidates_sources")
         changed = names("expects_source_change") | names("expects_changed_sources")
@@ -71,7 +73,10 @@ class ActionExpectation:
         timeout = float(action.get("verification_timeout", action.get("transition_timeout", 1.5)))
         if not isfinite(timeout) or timeout <= 0:
             raise ValueError("verification timeout must be finite and positive")
-        return cls(invalidates, changed, states, visual, timeout, mode, not explicit)
+        predicates = parse_predicates(action.get("semantic_predicates", []))
+        if any(p.source not in changed for p in predicates):
+            raise ValueError("semantic predicate source must expect change")
+        return cls(invalidates, changed, states, visual, timeout, mode, not explicit, predicates)
 
 
 @dataclass(frozen=True, slots=True)
@@ -89,7 +94,7 @@ class ActionResult:
         if self.reason == "CANCELLED":
             return VerificationStatus.CANCELLED
         if self.reason.startswith("TIMEOUT:"):
-            if self.visual_verified and self.reason == "TIMEOUT:EXPECTED_EVIDENCE_MISSING":
+            if self.visual_verified and self.reason in ("TIMEOUT:EXPECTED_EVIDENCE_MISSING", "TIMEOUT:SEMANTIC_EVIDENCE_MISSING"):
                 return VerificationStatus.INCONCLUSIVE
             return VerificationStatus.TIMEOUT
         if self.reason in ("DRY_RUN", "WAIT_ONLY"):
@@ -100,7 +105,7 @@ class ActionResult:
 def baseline_valid(expectation: ActionExpectation, baseline: AccountState | None) -> bool:
     if not expectation.expects_changed_sources:
         return True
-    return baseline is not None and all(
+    return baseline is not None and all(p.value(baseline) is not None for p in expectation.semantic_predicates) and all(
         (item := baseline.sources.get(name)) is not None
         and item.digest is not None and item.fresh(2.0)
         for name in expectation.expects_changed_sources
@@ -128,6 +133,8 @@ def evaluate(expectation: ActionExpectation, previous: GameState, observed: Game
             changed.add(name)
     structured = bool(expectation.expects_changed_sources) and (
         changed == expectation.expects_changed_sources)
+    semantic = all(p.matches(baseline, current) for p in expectation.semantic_predicates)
+    structured = structured and semantic
     mode = expectation.success_mode
     success = {
         SuccessMode.VISUAL_ONLY: visual,
@@ -139,6 +146,9 @@ def evaluate(expectation: ActionExpectation, previous: GameState, observed: Game
     if bad_sources:
         success = False
         reason = "SOURCE_UNAVAILABLE:" + ",".join(sorted(bad_sources))
+    elif not semantic:
+        success = False
+        reason = "SEMANTIC_EVIDENCE_MISSING"
     elif success:
         reason = "VERIFIED"
     else:

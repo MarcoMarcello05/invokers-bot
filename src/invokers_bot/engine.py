@@ -7,6 +7,7 @@ import cv2
 from .account_state import AccountObserver
 from .action_verification import ActionExpectation, ActionResult, baseline_valid, evaluate
 from .world_state import WorldState
+from .goal_eligibility import decide, authorize_action, REFRESH
 from .capture import ScreenCapture
 from .input_win import InputController, f12_pressed
 from .models import GameState
@@ -142,6 +143,17 @@ class BotEngine:
             return ActionResult(False, "INVALID_EXPECTATION:" + str(exc))
         baseline = (self._refresh_account(force=True, sources=expectation.invalidates_sources)
                     if expectation.invalidates_sources else self._refresh_account(poll_now=True))
+        required_goal = action.get("required_goal")
+        if required_goal:
+            trace = decide(baseline, self.config.raw, observer_available=self.account_observer is not None)
+            self.world_state.facts["decision_trace"] = trace
+            blocked = authorize_action(action, trace, self.config.raw)
+            self.world_state.facts["decision_block_reason"] = blocked
+            print("[decision] " + json.dumps({**trace.to_dict(), "action_block_reason": blocked}, sort_keys=True))
+            if trace.selected == REFRESH:
+                self._refresh_account(poll_now=True)
+            if blocked:
+                return ActionResult(False, blocked)
         if not baseline_valid(expectation, baseline):
             return ActionResult(False, "BASELINE_UNAVAILABLE")
         if f12_pressed():
@@ -223,7 +235,12 @@ class BotEngine:
                         result = self._handle(state, match, rect, frame)
                         # Suppress blind retries on the same screen even on failure.
                         # handled_state tracks attempts, not verification success.
-                        self.handled_state = state
+                        if result.reason.startswith("GOAL_BLOCKED"):
+                            # Re-evaluate blocked eligibility without issuing input;
+                            # bounded cadence avoids repeated refresh/logging at FPS.
+                            time.sleep(min(0.5, period * 15))
+                        else:
+                            self.handled_state = state
 
                 delay = period - (time.perf_counter() - started)
                 if delay > 0:

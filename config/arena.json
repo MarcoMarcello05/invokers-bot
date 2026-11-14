@@ -90,7 +90,8 @@
           "invalidates_sources": [],
           "expects_source_change": [],
           "expects_visual_transition": true,
-          "success_mode": "VISUAL_ONLY"
+          "success_mode": "VISUAL_ONLY",
+          "required_goal": "G-RES-001"
         }
       ]
     },
@@ -107,7 +108,9 @@
           "invalidates_sources": [],
           "expects_source_change": [],
           "expects_visual_transition": true,
-          "success_mode": "VISUAL_ONLY"
+          "success_mode": "VISUAL_ONLY",
+          "required_goal": "G-RES-001",
+          "requires_spend_authorization": true
         }
       ]
     },
@@ -129,7 +132,17 @@
           ],
           "expects_visual_transition": true,
           "success_mode": "VISUAL_AND_STRUCTURED",
-          "verification_timeout": 5
+          "verification_timeout": 5,
+          "required_goal": "G-RES-001",
+          "semantic_predicates": [
+            {
+              "kind": "resource_decreased",
+              "source": "player",
+              "resource_id": 21
+            }
+          ],
+          "requires_spend_authorization": true,
+          "spends_resource": true
         }
       ]
     },
@@ -183,6 +196,16 @@
           "success_mode": "VISUAL_ONLY"
         }
       ]
+    }
+  },
+  "planner": {
+    "arena": {
+      "threshold": 1,
+      "reserve": 0,
+      "cap": null,
+      "cost": null,
+      "max_age": 2,
+      "allow_test_battle_start": false
     }
   }
 }

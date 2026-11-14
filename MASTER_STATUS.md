@@ -220,3 +220,7 @@ Work directly from `MASTER_CHECKLIST.md`, starting with the universal core/data/
 - Details:
   - `RESOURCE_PLANNER_POLICY.md`
   - `ARENA_GOAL_POLICY.md`
+
+## LIVE-001B
+
+- TEST AUSSTEHEND: first AccountState-driven Arena eligibility and refresh goal; generic semantic resource predicates, decision trace and runtime goal gate implemented. CI pending. Real-client timing/cost/cap not verified.

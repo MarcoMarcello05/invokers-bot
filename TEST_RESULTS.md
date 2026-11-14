@@ -113,3 +113,7 @@ Added synthetic observer/evidence and mocked engine tests: scoped refresh, unrel
 ANALYSER code review confirms scoped invalidation and explicit verification behavior match the architecture contract. Note: the developer report expected 214 tests; CI actually discovered and passed 215.
 
 Live caveat: `config/arena.json` currently requires `player` to change for the start-battle action. This must be validated against real-client save timing before treating the five-second timeout as production truth.
+
+## LIVE-001B
+
+Synthetic tests for eligibility, freshness, reserve, missing navigation/data, deterministic sanitized trace, exact/decreased resource predicates and blocked runtime inputs. Full pytest CI pending. No real client test.
