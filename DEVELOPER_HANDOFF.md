@@ -1,160 +1,61 @@
 # DEVELOPER HANDOFF
 
-## Current package: ARENA-LIVE-004 — Own Team Power validation + first opponent ranking
+## Current package: ARENA-LIVE-004A — Real-client Own Team Power validation
 
-Status: BEREIT ZUR ENTWICKLUNG
+Status: LIVE-TEST AUSSTEHEND
 
-Read first:
-- PROJECT_WORKFLOW.md
-- MASTER_STATUS.md
-- MASTER_CHECKLIST.md
-- TEST_RESULTS.md
-- ARENA_MEMORYPACK_MAP_0.62.1621.md
-- ARENA_GOAL_POLICY.md
-- ARENA_REFRESH_POWER_SCORING_PLAN.md
-- ARENA_OWN_POWER_SOURCE_ANALYSIS.md
-- current arena_model.py / arena_opponent.py / arena_refresh.py / transition_probe.py
+No further autonomous Arena ranking code should be added before this validation.
 
-## Verified baseline
+## Verified code baseline
 
-ARENA-LIVE-003 is accepted:
-- final commit: `bca993439fae721158939b22f2e92559c39e6ffc`
-- Windows CI run: `43645342539`
-- result: `289 passed, 1 warning in 0.99s`
-- opponent identity = 16-byte Player-ID
-- exact opponent CombatPower is structured
-- opponent-set fingerprint is order-independent
-- semantic refresh invalidation exists
-- own-power A/B/C passive probe exists
+- commit `047c99ac78ddc377d09e9beddabe8e4cb23ed478`
+- Windows CI run `43645551854`
+- `304 passed, 1 warning in 0.69s`
+- opponent ranking is diagnostic only
+- battle start disabled
+- unvalidated own power cannot authorize selection/fight
 
-## Goal
+## Objective
 
-Resolve the user's own Arena Team Power provenance and build the first deterministic opponent ranking policy.
+Determine the exact real-client source for the user's own Arena Team Power.
 
-Do not start battles automatically yet.
-
-## Part A — own Team Power live validation path
-
-Preferred source:
+Preferred:
 `PlayerBattleModel.LastMetaBattleSetup -> PlayerTeamSetup -> CombatPower`
 
-Implement only if the nested MemoryPack path can be verified from IL2CPP/schema evidence.
+Fallback:
+small pre-battle numeric ROI, but only after live calibration and repeated parity checks.
 
-If schema is not yet sufficiently verified:
-- keep the passive A/B/C probe
-- add a tiny numeric ROI fallback interface for manual/live validation only
-- do not use broad OCR
-- do not invent offsets
+## Required A/B/C experiment
 
-Required live experiment:
-A. Arena list
-B. click Fight on one opponent, reach formation
-C. back out without starting battle
+A. Open Arena opponent list and let diagnostics observe the baseline.
+B. Press Fight on any opponent so the formation screen opens. Do NOT start the battle.
+C. Return/back to the Arena list.
 
-Record:
-- BattleModel digest/version A/B/C
-- ArenaModel digest/version A/B/C
-- LastMetaBattleSetup null/non-null
-- structured own CombatPower if available
-- visible UI Team Power for comparison
-- whether B -> C preserves or clears setup
+Capture/record:
+- PlayerBattleModel digest/version at A/B/C
+- PlayerArenaModel digest/version at A/B/C
+- LastMetaBattleSetup present/null and digest if available
+- visible own Team Power on the formation screen
+- if tiny ROI diagnostic is enabled for the test, its raw numeric result/confidence
+- whether B -> C preserves or clears the Battle setup
 
-## Part B — own-power provenance model
+## Acceptance
 
-Represent own power with provenance:
-- STRUCTURED_LAST_META_BATTLE_SETUP
-- EXACT_LOCAL_CALCULATOR
-- PREBATTLE_NUMERIC_ROI
-- UNKNOWN
+Best case:
+- a structured CombatPower value appears at B
+- it exactly equals the UI Team Power
+- repeated tests remain equal
 
-Every value must carry:
-- numeric value
-- source/provenance
-- observed_at
-- source digest/version if structured
-- confidence / exactness flag
+If structured value does not materialize:
+- calibrate the tiny numeric ROI
+- validate it across multiple formation openings
+- keep provenance PREBATTLE_NUMERIC_ROI until proven exact enough for policy
 
-Approximate values are not allowed for autonomous matchup decisions.
+Do not:
+- start a battle
+- spend Arena tokens
+- refresh with Gems
+- change formation
+- broaden OCR
 
-## Part C — first opponent ranking policy
-
-Use only verified fields:
-- opponent CombatPower
-- own Team Power
-- opponent ArenaPoints
-- optional previous result only if already verified
-
-Initial deterministic rank components:
-- power_ratio = opponent_power / own_power
-- ArenaPoints as bounded secondary signal
-- stable tie-break by Player-ID
-
-Do NOT hardcode a “win guaranteed below X%” rule.
-
-Config should support:
-- max_power_ratio
-- prefer_lower_power
-- prefer_higher/lower ArenaPoints policy if desired
-- minimum acceptable candidates
-
-If own power is UNKNOWN:
-- ranking may be diagnostic only
-- no target may be authorized for autonomous fight start
-
-## Part D — target selection object
-
-Produce a structured selected-opponent candidate containing:
-- Player-ID
-- name
-- level
-- ArenaPoints
-- CombatPower
-- own power
-- power ratio
-- rank components
-- arena source fingerprint/version
-- scoring policy version
-
-Selection becomes invalid immediately when:
-- opponent-set fingerprint changes
-- own-power provenance/version changes
-- Arena source becomes stale
-- scoring policy changes
-
-## Part E — visual navigation contract
-
-Do not assume structured opponent order equals visible order.
-
-Prepare a target-location contract:
-- selected opponent identity is semantic
-- visual traversal locates/validates the corresponding card later
-- no cached coordinate survives Arena refresh
-
-No automatic click-to-fight in this package unless explicitly running the manual own-power probe.
-
-## Tests
-
-At minimum:
-1. own power structured provenance object
-2. unknown own power blocks autonomous ranking authorization
-3. exact own power allows deterministic ranking
-4. lower power_ratio ranks ahead under configured policy
-5. tie-break deterministic by Player-ID
-6. ArenaPoints secondary component bounded
-7. candidate invalidated on opponent-set fingerprint change
-8. candidate invalidated on own-power source/version change
-9. stale Arena source blocks selection
-10. no battle-start action authorized
-11. passive probe never presses Start Battle
-12. existing 289+ suite remains green
-
-## Completion
-
-Run full pytest, push to main, verify Windows CI and report:
-- commit SHA
-- total tests
-- Actions run/result
-- own-power source status
-- ranking formula/config
-- candidate invalidation rules
-- remaining live-client requirements
+After the live probe, report the captured diagnostics and exact UI Team Power number. Do not guess missing fields.
