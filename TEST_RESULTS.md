@@ -86,3 +86,13 @@ Windows run 43642110801, commit ca2dc5bdc3251b3a8b05724ef893a90d7093e08a: pytest
 ## Live AccountState foundation
 
 Synthetic observer tests for refresh, invalidation, corrupt/missing files, freshness, immutability and throttling. CI pending. No real Windows client available; no game files written. Existing CV flows remain separate from future account-driven goal eligibility.
+
+
+### Live AccountState CI verification
+
+- commit: `371ab08015cb0bd9ec3e2a3ca4723a187133e80f`
+- workflow run: `43642665870`
+- result: `179 passed, 1 warning in 0.39s`
+- conclusion: SUCCESS
+
+ANALYSER review note: CI is green, but current post-input invalidation is intentionally conservative to the point of being operationally harmful. It marks all tracked aggregates awaiting_change after any real input. The next live-runtime package must replace this with action-scoped invalidation and verification expectations.
