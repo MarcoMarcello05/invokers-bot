@@ -1,6 +1,11 @@
 {
   "window":{"title_contains":"Invokers"},
-  "runtime":{"fps":4,"stable_frames":2,"post_action_delay":0.9,"unknown_dump_after":8},
+  "runtime":{
+    "fps":30,
+    "capture_fps":60,
+    "stable_frames":2,
+    "unknown_dump_after":8
+  },
   "safety":{"allow_purchase_actions":false},
   "states":{
     "main":{"template":"assets/states/main.png","threshold":0.88,"scales":[0.9,1.0,1.1]},
@@ -12,12 +17,12 @@
     "popup":{"template":"assets/states/popup.png","threshold":0.90,"scales":[0.9,1.0,1.1]}
   },
   "flows":{
-    "main":{"actions":[{"type":"click_template","template":"assets/targets/arena_button.png","threshold":0.88}]},
-    "arena_list":{"actions":[{"type":"click_template","template":"assets/targets/fight_button.png","threshold":0.88}]},
-    "formation":{"actions":[{"type":"click_template","template":"assets/targets/start_battle_button.png","threshold":0.88}]},
-    "battle":{"actions":[{"type":"wait","seconds":2.0,"recapture":false}]},
-    "victory":{"actions":[{"type":"click_template","template":"assets/targets/continue_button.png","threshold":0.88}]},
-    "defeat":{"actions":[{"type":"click_template","template":"assets/targets/continue_button.png","threshold":0.88}]},
-    "popup":{"actions":[{"type":"click_template","template":"assets/targets/close_popup.png","threshold":0.90}]}
+    "main":{"actions":[{"type":"click_template","template":"assets/targets/arena_button.png","threshold":0.88,"expect":["arena_list"],"transition_timeout":1.5}]},
+    "arena_list":{"actions":[{"type":"click_template","template":"assets/targets/fight_button.png","threshold":0.88,"expect":["formation"],"transition_timeout":1.5}]},
+    "formation":{"actions":[{"type":"click_template","template":"assets/targets/start_battle_button.png","threshold":0.88,"expect":["battle"],"transition_timeout":2.0}]},
+    "battle":{"actions":[{"type":"wait","seconds":0.05,"wait_for_transition":false}]},
+    "victory":{"actions":[{"type":"click_template","template":"assets/targets/continue_button.png","threshold":0.88,"transition_timeout":1.5}]},
+    "defeat":{"actions":[{"type":"click_template","template":"assets/targets/continue_button.png","threshold":0.88,"transition_timeout":1.5}]},
+    "popup":{"actions":[{"type":"click_template","template":"assets/targets/close_popup.png","threshold":0.90,"transition_timeout":1.0}]}
   }
 }
