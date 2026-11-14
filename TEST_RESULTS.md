@@ -155,3 +155,7 @@ ANALYSER review confirms:
 ## ARENA-LIVE-003
 
 Synthetic opponent field, malformed identity/power, fingerprint, cache invalidation and passive probe tests. Windows CI pending. No game input or raw snapshots used.
+
+## ARENA-LIVE-003 fixture repair
+
+Original run 43645108504 failed (275 passed, 3 failed, 1 warning). The fixture used raw unsigned single-byte member sizes instead of signed MemoryPack VarInt. Upstream reference: https://github.com/Cysharp/MemoryPack/blob/main/src/MemoryPack.Core/MemoryPackReaderWriter.VarInt.cs (WriteVarInt(int), ReadVarIntInt32). Reader unchanged. Independent literal wire tests and nested size boundary regressions added; real current client snapshot validation remains pending. New Windows CI pending.

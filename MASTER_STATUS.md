@@ -298,3 +298,7 @@ Engineering rule: scrolling uses generic SendInput wheel support, visual ROI cha
 ## ARENA-LIVE-003 implementation
 
 - TEST AUSSTEHEND: verified opponent fields, exact Int32 power, 16-byte identity, semantic fingerprint and conservative cache invalidation; passive A/B/C probe. Actual own power nested slot and real client parity remain unverified. CI pending.
+
+## ARENA-LIVE-003 fixture repair
+
+Original CI run 43645108504: 275 passed, 3 failed, 1 warning. Root fixture encoded slot 12 length 138 as a single byte 0x8a (signed -118); production reader correctly rejected it. Fixture now follows upstream WriteVarInt(int) for all object and envelope lengths. No production parser or slot map changed. Added literal wire vectors, boundary cases, invalid original fixture regression and large nested objects. CI pending.
