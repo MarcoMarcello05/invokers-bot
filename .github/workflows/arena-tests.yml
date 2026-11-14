@@ -1,0 +1,36 @@
+name: Arena Windows tests
+on:
+  push:
+    paths:
+      - 'InvokersBot_CODEX_HANDOFF/**'
+      - '.github/workflows/arena-tests.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  tests:
+    runs-on: windows-2022
+    timeout-minutes: 20
+    defaults:
+      run:
+        working-directory: InvokersBot_CODEX_HANDOFF
+        shell: pwsh
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Install existing dependencies
+        run: python -m pip install -r requirements-arena.txt
+      - name: Full regression suite
+        run: python -m unittest discover -s tests -v
+      - name: Offline arena simulation
+        run: |
+          python src/arena_runner.py --simulate --cycles 2 --output-dir "$env:RUNNER_TEMP/arena-ci"
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          $report = Get-ChildItem "$env:RUNNER_TEMP/arena-ci" -Recurse -Filter report.json | Select-Object -First 1
+          if (-not $report) { throw 'Simulation report missing' }
+          $state = Get-Content $report.FullName -Raw | ConvertFrom-Json
+          if ($state.status -ne 'COMPLETED' -or $state.completed_cycles -ne 2 -or $state.mode -ne 'simulation') { throw 'Simulation contract failed' }
