@@ -53,7 +53,7 @@ Rules:
 
 ## D. Quests / rewards / progression
 
-- [ ] QUEST-001 | OFFEN | Progress Quests inspect
+- [ ] QUEST-001 | IN ANALYSE | Progress Quests inspect
 - [ ] QUEST-002 | OFFEN | Progress Quest GO-navigation
 - [ ] QUEST-003 | OFFEN | Progress Quest completion/reward claim
 - [ ] QUEST-004 | OFFEN | Daily Quests
@@ -155,7 +155,7 @@ Rules:
 
 ## K. Invoker management
 
-- [ ] INV-001 | OFFEN | Collection/index inspection
+- [ ] INV-001 | IN ANALYSE | Collection/index inspection
 - [ ] INV-002 | OFFEN | Summon Invokers with Stars
 - [ ] INV-003 | OFFEN | Detect new/duplicate Invokers
 - [ ] INV-004 | OFFEN | Rarity/faction/element/class/tag model
@@ -174,7 +174,7 @@ Rules:
 
 ## L. Titan management
 
-- [ ] TITAN-001 | OFFEN | Summon Titans with Orbs
+- [ ] TITAN-001 | IN ANALYSE | Summon Titans with Orbs
 - [ ] TITAN-002 | OFFEN | Detect duplicates/rarity/faction
 - [ ] TITAN-003 | OFFEN | Level Titans
 - [ ] TITAN-004 | OFFEN | Ascend Titans
@@ -187,7 +187,7 @@ Rules:
 
 ## M. Relics
 
-- [ ] RELIC-001 | OFFEN | Inventory inspection
+- [ ] RELIC-001 | IN ANALYSE | Inventory inspection
 - [ ] RELIC-002 | OFFEN | Evaluate rarity/rank/type/stats/set
 - [ ] RELIC-003 | OFFEN | Equip / replace
 - [ ] RELIC-004 | OFFEN | Auto Equip
