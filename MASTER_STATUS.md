@@ -34,3 +34,12 @@ Never mark a major capability as complete only because code exists. A checklist 
 ## Immediate next objective
 
 Work directly from `MASTER_CHECKLIST.md`, starting with the universal core/data/navigation foundations required by many later systems.
+
+
+## Current data-analysis package
+
+- IN ANALYSE: DATA-002 fresh local data inventory.
+- IN ANALYSE: DATA-003 structured snapshot-reader research.
+- Fresh snapshot findings are documented in `DATA_SNAPSHOT_2026-11-14.md`.
+- Project role split and research-first rule are documented in `PROJECT_WORKFLOW.md`.
+- No new production coding task is issued until the model/schema analysis is ready for a precise DEVELOPER prompt.
