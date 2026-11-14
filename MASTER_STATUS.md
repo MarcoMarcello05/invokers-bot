@@ -208,3 +208,15 @@ Work directly from `MASTER_CHECKLIST.md`, starting with the universal core/data/
 - VERIFIED: navigation-only actions preserve unrelated account sources.
 - VERIFIED: all four verification modes, corrupt-source failure handling, scoped invalidation, baseline checks, cancellation and legacy compatibility.
 - OPEN LIVE ASSUMPTION: Arena start currently requires a PlayerModel digest change within 5s. Real client persistence timing and the precise Arena-token semantic delta are not yet measured.
+
+
+## ResourcePlanner / Arena policy milestone
+
+- ABGESCHLOSSEN: ResourcePlanner reserve/spend policy defined.
+- ABGESCHLOSSEN: initial live Arena Goal policy defined.
+- ENTSCHEIDUNG: unknown resource caps/costs are never guessed.
+- ENTSCHEIDUNG: Arena overflow pressure is disabled until a cap is verified/configured.
+- ENTSCHEIDUNG: visual battle start followed by delayed snapshot persistence must reconcile before any retry.
+- Details:
+  - `RESOURCE_PLANNER_POLICY.md`
+  - `ARENA_GOAL_POLICY.md`
