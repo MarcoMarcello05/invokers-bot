@@ -135,3 +135,19 @@ ANALYSER review:
 ## ARENA-LIVE-002
 
 Synthetic arena root, malformed members, opaque entry hashes, observer, wheel contract and traversal termination tests added. CI pending. No client or private data exercised.
+
+
+### ARENA-LIVE-002 CI verification
+
+- commit: `84eadeb436e707c3e9157252fc6b3f66c5fa009c`
+- Actions run: `43644672629`
+- result: `269 passed, 1 warning in 0.66s`
+- conclusion: SUCCESS
+
+ANALYSER review confirms:
+- bounded traversal safety conditions
+- STALE cancellation on Arena source change
+- F12/UNKNOWN/unexpected-screen exits
+- visual overlap de-duplication
+- no AccountState invalidation from wheel scrolling
+- live calibration intentionally disabled by default
