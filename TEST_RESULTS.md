@@ -210,3 +210,11 @@ Synthetic identity/ambiguity, malformed entry, immutable baseline, stale pre-sta
 ## ARENA-LIVE-005C
 
 Synthetic pressure, budget, provenance, candidate, immutable authorization, revalidation and exact spend tests. CI pending; no client input.
+
+
+### ARENA-LIVE-005C acceptance
+
+- commit: `6dce5d68021a765cef2406a7b9562a21229b8ac9`
+- Actions run: `43646793086`
+- result: `342 passed, 1 warning in 0.90s`
+- conclusion: SUCCESS
