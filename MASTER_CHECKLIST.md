@@ -29,7 +29,7 @@ Rules:
 
 - [ ] DATA-001 | OFFEN | Fresh global UI screenshot inventory
 - [ ] DATA-002 | IN ANALYSE | Fresh local Invokers data inventory
-- [ ] DATA-003 | BEREIT ZUR ENTWICKLUNG | Structured snapshot readers: outer MemoryPack aggregate envelope fully specified; inner model member-order mapping continues
+- [ ] DATA-003 | BEREIT ZUR ENTWICKLUNG | Structured snapshot readers: phase 1 envelope ready; PlayerModel/Resources phase 2 schema now verified
 - [ ] DATA-004 | OFFEN | Action/event file watchers
 - [ ] DATA-005 | IN ENTWICKLUNG | Window/client/DPI detection
 - [ ] DATA-006 | IN ENTWICKLUNG | DXcam/MSS capture
