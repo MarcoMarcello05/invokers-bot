@@ -7,6 +7,7 @@ from struct import unpack
 from types import MappingProxyType
 from typing import Mapping
 
+from .arena_stats import ArenaBattleStats, parse_arena_stats
 from .arena_opponent import ArenaOpponent, parse_opponent, opponent_set_fingerprint
 from .memorypack_slots import read_member_spans, read_member_spans_at
 from .snapshot_envelope import AggregateSnapshot, SnapshotFormatError, _datetime_utc, parse_snapshot, read_snapshot
@@ -48,6 +49,7 @@ class ArenaState:
     opaque_slots: Mapping[int, bytes]
     current_opponents: tuple[ArenaOpponent, ...]
     opponent_set_fingerprint: str
+    stats: ArenaBattleStats
 
 
 def _scalar(data, fmt, width):
@@ -89,7 +91,7 @@ def parse_arena_model(snapshot: AggregateSnapshot) -> ArenaState:
     s = read_member_spans(snapshot.data, minimum_count=18)
     week, week_ticks = _datetime_utc(_scalar(s[5], "<Q", 8))
     refresh, refresh_ticks = _datetime_utc(_scalar(s[7], "<Q", 8))
-    read_member_spans(s[10], minimum_count=18)
+    stats = parse_arena_stats(s[10])
     opponents = _collection(s[12], objects=True)
     semantic = tuple(parse_opponent(entry) for entry in opponents.entries)
     fingerprint = opponent_set_fingerprint(semantic)
@@ -98,7 +100,7 @@ def parse_arena_model(snapshot: AggregateSnapshot) -> ArenaState:
         _scalar(s[8], "<i", 4), _collection(s[9]), bytes(s[10]),
         opponents, _nullable_object(s[14]),
         _collection(s[15], objects=True), _collection(s[16]), _nullable_object(s[17]),
-        MappingProxyType({i: bytes(s[i]) for i in (2,3,4,6,11,13,*range(18,len(s)))}), semantic, fingerprint)
+        MappingProxyType({i: bytes(s[i]) for i in (2,3,4,6,11,13,*range(18,len(s)))}), semantic, fingerprint, stats)
 
 
 def parse_arena_snapshot(data):

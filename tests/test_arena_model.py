@@ -28,7 +28,7 @@ def root():
     s[5]=s[7]=STAMP
     s[8]=pack("<i",12)
     s[9]=s[16]=bytes(4)
-    s[10]=obj([b""]*18)
+    s[10]=obj([b""]*4+[bytes(4)]*14)
     s[12]=pack("<i",2)+opponent("same",1)+opponent("same",2)
     s[14]=s[17]=b"\xff"
     s[15]=pack("<i",1)+obj([b"finished"])

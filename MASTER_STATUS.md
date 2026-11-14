@@ -338,3 +338,7 @@ Original CI run 43645108504: 275 passed, 3 failed, 1 warning. Root fixture encod
 - NEXT PARALLEL WORK: ARENA-LIVE-005A ArenaBattleStats + post-battle result verification core.
 - Purpose: prepare structured win/loss/result/reward verification without starting any battle.
 - Current official Arena behavior confirms Offense wins affect Arena Points and award Arena Coins/Trophies; result-screen behavior exists.
+
+## ARENA-LIVE-005A implementation
+
+TEST AUSSTEHEND: ArenaStats captured-profile parser and offline reconciliation core; actual offensive transition and source timestamp labels still require live validation. No changes to own-power rules or battle-start authorization. CI pending.

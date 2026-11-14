@@ -181,3 +181,7 @@ Synthetic tests cover provenance gates, deterministic ratio and tie-break, polic
 - result: `304 passed, 1 warning in 0.69s`
 - conclusion: SUCCESS
 - ranking remains diagnostic only until own Team Power is exact + validated on the real client.
+
+## ARENA-LIVE-005A
+
+Synthetic historical-profile stats and malformed wire, single-channel, outcome/conflict, defense/reset, exact spend, delayed/timeout and no-replay tests. Full Windows CI pending. No live fights performed.
