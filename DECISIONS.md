@@ -26,3 +26,16 @@ Future normalized AccountState/WorldState facts should carry source/provenance a
 
 ### D018 — Structured state decides; vision navigates/verifies
 Where a confirmed local structured source exists, it is the preferred source for ownership, progress, resources and candidate selection. Vision remains authoritative for currently visible UI state, navigation targets, blocking dialogs and transition verification. OCR is a gap-filler, not the primary account database.
+
+
+### D019 — Hybrid planner instead of full GOAP for the current phase
+The bot uses hard eligibility/safety gates first, deterministic utility scoring second, and registered Task/Skill plans for execution. Reactive replanning occurs when prerequisites change, facts become stale, actions fail or higher-priority events appear. A generic GOAP search planner is intentionally deferred until cross-domain quest routing demonstrates a real need for it.
+
+### D020 — Safety gates are non-compensatory
+Risk permission, resource reserve policy, freshness, capability availability and evidence consistency are hard prerequisites. A larger expected reward or progression value can never compensate for a failed safety gate.
+
+### D021 — Deterministic utility selection with hysteresis
+Eligible Goals are ranked by bounded utility components including priority, deadline urgency, progression/reward value, quest/event synergy, resource-overflow pressure and bounded starvation age, minus time/resource/navigation/failure/risk costs. The active valid Goal receives a modest continuation bonus to prevent oscillation; safety and urgent expiry conditions may preempt immediately.
+
+### D022 — Parser layer is isolated from planner semantics
+Low-level MemoryPack parsers expose immutable decoded models. AccountState adapters attach provenance, source version, freshness and semantic names. Goal code never depends on binary slot numbers, file paths or MemoryPack decoding.
