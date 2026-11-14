@@ -78,3 +78,11 @@ The remaining warning is the existing pytest parametrize deprecation in the enve
 Synthetic tests cover empty/multiple inventories, identity, unknown enums, nullable ownership, booleans, opaque bonuses, malformed counts/spans/scalars, additive slots, trailing bytes, read-only files and inventory-ID joins. Command: `pytest -q`. CI outcome pending. No real snapshot execution claimed; no private fixtures committed.
 
 Sources: RELICS_MEMORYPACK_MAP_0.62.1621.md; archived memorypack.py Nullable<int> reader corroborates the native 8-byte layout (flag at byte 0, value at byte 4). Bonus and Randoms contents are not validated internally, only bounded by the outer slot lengths. Additional root/relic slots skipped by length.
+
+### Phase 4 verification
+
+Windows run 43642110801, commit ca2dc5bdc3251b3a8b05724ef893a90d7093e08a: pytest -q, 174 passed, 1 warning in 0.47s (verified job logs).
+
+## Live AccountState foundation
+
+Synthetic observer tests for refresh, invalidation, corrupt/missing files, freshness, immutability and throttling. CI pending. No real Windows client available; no game files written. Existing CV flows remain separate from future account-driven goal eligibility.

@@ -166,3 +166,8 @@ Work directly from `MASTER_CHECKLIST.md`, starting with the universal core/data/
 - Details:
   - `INVOKERS_GOAL_CATALOG.md`
   - `PLANNER_DOMAIN_SCENARIOS.md`
+
+## Phase 4 CI and live AccountState foundation
+
+- ABGESCHLOSSEN: Phase 4 parser CI run 43642110801, 174 passed, 1 warning; commit ca2dc5bdc3251b3a8b05724ef893a90d7093e08a.
+- TEST AUSSTEHEND: optional live AccountObserver and WorldState bridge; polling plus post-input refresh. Planner integration and real client verification remain open.

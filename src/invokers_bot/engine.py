@@ -4,6 +4,8 @@ from pathlib import Path
 
 import cv2
 
+from .account_state import AccountObserver
+from .world_state import WorldState
 from .capture import ScreenCapture
 from .input_win import InputController, f12_pressed
 from .models import GameState
@@ -11,7 +13,7 @@ from .vision import Vision
 from .window import GameWindow
 
 class BotEngine:
-    def __init__(self, config, live):
+    def __init__(self, config, live, snapshot_dir=None):
         self.config = config
         self.live = live
         self.window = GameWindow.find(config.window_title_contains)
@@ -25,6 +27,12 @@ class BotEngine:
         self.stable_count = 0
         self.handled_state = GameState.UNKNOWN
         self.unknown_count = 0
+        self.world_state = WorldState()
+        self.account_observer = (AccountObserver(snapshot_dir) if snapshot_dir else None)
+
+    def _refresh_account(self, *, force=False):
+        if self.account_observer is not None:
+            self.world_state.facts['account'] = self.account_observer.refresh(force=force)
 
     def _observe(self):
         if not self.window.is_alive():
@@ -32,7 +40,12 @@ class BotEngine:
         rect = self.window.client_rect()
         frame = self.capture.grab(rect)
         match = self.vision.classify(frame)
-        return rect, frame, match, match.state if match else GameState.UNKNOWN
+        state = match.state if match else GameState.UNKNOWN
+        self.world_state.screen = state
+        self.world_state.confidence = match.score if match else 0.0
+        self.world_state.observed_at = time.time()
+        self._refresh_account()
+        return rect, frame, match, state
 
     def _stable(self, state):
         if state == self.last_state:
@@ -112,14 +125,28 @@ class BotEngine:
 
         print(f"[state] {state.value} score={match.score if match else 0:.3f}")
         for action in actions:
+            if f12_pressed():
+                break
             acted = self._perform(action, rect, frame)
             if not acted:
                 continue
 
-            if action.get("wait_for_transition", action.get("recapture", True)):
+            real_input = self.live and action.get('type', 'wait') in ('click_template', 'click_norm', 'key')
+            if real_input and self.account_observer is not None:
+                self.account_observer.invalidate()
+                self._refresh_account(force=True)
+            if real_input or action.get('wait_for_transition', action.get('recapture', True)):
                 result = self._wait_for_transition(state, action)
-                if result is not None:
-                    rect, frame, _match, _state = result
+                if real_input:
+                    self._refresh_account(force=True)
+                if result is None or f12_pressed():
+                    break
+                rect, frame, _match, observed = result
+                if observed == GameState.UNKNOWN or observed != state:
+                    break
+                if real_input:
+                    # Return to the main observation loop after each real input.
+                    break
 
     def run(self):
         print(json.dumps({
