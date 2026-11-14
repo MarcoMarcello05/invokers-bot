@@ -39,3 +39,10 @@ Eligible Goals are ranked by bounded utility components including priority, dead
 
 ### D022 — Parser layer is isolated from planner semantics
 Low-level MemoryPack parsers expose immutable decoded models. AccountState adapters attach provenance, source version, freshness and semantic names. Goal code never depends on binary slot numbers, file paths or MemoryPack decoding.
+
+
+### D023 — Overlapping objectives collapse into one executable domain Goal
+If one game action advances several objectives (for example Arena token spending + daily quest + event progress), the planner should create one executable domain Goal and add synergy value from the dependent objectives. It should not create multiple competing loops for the same action.
+
+### D024 — Broad priority tiers bound preemption, utility decides within the band
+Safety/recovery outranks expiring/claim work, which outranks ordinary active-session/progression/development/maintenance work. Utility scoring chooses among eligible Goals within those broad bands. This prevents a small numeric score difference from causing nonsensical preemption across fundamentally different urgency classes.
