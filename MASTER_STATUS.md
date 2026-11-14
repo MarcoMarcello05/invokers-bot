@@ -254,3 +254,14 @@ Arena will now be completed before Campaign:
 9. recovery/circuit + real-client validation
 
 Engineering rule: scrolling uses generic SendInput wheel support, visual ROI change verification, de-duplication, end-of-list detection and hard safety bounds.
+
+
+## Arena own Team Power source analysis
+
+- ABGESCHLOSSEN: opponent Team Power confirmed as structured Arena data target.
+- ABGESCHLOSSEN: own-power source candidates ranked.
+- PRIMARY CANDIDATE: PlayerBattleModel.LastMetaBattleSetup -> PlayerTeamSetup -> CombatPower.
+- ALTERNATIVE: exact local calculation from AsyncPvpPreset + Heroes + Relics + Accessories + Arena/formation inputs, but formula parity is not yet proven.
+- FALLBACK: tiny pre-battle Team Power OCR/number ROI.
+- REQUIRED LIVE TEST BEFORE OPPONENT SCORING: snapshot diff before/after opening Arena formation without starting battle.
+- Details: `ARENA_OWN_POWER_SOURCE_ANALYSIS.md`
