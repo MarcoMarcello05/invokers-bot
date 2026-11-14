@@ -90,3 +90,9 @@ Work directly from `MASTER_CHECKLIST.md`, starting with the universal core/data/
   - `RELICS_MEMORYPACK_MAP_0.62.1621.md`
   - `QUESTS_MEMORYPACK_MAP_0.62.1621.md`
   - `ANIMAS_MEMORYPACK_MAP_0.62.1621.md`
+
+## DATA-003 Phase 2 implementation
+
+- TEST AUSSTEHEND: selected PlayerModel scalars and all three Resources dictionaries implemented using bounded VersionTolerant slot spans and the existing envelope parser.
+- Full 181-name ResourceTypeId mapping ported from the verified archive; integer keys remain canonical.
+- No other model decoding or game writes. Windows CI verification pending.

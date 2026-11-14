@@ -36,3 +36,9 @@ GitHub Actions independently executed the exact DATA-003 Phase 1 implementation 
 - overall conclusion: SUCCESS
 
 Therefore the earlier developer-session DNS block is no longer a project blocker. DATA-003 Phase 1 is verified by repository CI.
+
+## DATA-003 Phase 2
+
+Added synthetic pytest coverage for selected scalars, reserved and additive slots, all three dictionaries, unknown IDs, malformed headers, lengths, counts, duplicates, trailing bytes and file read-only behavior. Full suite command: `python -m pytest -q`. Local execution and Windows CI outcome not yet verified. No private snapshots committed.
+
+Schema references: PLAYERMODEL_RESOURCES_MAP_0.62.1621.md and RESOURCE_TYPE_ID_0.62.1621.md; upstream MemoryPack collection formatter: https://github.com/Cysharp/MemoryPack/blob/main/src/MemoryPack.Core/Formatters/CollectionFormatters.cs . Timestamp conversion reuses Phase 1 UTC policy and preserves ticks. Revision fields interpreted as signed Int64; reserved historical bytes skipped, additive slots allowed, null dictionaries rejected rather than treated as empty.
