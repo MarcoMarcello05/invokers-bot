@@ -21,7 +21,7 @@ Rules:
 - [ ] CORE-005 | OFFEN | Persistent run memory
 - [ ] CORE-006 | OFFEN | Navigation graph
 - [ ] CORE-007 | IN ANALYSE | Recovery engine: retry/timeout/circuit-break policy specified
-- [ ] CORE-008 | IN ANALYSE | Resource planner: reserve/budget contract specified
+- [ ] CORE-008 | BEREIT ZUR ENTWICKLUNG | Resource planner: reserves, caps, event-save, spend authorization and semantic verification specified
 - [ ] CORE-009 | IN ANALYSE | Irreversible-action policy: risk classes and hard gates specified
 - [ ] CORE-010 | IN ENTWICKLUNG | Event-aware priority engine: first AccountState-driven replanning slice next
 
@@ -85,9 +85,9 @@ Rules:
 
 - [ ] ARENA-001 | IN ANALYSE | Detect Arena screen
 - [ ] ARENA-002 | OFFEN | Opponent list parsing
-- [ ] ARENA-003 | OFFEN | Opponent scoring
+- [ ] ARENA-003 | IN ANALYSE | Opponent scoring deferred until live PlayerArenaModel/opponent source exists
 - [ ] ARENA-004 | OFFEN | Team/formation selection
-- [ ] ARENA-005 | OFFEN | Arena token awareness
+- [ ] ARENA-005 | IN ANALYSE | Arena token awareness: live ResourceTypeId source + configurable eligibility policy specified
 - [ ] ARENA-006 | OFFEN | Start battle
 - [ ] ARENA-007 | OFFEN | Battle/result verification
 - [ ] ARENA-008 | OFFEN | Win/loss handling
