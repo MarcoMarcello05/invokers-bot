@@ -222,3 +222,13 @@ Synthetic pressure, budget, provenance, candidate, immutable authorization, reva
 ## ARENA-LIVE-006A
 
 Synthetic UI glyphs, strict German numeric normalization, geometry/state/age rejection, planning authorization and sanitized measured victory delta regression. No raw dumps or screenshots committed. CI pending. Real glyph parity and loss transition untested.
+
+
+### ARENA-LIVE-006A first CI attempt
+
+- commit: `d0432a49479578afa0ac7d1847cb0544044c90bf`
+- Actions run: `43649926909`
+- result: `3 failed, 356 passed, 1 warning in 1.11s`
+- conclusion: FAILURE
+- failures: legacy goal-eligibility expectations for predicate/cap/cost
+- status: fix required, package not accepted
