@@ -112,3 +112,16 @@ Work directly from `MASTER_CHECKLIST.md`, starting with the universal core/data/
   - `BATTLE_MULTIBATTLE_MAP_0.62.1621.md`
   - `ACCESSORIES_MEMORYPACK_MAP_0.62.1621.md`
   - `ACCOUNTSTATE_SOURCE_MATRIX.md`
+
+
+## Additional structured-domain milestone
+
+- ABGESCHLOSSEN: PlayerClanModel top-level layout and PlayerClanBoss2State mapped.
+- ABGESCHLOSSEN: PlayerGlobalEventsModel top-level layout mapped; nested tournament union remains future analysis.
+- ABGESCHLOSSEN: PlayerShopModel current 19-slot layout mapped, including historical gaps and current Purchases/Offers dictionaries.
+- IN ANALYSE: InboxItem exact inner layout awaits a non-empty inbox snapshot; top-level PlayerInboxModel is mapped.
+- New schema documents:
+  - `CLAN_MEMORYPACK_MAP_0.62.1621.md`
+  - `GLOBAL_EVENTS_MEMORYPACK_MAP_0.62.1621.md`
+  - `INBOX_MEMORYPACK_MAP_0.62.1621.md`
+  - `SHOP_MEMORYPACK_MAP_0.62.1621.md`
