@@ -226,7 +226,7 @@ Work directly from `MASTER_CHECKLIST.md`, starting with the universal core/data/
 - TEST AUSSTEHEND: first AccountState-driven Arena eligibility and refresh goal; generic semantic resource predicates, decision trace and runtime goal gate implemented. CI pending. Real-client timing/cost/cap not verified.
 
 
-## LIVE-001B acceptance and domain pivot
+## LIVE-001B acceptance and Arena completion direction
 
 - ABGESCHLOSSEN: LIVE-001B AccountState-driven Goal eligibility + semantic resource verification.
 - commit: `6c12332548ff3c0e6d0d536fda7250156732f0ad`
@@ -235,4 +235,22 @@ Work directly from `MASTER_CHECKLIST.md`, starting with the universal core/data/
 - VERIFIED: blocked Goals do not send live input.
 - VERIFIED: Arena token semantic predicates distinguish real token deltas from unrelated PlayerModel changes.
 - VERIFIED: Goal domain logic remains outside BotEngine.
-- NEXT: pivot away from deeper Arena work. LIVE-002A = PlayerBattleModel + first Campaign Goal.
+- NEXT: complete Arena end-to-end before Campaign. ARENA-LIVE-002 = PlayerArenaModel + bounded scrollable opponent-list traversal.
+
+
+## Arena completion plan
+
+User confirmed that the Arena opponent list is vertically scrollable. Opponent discovery must therefore traverse beyond the first viewport.
+
+Arena will now be completed before Campaign:
+1. live PlayerArenaModel
+2. bounded scrollable opponent-list traversal
+3. ArenaOpponent semantic mapping
+4. opponent scoring
+5. target/formation selection
+6. battle start and token verification
+7. result/win/loss handling
+8. opponent refresh policy
+9. recovery/circuit + real-client validation
+
+Engineering rule: scrolling uses generic SendInput wheel support, visual ROI change verification, de-duplication, end-of-list detection and hard safety bounds.
