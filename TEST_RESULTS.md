@@ -168,3 +168,7 @@ Original run 43645108504 failed (275 passed, 3 failed, 1 warning). The fixture u
 - result: `289 passed, 1 warning in 0.99s`
 - conclusion: SUCCESS
 - fixture VarInt regression coverage added at 127/128/255/256/32767/32768 and nested large-object cases.
+
+## ARENA-LIVE-004
+
+Synthetic tests cover provenance gates, deterministic ratio and tie-break, policy bounds, stale source, cache invalidation and small ROI diagnostic contract. Full Windows CI pending. Live A/B/C and UI parity not executed.

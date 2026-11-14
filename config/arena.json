@@ -25,7 +25,11 @@
           ]
         ]
       }
-    ]
+    ],
+    "own_power_numeric_roi": {
+      "enabled": false,
+      "roi": null
+    }
   },
   "safety": {
     "allow_purchase_actions": false
@@ -231,6 +235,15 @@
       "cost": null,
       "max_age": 2,
       "allow_test_battle_start": false
+    },
+    "arena_ranking": {
+      "version": "arena-ranking-v1",
+      "max_power_ratio": 1,
+      "prefer_lower_power": true,
+      "points_preference": "higher",
+      "points_bound": 10000,
+      "minimum_candidates": 1,
+      "power_max_age": 15
     }
   }
 }

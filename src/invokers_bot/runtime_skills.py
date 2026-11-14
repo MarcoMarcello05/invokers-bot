@@ -2,6 +2,7 @@
 from .arena_skill import run_arena_traversal, discard_stale_inventory
 
 from .arena_refresh import update_arena
+from .arena_ranking import update_ranking
 
 SKILLS = {"arena_traversal": run_arena_traversal}
 
@@ -14,6 +15,9 @@ def invoke(engine, action, cancelled):
     return skill(engine, action, cancelled)
 
 
-def account_updated(facts, account):
+def account_updated(facts, account, raw=None):
     changed = update_arena(facts, account)
-    return discard_stale_inventory(facts, account) or changed
+    stale = discard_stale_inventory(facts, account)
+    if raw is not None:
+        update_ranking(facts,account,raw)
+    return stale or changed

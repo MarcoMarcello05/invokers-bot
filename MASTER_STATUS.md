@@ -312,3 +312,7 @@ Original CI run 43645108504: 275 passed, 3 failed, 1 warning. Root fixture encod
 - result: `289 passed, 1 warning in 0.99s`
 - original red run was caused by an invalid synthetic fixture member-length encoder; production reader/schema stayed unchanged.
 - NEXT: ARENA-LIVE-004 own Team Power provenance + first opponent ranking.
+
+## ARENA-LIVE-004 implementation
+
+- TEST AUSSTEHEND: diagnostic ranking with exact validated own-power contract, deterministic ratio/points/identity ordering, dependency and policy invalidation. Own power remains unknown in live runtime; nested Battle path unverified. Tiny ROI reader interface disabled by default. No battle start. CI pending.

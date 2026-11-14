@@ -39,7 +39,7 @@ class BotEngine:
         if self.account_observer is not None:
             state = self.account_observer.refresh(force=force, sources=sources, poll_now=poll_now)
             self.world_state.facts['account'] = state
-            if account_updated(self.world_state.facts, state):
+            if account_updated(self.world_state.facts, state, self.config.raw):
                 self.handled_state = GameState.UNKNOWN
             return state
         return None
