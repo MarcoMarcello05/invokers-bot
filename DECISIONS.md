@@ -46,3 +46,16 @@ If one game action advances several objectives (for example Arena token spending
 
 ### D024 — Broad priority tiers bound preemption, utility decides within the band
 Safety/recovery outranks expiring/claim work, which outranks ordinary active-session/progression/development/maintenance work. Utility scoring chooses among eligible Goals within those broad bands. This prevents a small numeric score difference from causing nonsensical preemption across fundamentally different urgency classes.
+
+
+### D025 — Action invalidation is scoped and separate from expected change
+A live input only invalidates the structured sources that may have become stale because of that action. This list is distinct from the sources whose changed content is required to prove success. Navigation-only actions invalidate no account aggregates.
+
+### D026 — Live action success is evidence-based
+State-changing actions must capture relevant pre-action evidence and evaluate explicit post-action visual and/or structured predicates. A file timestamp change alone is not success; an unchanged digest is not immediate failure before the configured save grace expires.
+
+### D027 — Verification can be inconclusive
+The runtime must distinguish SUCCESS, FAILURE, TIMEOUT, CANCELLED and INCONCLUSIVE. Visual success combined with delayed structured persistence must not be silently promoted to semantic success for high-risk account-changing operations.
+
+### D028 — Retries occur at Skill level after re-observation
+A failed live action is not mechanically clicked again. The Skill re-observes screen/account state, re-checks preconditions, and only then decides whether a bounded retry is safe. This prevents duplicate spends and double confirmations.
