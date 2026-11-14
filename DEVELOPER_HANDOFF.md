@@ -1,6 +1,6 @@
 # DEVELOPER HANDOFF
 
-## Current package: LIVE-002A — PlayerBattleModel + first Campaign Goal
+## Current package: ARENA-LIVE-002 — PlayerArenaModel + bounded scrollable opponent-list traversal
 
 Status: BEREIT ZUR ENTWICKLUNG
 
@@ -9,172 +9,223 @@ Read first:
 - MASTER_STATUS.md
 - MASTER_CHECKLIST.md
 - TEST_RESULTS.md
-- BATTLE_MULTIBATTLE_MAP_0.62.1621.md
-- ACCOUNTSTATE_PLANNER_CONTRACT.md
-- PLANNER_POLICY.md
-- INVOKERS_GOAL_CATALOG.md
+- ARENA_MEMORYPACK_MAP_0.62.1621.md
+- ARENA_GOAL_POLICY.md
+- RESOURCE_PLANNER_POLICY.md
 - ACTION_SOURCE_VERIFICATION_MATRIX.md
 - LIVE_SKILL_VERIFICATION_CONTRACT.md
-- RESOURCE_PLANNER_POLICY.md
-- current parser/account_state/goal code under src/invokers_bot
+- ACCOUNTSTATE_PLANNER_CONTRACT.md
+- current AccountState / Goal / Input / Vision code
 
 ## Verified baseline
 
 LIVE-001B:
 - commit `6c12332548ff3c0e6d0d536fda7250156732f0ad`
-- Windows CI run `43643490286`
+- CI run `43643490286`
 - `242 passed, 1 warning`
-- AccountState-driven Goal gating is working
-- semantic resource predicates are working
-- blocked Goals do not send input
+- AccountState-driven Arena opportunity gating works
+- semantic Arena-token verification infrastructure exists
+- fight start remains blocked by default unless explicit spend policy is configured
 
-Arena has served its purpose as the first vertical slice.
-Do NOT deepen Arena in this package.
+## Product direction
 
-## Goal
+Do NOT pivot to Campaign yet.
 
-Add the second autonomous domain: Campaign/Battle.
+Arena is now the first domain to be completed end-to-end before moving to the next domain.
 
-Implement the verified PlayerBattleModel top-level state and wire it into AccountState, then add the first Campaign eligibility Goal.
+User-confirmed UI behavior:
+- the Arena opponent list is vertically scrollable
+- opponents below the initial viewport must be discoverable
 
-This package is intentionally a vertical slice, not a full Battle subsystem.
+## Arena completion roadmap
 
-## Part A — PlayerBattleModel parser
+This package is stage 1 of completion:
 
-Use the existing envelope + VersionTolerant infrastructure.
+1. LIVE PlayerArenaModel source
+2. bounded opponent-list scrolling/traversal
+3. opponent observation inventory
 
-Follow `BATTLE_MULTIBATTLE_MAP_0.62.1621.md`.
+Following packages:
+4. verified ArenaOpponent semantic model
+5. opponent scoring/ranking
+6. target selection + formation
+7. battle start + token verification
+8. result/win/loss handling
+9. refresh-opponents logic
+10. circuit/recovery + real-client validation
+
+Do not skip directly to scoring before the opponent data model is verified.
+
+## Part A — PlayerArenaModel parser and AccountState source
+
+Implement the verified PlayerArenaModel top-level layout from `ARENA_MEMORYPACK_MAP_0.62.1621.md`.
 
 Requirements:
-- parse the verified top-level PlayerBattleModel slots
-- preserve reserved/unknown slots safely
-- expose immutable state
-- parse only nested structures whose layout is already verified
-- do not guess unknown nested schemas
-- keep parser read-only
-- unknown enum numeric values preserved
+- reuse existing envelope + VersionTolerant readers
+- add `arena` source to AccountObserver/AccountState
+- expose verified top-level fields only
+- preserve unknown/unverified nested fields opaque
+- no guessed ArenaOpponent member layout
+- numeric unknown enum values preserved
+- read-only snapshot access
 
-At minimum expose the fields needed for Campaign eligibility and later verification:
+Expose at minimum all top-level fields whose types/layout are verified in the map, including where verified:
 - version / updated_at
-- LevelStats / campaign progress representation where verified
-- claimed campaign reward state where verified
-- MultiBattleSession top-level state where verified
-- relevant timestamps / campaign progression fields documented as verified
+- points
+- opponents collection metadata/raw entries
+- finished opponents
+- current battle opponent
+- last opponents refresh time
+- HallBonuses
+- Stats
+- other verified root fields
 
-If a nested LevelStats entry layout is not fully verified, preserve raw/opaque member content and expose only safely proven metadata/counts. Do not invent fields.
+If opponent entry internals are not yet verified, keep individual entries opaque/bounded rather than inventing semantic fields.
 
-## Part B — AccountState integration
+## Part B — generic wheel-scroll input support
 
-Add `battle` as a live source:
-- PlayerBattleModel.dat
-- freshness/error/digest semantics identical to existing sources
-- scoped invalidation support
-- no coupling between parser and planner
+The Windows input layer currently supports click/key paths.
 
-AccountState should expose:
-- battle
-- existing player/heroes/relics unchanged
+Add a reusable vertical wheel action through the existing SendInput path.
 
-## Part C — first Campaign Goal
+Requirements:
+- generic action type, e.g. `scroll_wheel`
+- signed wheel delta
+- use Windows wheel semantics; WHEEL_DELTA = 120 per wheel notch
+- no obsolete mouse_event implementation
+- cursor must be positioned over a configured client-relative list ROI before wheel input if required by the game
+- action remains client/DPI aware
+- F12 abort still applies
 
-Implement a narrow planner-facing candidate, e.g.:
+Do not hardcode Arena into InputController.
 
-`G-PROG-001 CampaignOpportunity`
+## Part C — bounded Arena opponent-list traversal Skill
 
-Eligibility should use only facts currently proven available.
+Implement a reusable Arena opponent-list traversal mechanism.
 
-Required gates:
-- fresh PlayerModel
-- fresh PlayerBattleModel
-- Campaign navigation capability configured
-- no source error/awaiting_change
-- Energy resource available if Campaign action requires Energy
-- ResourcePlanner/policy approves any known configured spend
+Behavior:
 
-If exact Campaign Energy cost is not verified/configured:
-- navigation/inspection may be eligible
-- actual battle-start spend remains blocked
-- do not guess cost
+1. start from recognized `arena_list`
+2. observe current opponent-list ROI
+3. record visible opponent rows/cards
+4. scroll downward by a configured bounded amount
+5. wait for the list ROI to visually change/stabilize
+6. observe newly visible rows
+7. de-duplicate already seen entries
+8. repeat until end-of-list or safety limit
+9. optionally restore list to top if policy requires deterministic selection
 
-The Goal must remain outside BotEngine domain logic.
+### End-of-list detection
 
-## Part D — structured verification hooks
+Do NOT use a fixed arbitrary number of scrolls as the only stop condition.
 
-Prepare Campaign action verification using the existing generic semantic predicate architecture.
-
-Do not add Campaign-specific branches inside BotEngine.
-
-Useful first semantic capability, only if supported by verified Battle state:
-- a known campaign progress/claimed-state predicate
+Support at least:
+- ROI/content fingerprint unchanged after a scroll
 OR
-- exact/decreased Energy predicate when configured cost is known
+- no new opponent observations after repeated bounded scroll attempts
 
-If campaign progress semantics are not yet safely parsed, keep structured verification limited to resource deltas and visual state.
+Also enforce:
+- max scroll count
+- max traversal duration
 
-## Part E — Decision Trace
+If the UI contains a scrollbar/thumb and robust detection already exists, it may be used as supplemental evidence, not required.
 
-Campaign candidate must emit the same diagnostic quality as Arena:
-- candidate
-- eligible/blocked
-- battle source freshness/version/digest
-- player source freshness/version/digest
-- relevant Energy balance
-- configured cost/reserve
-- selected reason
+### De-duplication
 
-No raw snapshot bytes.
+Preferred identity order:
+1. structured Arena opponent identifier once ArenaOpponent schema is verified
+2. stable visual/card fingerprint
+3. bounded fallback row fingerprint for traversal only
+
+Do not use player display name alone as guaranteed identity.
+
+## Part D — opponent observation inventory
+
+This package does NOT need final opponent scoring yet.
+
+It must produce a diagnostic inventory for one traversal:
+- traversal id
+- viewport/page index
+- visible row/card regions
+- visual fingerprints
+- structured opponent entry count if available
+- number of unique observations
+- stop reason: END_UNCHANGED / NO_NEW_ROWS / MAX_SCROLLS / TIMEOUT / CANCELLED
+- screenshots/fingerprints for failures only, not raw private snapshot bytes in Git
+
+This inventory is the bridge to the ANALYSER mapping the nested ArenaOpponent structure.
+
+## Part E — Planner/Goal behavior
+
+Existing ArenaOpportunity remains the entry Goal.
+
+Before FightBestAcceptableOpponent exists:
+- Arena navigation may be selected when eligible
+- list traversal may run as a read/reversible R1 Skill
+- actual battle start stays blocked by existing spend policy unless explicitly configured
+
+Do not make list scrolling spend Arena tokens.
+
+## Verification
+
+A wheel-scroll is successful only if:
+- the opponent-list ROI changes and stabilizes
+OR
+- end-of-list is explicitly detected by unchanged content after the attempt
+
+UNKNOWN screen:
+- stop traversal
+- no additional input
+
+Unexpected screen transition:
+- cancel traversal and return control to recovery/replan
 
 ## Tests
 
 Add tests at minimum for:
 
-1. valid PlayerBattleModel root
-2. malformed/truncated Battle root
-3. unknown/reserved slots preserved
-4. AccountState battle source fresh
-5. corrupt Battle source blocks Campaign Goal
-6. missing Battle source -> refresh/block
-7. stale Battle source -> block
-8. fresh Player + Battle -> Campaign candidate eligible for navigation/inspection
-9. missing Energy -> blocked when action requires Energy
-10. unknown Campaign cost -> no battle-start authorization
-11. configured exact Energy cost -> ResourcePlanner budget enforced
-12. blocked Campaign Goal never sends input
-13. Decision Trace deterministic and contains no raw bytes
-14. existing Arena behavior remains regression-safe
-15. full existing suite passes
+1. valid PlayerArenaModel root
+2. malformed/truncated Arena root
+3. opaque opponent entry preservation
+4. AccountState exposes fresh arena source
+5. corrupt arena source becomes unavailable
+6. signed wheel delta/action contract
+7. scroll action does not mutate account sources
+8. one-page opponent list stops without unnecessary scroll
+9. multi-page list discovers new rows across scrolls
+10. duplicate visible rows are de-duplicated
+11. unchanged ROI after scroll -> end-of-list
+12. no-new-rows repeated -> end-of-list
+13. max-scroll safety bound
+14. timeout safety bound
+15. F12 cancellation
+16. UNKNOWN cancels/no further input
+17. unexpected screen transition cancels
+18. battle start remains blocked by default
+19. existing 242+ regression tests remain green
 
 ## Architecture constraints
 
-- Do not implement Quest parser in this package.
-- Do not deepen Arena.
-- Do not hardcode Campaign slot numbers in Goal code.
-- BotEngine stays domain-agnostic.
+- BotEngine remains domain-agnostic
+- scroll action belongs to generic input/action layer
+- Arena traversal belongs to Arena Skill/domain layer
+- no OCR unless a specific field cannot be obtained structurally/visually otherwise
+- no guessed ArenaOpponent schema
 - no snapshot writes
-- no process injection/packet manipulation
-- no invented Energy cost
-- UNKNOWN remains no-input
-- F12 remains immediate abort
+- no packet/process manipulation
+- no infinite scroll loops
 
-## Out of scope
+## Completion report
 
-- full campaign stage selection
-- team optimization
-- automatic battle tactics
-- Quest parser
-- Clan/Event/Boss/Spire implementation
-- MultiBattle execution
-- opponent scoring
-- destructive/purchase actions
-
-## Completion
-
-Run full pytest, push to main, verify Windows CI, update docs and report:
+Report:
 - commit SHA
-- full test count
-- Actions run/result
+- branch/push result
+- total pytest count
+- Windows Actions run/result
 - changed files
-- exact Battle fields implemented
-- which Battle fields remain opaque
-- Campaign eligibility behavior
-- remaining assumptions
+- exact PlayerArenaModel fields implemented
+- what remains opaque
+- scroll delta/config used
+- end-of-list detection behavior
+- number of synthetic traversal cases
+- unresolved live-client assumptions
