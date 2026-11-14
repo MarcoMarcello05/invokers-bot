@@ -378,3 +378,17 @@ Implemented offline attempt binding, separate finished-entry parser and metadata
 ## ARENA-LIVE-005C
 
 Pure token pressure and pre-start authorization layer implemented, CI pending. Default cost null; no actor integration or battle start. 004A live blocker remains.
+
+
+## ARENA-LIVE-005C acceptance
+
+- ABGESCHLOSSEN (CODE/CI): pure token pressure + pre-start authorization.
+- commit: `6dce5d68021a765cef2406a7b9562a21229b8ac9`
+- Windows CI run: `43646793086`
+- result: `342 passed, 1 warning in 0.90s`
+- VERIFIED: token cap/regeneration are policy defaults, not parser facts.
+- VERIFIED: unknown cost blocks spending.
+- VERIFIED: stale/unknown OwnPower, target, Arena or token balance block authorization.
+- VERIFIED: ALLOW still does not authorize SendInput; fight_authorized remains false.
+- VERIFIED: exact token delta contract and no blind retry.
+- LIVE BLOCKERS: exact own Team Power and actual battle token cost still require real-client measurement.
