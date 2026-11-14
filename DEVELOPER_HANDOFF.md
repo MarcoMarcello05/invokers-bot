@@ -1,79 +1,203 @@
 # DEVELOPER HANDOFF
 
-## ARENA-LIVE-006B — real-client formation glyph calibration
+## ARENA-LIVE-006C — Shadow end-to-end Arena run coordinator
 
-Status: BEREIT FÜR LIVE-KALIBRIERUNG
+Status: BEREIT ZUR ENTWICKLUNG
 
-006A accepted:
-- implementation `d0432a49479578afa0ac7d1847cb0544044c90bf`
+006B real-client glyph calibration remains BLOCKIERT until the user is back at the Windows client.
+
+Current accepted baseline:
+- 006A implementation `d0432a49479578afa0ac7d1847cb0544044c90bf`
 - CI fix `f3e0e6d702e155c27d8fad5a6e6b57161ae74efe`
 - Windows CI `43650628167`
 - `359 passed, 1 warning in 1.31s`
+- Arena battle cost 1 token live verified
+- victory reconciliation live verified
+- battle start remains disabled
 
-## Goal
+## Purpose
 
-Replace synthetic-only formation glyph assumptions with a calibration workflow using real client captures.
+Build the pure orchestration layer that joins the existing Arena components into one attempt-scoped state machine without performing any game input.
 
-The current real reference capture is 1536x864 and showed pre-start formation power 9368.
+This should expose integration bugs before enabling a real battle-start action.
 
-## Required live evidence
+Research rationale:
+- long-running actions should be stateful and return RUNNING while awaiting evidence, not block on fixed sleeps
+- waits should poll explicit conditions and finish as soon as evidence appears
+- stale observations must be re-observed/rebound, not blindly reused
+- cancellation/halt should terminate the in-flight attempt quickly
 
-Collect several formation screenshots at unchanged client geometry/DPI while deliberately changing the selected team so the visible own-power number changes.
+## New pure ArenaRunCoordinator
 
-For every capture record:
-- exact visible own-power text
-- full client screenshot
-- client size
-- Windows DPI
-- same confirmed formation state
+Implement a deterministic coordinator driven only by supplied observations/events.
 
-Target:
-- collectively cover digits 0..9 and the thousands separator '.'
-- preferably each digit appears at least twice across captures
-- do not use result-screen power values
-- do not use opponent power glyphs unless font/scale parity is explicitly proven
+Suggested phases:
+1. IDLE
+2. NEED_ARENA_STATE
+3. NEED_TRAVERSAL
+4. NEED_OWN_POWER
+5. NEED_RANKING
+6. NEED_AUTHORIZATION
+7. PREPARED
+8. START_OBSERVED
+9. BATTLE_RUNNING
+10. RESULT_PENDING
+11. TERMINAL
+12. BLOCKED
+13. CANCELLED
 
-## Calibration implementation
+Exact naming may vary, but semantics must remain explicit and testable.
 
-Build a local calibration helper that:
-- crops only the configured formation power ROI
-- extracts connected glyph components from confirmed real captures
-- associates components with the operator-provided exact numeric label
-- creates per-glyph canonical templates for 0..9 and dot
-- rejects inconsistent samples for the same glyph
-- stores only sanitized glyph templates/calibration metadata, never full user screenshots
-- records calibration_id, client_size, DPI, ROI, sample count and template digest
+## Inputs
 
-Runtime reader remains disabled until:
-- all 11 glyphs present
-- geometry/DPI exact match
-- calibration consistency tests pass
-- at least one held-out real formation capture is recognized exactly
+Coordinator may consume:
+- fresh AccountState
+- arena traversal inventory
+- OwnPower
+- Ranking / selected Candidate
+- PreStartAuthorization
+- externally observed visual state
+- token spend observation
+- AttemptObservation / result reconciliation evidence
+- cancellation signal
+- monotonic time
 
-## Validation
+It must NOT:
+- capture the screen itself
+- parse raw files itself
+- call SendInput
+- click buttons
+- construct guessed coordinates
 
-Use at least one real screenshot NOT used to build templates as hold-out.
-Recognition must exactly equal the operator-observed power.
+## Attempt ownership
 
-No confidence=1 / validated=true before hold-out parity succeeds.
+Once PREPARED:
+- freeze the selected Player-ID and immutable ArenaBattleAttemptContext
+- later opponent-list refresh cannot replace the attempt opponent
+- a new attempt cannot start until previous attempt is terminal/cancelled
+- wrong attempt-id observations are rejected
+- duplicate terminal observations return the existing terminal result
 
-## Constraints
-- no broad OCR
-- no result-screen power substitution
-- no raw screenshots committed
-- no SendInput
-- no battle-start enablement
-- no replay/Gem refresh
-- existing 359+ suite remains green
+## Pre-start invalidation
+
+Before START_OBSERVED, any of these returns to a safe replan/block state:
+- opponent fingerprint changed
+- selected candidate changed
+- OwnPower became stale/unknown
+- token/player source changed
+- authorization expired
+- policy version changed
+- Arena source stale
+- cancellation
+
+Never auto-recreate and immediately spend in the same tick after invalidation.
+
+## Start transaction contract
+
+Do not enable actual input.
+
+Create a pure `StartIntent` / equivalent only when authorization is valid.
+
+It should contain:
+- attempt id
+- opponent id
+- expected token cost = 1
+- expected visual transition to battle
+- exact resource delta predicate Arena Token -1
+- authorization digest/provenance
+- created_at / deadline
+
+The coordinator can accept an externally supplied `START_OBSERVED` event later.
+
+Rules:
+- visual battle alone => start PENDING
+- exact token -1 alone => start PENDING
+- both compatible => START_CONFIRMED / BATTLE_RUNNING
+- mismatched resource delta => CONFLICTED/BLOCKED
+- timeout => INCONCLUSIVE/BLOCKED
+- retry_allowed=false
+
+## Battle/result flow
+
+After start confirmation:
+- preserve attempt context
+- consume result observations using existing AttemptReconciliation
+- WIN_CONFIRMED becomes terminal success
+- LOSS_CONFIRMED supported synthetically but clearly marked not live-validated
+- BATTLE_COMPLETED_RESULT_UNKNOWN remains pending until timeout
+- CONFLICTED becomes terminal blocked/failure
+- timeout becomes terminal inconclusive
+- no replay
+
+## Synthetic loss contract
+
+Add a sanitized synthetic loss fixture:
+- token 12 -> 11
+- total offense battles +1
+- total offense wins +0
+- weekly offense battles +1
+- weekly offense wins +0
+- selected FinishedOpponent exact ID if compatible with existing semantics
+- visual defeat
+Expected: LOSS_CONFIRMED under current reconciliation rules.
+
+Document clearly: this validates code behavior only; real loss persistence still requires later live capture.
+
+## Recovery/cancellation
+
+Coordinator must:
+- cancel immediately from any non-terminal phase
+- never emit a second StartIntent after cancellation
+- never blind-retry a start
+- require fresh re-observation/replanning after BLOCKED/INCONCLUSIVE
+- expose a machine-readable reason and small trace of phase transitions
+- keep trace metadata-only, no screenshots/raw snapshots
+
+## Shadow scenario tests
+
+At minimum:
+1. happy-path synthetic victory end-to-end
+2. synthetic loss end-to-end
+3. stale Arena before authorization -> blocked/replan
+4. target fingerprint changes before start -> invalidate
+5. target refresh after start does not replace opponent identity
+6. OwnPower stale before start -> blocked
+7. token source changes before start -> invalidate
+8. exact token -1 + battle visual confirms start
+9. battle visual without token persistence remains pending
+10. token -1 without battle visual remains pending
+11. wrong token delta conflicts
+12. timeout never retries
+13. cancellation in PREPARED
+14. cancellation in BATTLE_RUNNING
+15. wrong attempt ID rejected
+16. duplicate terminal observation is idempotent
+17. one coordinator cannot own two active attempts
+18. no SendInput/action executor dependency
+19. no raw snapshots/screenshots persisted
+20. existing 359+ suite green
+
+## Architecture constraints
+
+Keep BotEngine generic.
+Coordinator must be pure/domain-level.
+Do not add fixed sleeps.
+Use monotonic deadlines and explicit condition polling.
+No battle-start activation.
+No Gem refresh.
+No replay.
+No broad OCR.
+006B calibration remains separate.
 
 ## Completion report
+
 Report:
-- captured power labels
-- digit coverage
-- real client size/DPI
-- calibration ID
-- template consistency method
-- held-out recognition result
+- commit SHA
+- coordinator phases
+- StartIntent schema
+- invalidation/recovery rules
+- synthetic victory/loss behavior
+- cancellation semantics
 - pytest count
-- Windows CI
-- remaining live blockers
+- Windows CI run/result
+- confirmation that no input path was enabled
