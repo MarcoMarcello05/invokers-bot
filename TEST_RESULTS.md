@@ -96,3 +96,7 @@ Synthetic observer tests for refresh, invalidation, corrupt/missing files, fresh
 - conclusion: SUCCESS
 
 ANALYSER review note: CI is green, but current post-input invalidation is intentionally conservative to the point of being operationally harmful. It marks all tracked aggregates awaiting_change after any real input. The next live-runtime package must replace this with action-scoped invalidation and verification expectations.
+
+## LIVE-001A
+
+Added synthetic observer/evidence and mocked engine tests: scoped refresh, unrelated freshness, four verification modes, invalid contracts, corrupt sources, missing baseline, timeout, cancellation, no chained action after failure and read-only files. Command: `pytest -q`. CI pending; actual client not exercised. See LIVE_ACCOUNTSTATE.md for legacy behavior and assumptions.

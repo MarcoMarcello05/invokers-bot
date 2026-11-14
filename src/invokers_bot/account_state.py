@@ -1,5 +1,5 @@
 """Read-only observation of independently persisted account aggregates."""
-from dataclasses import dataclass
+from dataclasses import dataclass, replace
 from datetime import datetime
 from hashlib import sha256
 from pathlib import Path
@@ -80,8 +80,18 @@ class AccountObserver:
         self._items: dict[str, Observation] = {}
         self.state = AccountState(MappingProxyType({}), frozenset())
 
+    @staticmethod
+    def source_names():
+        return frozenset(_SOURCES)
+
+    def _names(self, sources):
+        names = self.source_names() if sources is None else frozenset(sources)
+        if not names <= self.source_names():
+            raise ValueError("unknown snapshot source")
+        return names
+
     def invalidate(self, sources=None):
-        names = _SOURCES if sources is None else sources
+        names = self._names(sources)
         for name in names:
             old = self._items.get(name)
             if old:
@@ -89,17 +99,36 @@ class AccountObserver:
                                                old.checked_at, old.error, True)
         self._publish(set())
 
+    def release_visual_only(self, sources, baseline):
+        """Release only this action\'s optional invalidations after visual success.
+
+        A pre-existing invalidation or read error is never cleared by navigation.
+        """
+        for name in self._names(sources):
+            old = self._items.get(name)
+            pre = baseline.sources.get(name) if baseline else None
+            if (old and pre and not pre.awaiting_change and old.error is None
+                    and old.model is not None and old.checked_at >= pre.checked_at):
+                self._items[name] = replace(old, awaiting_change=False)
+        return self._publish(set())
+
     def _publish(self, changed):
         self.state = AccountState(MappingProxyType(dict(self._items)), frozenset(changed))
         return self.state
 
-    def refresh(self, *, force=False):
+    def refresh(self, *, force=False, sources=None, poll_now=False):
+        names = self._names(sources)
         now = time.monotonic()
-        if not force and now - self._last_poll < self.interval:
-            return self.state
-        self._last_poll = now
+        if sources is not None and not force:
+            raise ValueError("scoped refresh requires force=True")
+        if sources is None:
+            if not force and not poll_now and now - self._last_poll < self.interval:
+                return self.state
+            self._last_poll = now
         changed = set()
         for name, (filename, parser) in _SOURCES.items():
+            if name not in names:
+                continue
             old = self._items.get(name)
             path = self.directory / filename
             try:

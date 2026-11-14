@@ -5,6 +5,7 @@ from pathlib import Path
 import cv2
 
 from .account_state import AccountObserver
+from .action_verification import ActionExpectation, ActionResult, baseline_valid, evaluate
 from .world_state import WorldState
 from .capture import ScreenCapture
 from .input_win import InputController, f12_pressed
@@ -30,9 +31,12 @@ class BotEngine:
         self.world_state = WorldState()
         self.account_observer = (AccountObserver(snapshot_dir) if snapshot_dir else None)
 
-    def _refresh_account(self, *, force=False):
+    def _refresh_account(self, *, force=False, sources=None, poll_now=False):
         if self.account_observer is not None:
-            self.world_state.facts['account'] = self.account_observer.refresh(force=force)
+            state = self.account_observer.refresh(force=force, sources=sources, poll_now=poll_now)
+            self.world_state.facts['account'] = state
+            return state
+        return None
 
     def _observe(self):
         if not self.window.is_alive():
@@ -56,25 +60,38 @@ class BotEngine:
             self.handled_state = GameState.UNKNOWN
         return self.stable_count >= self.config.stable_frames
 
-    def _wait_for_transition(self, previous_state, action):
-        timeout = float(action.get("transition_timeout", 1.5))
-        expected = {GameState(x) for x in action.get("expect", [])}
-        deadline = time.perf_counter() + timeout
-        latest = None
-
-        while time.perf_counter() < deadline:
+    def _verify_action(self, previous_state, expectation, baseline):
+        deadline = time.monotonic() + expectation.timeout
+        last = ActionResult(False, "NO_POST_ACTION_OBSERVATION")
+        stable_state = GameState.UNKNOWN
+        stable_frames = 0
+        while time.monotonic() < deadline:
             if f12_pressed():
-                return latest
-            rect, frame, match, state = self._observe()
-            latest = (rect, frame, match, state)
-            if state == GameState.UNKNOWN:
-                continue
-            if expected:
-                if state in expected:
-                    return latest
-            elif state != previous_state:
-                return latest
-        return latest
+                return ActionResult(False, "CANCELLED")
+            try:
+                _, _, _, state = self._observe()
+                if state == stable_state:
+                    stable_frames += 1
+                else:
+                    stable_state, stable_frames = state, 1
+                visual = state if stable_frames >= self.config.stable_frames else GameState.UNKNOWN
+                current = self._refresh_account(force=True, sources=expectation.invalidates_sources) if expectation.invalidates_sources else (
+                    self.account_observer.state if self.account_observer else None)
+                last = evaluate(expectation, previous_state, visual, baseline, current)
+            except (OSError, RuntimeError, ValueError) as exc:
+                return ActionResult(False, "OBSERVATION_FAILED:" + type(exc).__name__)
+            if f12_pressed():
+                return ActionResult(False, "CANCELLED")
+            if time.monotonic() >= deadline:
+                break
+            if last.success:
+                if self.account_observer is not None and last.visual_verified and expectation.invalidates_sources:
+                    optional = expectation.invalidates_sources - expectation.expects_changed_sources
+                    self.world_state.facts['account'] = self.account_observer.release_visual_only(optional, baseline)
+                return last
+            time.sleep(min(0.05, max(0.0, deadline - time.monotonic())))
+        return ActionResult(False, "TIMEOUT:" + last.reason,
+                            last.visual_verified, last.changed_sources, expectation.legacy)
 
     def _perform(self, action, rect, frame):
         kind = str(action.get("type", "wait"))
@@ -118,35 +135,58 @@ class BotEngine:
 
         raise ValueError(f"Unknown action: {kind}")
 
+    def _execute_live_action(self, action, state, rect, frame):
+        try:
+            expectation = ActionExpectation.from_action(action)
+        except (TypeError, ValueError) as exc:
+            return ActionResult(False, "INVALID_EXPECTATION:" + str(exc))
+        baseline = (self._refresh_account(force=True, sources=expectation.invalidates_sources)
+                    if expectation.invalidates_sources else self._refresh_account(poll_now=True))
+        if not baseline_valid(expectation, baseline):
+            return ActionResult(False, "BASELINE_UNAVAILABLE")
+        if f12_pressed():
+            return ActionResult(False, "CANCELLED")
+        try:
+            acted = self._perform(action, rect, frame)
+        except OSError:
+            # SendInput may have partially succeeded. Keep affected facts pending.
+            if self.account_observer is not None:
+                self.account_observer.invalidate(expectation.invalidates_sources)
+                self._refresh_account(force=True, sources=expectation.invalidates_sources)
+            return ActionResult(False, "INPUT_FAILED")
+        if not acted:
+            return ActionResult(False, "INPUT_NOT_SENT")
+        if self.account_observer is not None and expectation.invalidates_sources:
+            self.account_observer.invalidate(expectation.invalidates_sources)
+            self.world_state.facts['account'] = self.account_observer.state
+        elif self.account_observer is not None:
+            self._refresh_account(poll_now=True)
+        return self._verify_action(state, expectation, baseline)
+
     def _handle(self, state, match, rect, frame):
         actions = list(self.config.flows.get(state.value, {}).get("actions", []))
         if not actions:
-            return
-
+            return ActionResult(False, "NO_ACTION")
         print(f"[state] {state.value} score={match.score if match else 0:.3f}")
         for action in actions:
             if f12_pressed():
+                result = ActionResult(False, "CANCELLED")
                 break
-            acted = self._perform(action, rect, frame)
-            if not acted:
-                continue
-
-            real_input = self.live and action.get('type', 'wait') in ('click_template', 'click_norm', 'key')
-            if real_input and self.account_observer is not None:
-                self.account_observer.invalidate()
-                self._refresh_account(force=True)
-            if real_input or action.get('wait_for_transition', action.get('recapture', True)):
-                result = self._wait_for_transition(state, action)
-                if real_input:
-                    self._refresh_account(force=True)
-                if result is None or f12_pressed():
-                    break
-                rect, frame, _match, observed = result
-                if observed == GameState.UNKNOWN or observed != state:
-                    break
-                if real_input:
-                    # Return to the main observation loop after each real input.
-                    break
+            kind = action.get("type", "wait")
+            if self.live and kind != "wait":
+                result = self._execute_live_action(action, state, rect, frame)
+                # Every real input returns to the observation loop; never chain
+                # further actions with stale screen data, even after success.
+                break
+            if not self._perform(action, rect, frame):
+                result = ActionResult(False, "INPUT_NOT_SENT")
+                break
+            result = ActionResult(False, "WAIT_ONLY" if kind == "wait" else "DRY_RUN")
+        self.world_state.facts["last_action_result"] = result
+        print(f"[verification] {result.status.value} {result.reason} success={result.success}"
+              f" legacy={result.legacy} visual={result.visual_verified}"
+              f" changed={sorted(result.changed_sources)}")
+        return result
 
     def run(self):
         print(json.dumps({
@@ -180,7 +220,9 @@ class BotEngine:
                 else:
                     self.unknown_count = 0
                     if self._stable(state) and self.handled_state != state:
-                        self._handle(state, match, rect, frame)
+                        result = self._handle(state, match, rect, frame)
+                        # Suppress blind retries on the same screen even on failure.
+                        # handled_state tracks attempts, not verification success.
                         self.handled_state = state
 
                 delay = period - (time.perf_counter() - started)

@@ -14,7 +14,7 @@ Rules:
 
 ## A. Universal core
 
-- [ ] CORE-001 | IN ENTWICKLUNG | Universal WorldState / Blackboard: live AccountState observation integrated; scoped invalidation pending
+- [ ] CORE-001 | IN ENTWICKLUNG | Universal WorldState / Blackboard: live AccountState observation integrated; scoped invalidation implemented, CI pending
 - [ ] CORE-002 | BEREIT ZUR ENTWICKLUNG | Goal model: concrete Invokers goal catalog + eligibility/utility policy specified
 - [ ] CORE-003 | BEREIT ZUR ENTWICKLUNG | Central TaskScheduler: tiers, hysteresis, preemption and acceptance scenarios specified
 - [ ] CORE-004 | IN ENTWICKLUNG | Skill registry
@@ -29,7 +29,7 @@ Rules:
 
 - [ ] DATA-001 | OFFEN | Fresh global UI screenshot inventory
 - [ ] DATA-002 | IN ANALYSE | Fresh local Invokers data inventory
-- [ ] DATA-003 | IN ENTWICKLUNG | Structured snapshot readers: Phase 1-4 CI-verified; live AccountState integrated, action-scoped invalidation pending
+- [ ] DATA-003 | IN ENTWICKLUNG | Structured snapshot readers: Phase 1-4 CI-verified; live AccountState integrated, action-scoped invalidation implemented, CI pending
 - [ ] DATA-004 | OFFEN | Action/event file watchers
 - [ ] DATA-005 | IN ENTWICKLUNG | Window/client/DPI detection
 - [ ] DATA-006 | IN ENTWICKLUNG | DXcam/MSS capture

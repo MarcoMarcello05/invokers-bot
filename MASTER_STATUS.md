@@ -193,3 +193,7 @@ Work directly from `MASTER_CHECKLIST.md`, starting with the universal core/data/
 - Details:
   - `ACTION_SOURCE_VERIFICATION_MATRIX.md`
   - `LIVE_SKILL_VERIFICATION_CONTRACT.md`
+
+## LIVE-001A implementation
+
+- TEST AUSSTEHEND: action-scoped invalidation, explicit four-mode evidence contracts, baseline checks and failure results integrated into existing BotEngine. Navigation no longer invalidates unrelated aggregates. Arena start requires player change plus visual transition; real-client timing unverified. CI pending.
