@@ -194,3 +194,7 @@ Synthetic historical-profile stats and malformed wire, single-channel, outcome/c
 - result: `323 passed, 1 warning in 1.06s`
 - conclusion: SUCCESS
 - no battle start or replay path introduced.
+
+## ARENA-LIVE-005B
+
+Synthetic identity/ambiguity, malformed entry, immutable baseline, stale pre-start, wrong-attempt rejection, duplicate terminal record and raw baseline exclusion tests. CI pending.

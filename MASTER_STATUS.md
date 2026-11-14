@@ -356,3 +356,7 @@ TEST AUSSTEHEND: ArenaStats captured-profile parser and offline reconciliation c
 - VERIFIED: delayed persistence remains pending/inconclusive; replay is never authorized.
 - VERIFIED: defense-only and weekly-reset-like changes do not confirm an Offense result.
 - OPEN LIVE ASSUMPTION: historical timestamp naming conflict remains unresolved and may conservatively reject valid outcomes until real-client A/B/C/post-battle data is captured.
+
+## ARENA-LIVE-005B
+
+Implemented offline attempt binding, separate finished-entry parser and metadata-only terminal record. CI pending. No input path. Result slot/timestamp and live transition correlation remain unverified.

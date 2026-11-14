@@ -6,6 +6,7 @@ from math import isfinite
 import time
 from .arena_stats import ArenaBattleStats
 from .arena_opponent import parse_opponent
+from .arena_finished import parse_finished_opponent
 from .snapshot_envelope import SnapshotFormatError
 from .resource_types import ResourceTypeId
 
@@ -51,7 +52,7 @@ def capture(account, *, now=None):
         values.update(arena_digest=a.digest,arena_version=m.version,stats=m.stats,
                       week_ticks=m.last_week_process_ticks,points=m.points)
         try:
-            values["finished_ids"]=tuple(_identity(x) for x in m.finished_opponents.entries)
+            values["finished_ids"]=tuple(parse_finished_opponent(x).identity for x in m.finished_opponents.entries)
         except SnapshotFormatError:
             pass
         if m.current_battle_opponent_raw is not None:
@@ -78,7 +79,7 @@ def arena_token_spent_exactly(before,after,cost):
 def finished_opponent_added(before,after,identity):
     if not identity or before.finished_ids is None or after.finished_ids is None:
         return False
-    return Counter(after.finished_ids)[identity]>Counter(before.finished_ids)[identity]
+    return Counter(after.finished_ids)[identity]==1 and Counter(before.finished_ids)[identity]==0
 
 
 @dataclass(frozen=True,slots=True)
