@@ -185,3 +185,12 @@ Synthetic tests cover provenance gates, deterministic ratio and tie-break, polic
 ## ARENA-LIVE-005A
 
 Synthetic historical-profile stats and malformed wire, single-channel, outcome/conflict, defense/reset, exact spend, delayed/timeout and no-replay tests. Full Windows CI pending. No live fights performed.
+
+
+### ARENA-LIVE-005A acceptance
+
+- commit: `779d5b4106f031b24fa5361763ac716b206eabcf`
+- Actions run: `43646254157`
+- result: `323 passed, 1 warning in 1.06s`
+- conclusion: SUCCESS
+- no battle start or replay path introduced.
