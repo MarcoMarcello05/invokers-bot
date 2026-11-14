@@ -129,3 +129,31 @@ Performance rules:
 - Future optimization: verify only small ROIs for known hot transitions.
 - Irreversible actions remain deliberately slower/stricter and require stronger evidence.
 - Windows input uses SendInput rather than obsolete mouse_event/keybd_event paths.
+
+
+## Planner policy
+
+The concrete Goal-selection and AccountState contracts are specified in:
+- `PLANNER_POLICY.md`
+- `ACCOUNTSTATE_PLANNER_CONTRACT.md`
+
+Current decision flow:
+
+```
+new/changed evidence
+ -> rebuild affected StateFacts
+ -> generate candidate Goals
+ -> hard eligibility/safety gates
+ -> bounded deterministic utility score
+ -> commitment/preemption check
+ -> choose Goal
+ -> deterministic Task/Skill plan
+ -> fresh precondition check
+ -> SafetyGate
+ -> action
+ -> verification
+ -> publish outcome/state changes
+ -> replan
+```
+
+The current architecture deliberately does not use a generic GOAP runtime. Preconditions/effects/cost metadata are retained so bounded planning can be introduced later where it has clear value.
