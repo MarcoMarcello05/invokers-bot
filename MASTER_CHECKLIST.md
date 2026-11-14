@@ -29,7 +29,7 @@ Rules:
 
 - [ ] DATA-001 | OFFEN | Fresh global UI screenshot inventory
 - [ ] DATA-002 | IN ANALYSE | Fresh local Invokers data inventory
-- [ ] DATA-003 | IN ENTWICKLUNG | Structured snapshot readers: Phase 1 envelope CI-verified; Phase 2 PlayerModel/Resources ready for implementation
+- [ ] DATA-003 | IN ENTWICKLUNG | Structured snapshot readers: Phase 1 + Phase 2 CI-verified; Phase 3 PlayerHeroesModel/PlayerHero ready
 - [ ] DATA-004 | OFFEN | Action/event file watchers
 - [ ] DATA-005 | IN ENTWICKLUNG | Window/client/DPI detection
 - [ ] DATA-006 | IN ENTWICKLUNG | DXcam/MSS capture
