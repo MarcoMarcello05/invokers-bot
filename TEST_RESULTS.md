@@ -206,3 +206,7 @@ Synthetic identity/ambiguity, malformed entry, immutable baseline, stale pre-sta
 - Actions run: `43646510502`
 - result: `329 passed, 1 warning in 0.71s`
 - conclusion: SUCCESS
+
+## ARENA-LIVE-005C
+
+Synthetic pressure, budget, provenance, candidate, immutable authorization, revalidation and exact spend tests. CI pending; no client input.

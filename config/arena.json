@@ -244,6 +244,15 @@
       "points_bound": 10000,
       "minimum_candidates": 1,
       "power_max_age": 15
+    },
+    "arena_token": {
+      "token_cap": 10,
+      "regeneration_seconds": 3600,
+      "pressure_start": 8,
+      "reserve": 0,
+      "expected_battle_cost": null,
+      "max_balance_age": 2,
+      "policy_version": "arena-token-v1"
     }
   }
 }

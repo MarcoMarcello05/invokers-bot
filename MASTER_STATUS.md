@@ -374,3 +374,7 @@ Implemented offline attempt binding, separate finished-entry parser and metadata
 - VERIFIED: immutable attempt baseline survives post-start opponent-list refresh.
 - VERIFIED: terminal result latches; duplicate later observations do not create a second result.
 - OPEN: result slot/timestamp remain opaque and need live evidence.
+
+## ARENA-LIVE-005C
+
+Pure token pressure and pre-start authorization layer implemented, CI pending. Default cost null; no actor integration or battle start. 004A live blocker remains.
