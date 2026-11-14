@@ -86,7 +86,7 @@ Rules:
 - [ ] ARENA-001 | IN ENTWICKLUNG | Live Arena state implemented; real-client visual calibration pending
 - [ ] ARENA-002 | TEST AUSSTEHEND | Scrollable opponent-list traversal implemented; live ROI/template/scroll calibration pending
 - [ ] ARENA-003 | IN ENTWICKLUNG | Opponent semantics/CombatPower verified; own Team Power provenance + first ranking next
-- [ ] ARENA-004 | IN ENTWICKLUNG | Own Team Power validation + first deterministic opponent ranking
+- [ ] ARENA-004 | TEST AUSSTEHEND | Deterministic ranking implemented; real-client own Team Power validation required
 - [ ] ARENA-005 | IN ANALYSE | Arena token awareness: live ResourceTypeId source + configurable eligibility policy specified
 - [ ] ARENA-006 | OFFEN | Start battle
 - [ ] ARENA-007 | OFFEN | Battle/result verification
