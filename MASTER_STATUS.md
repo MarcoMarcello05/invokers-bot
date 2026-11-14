@@ -43,3 +43,12 @@ Work directly from `MASTER_CHECKLIST.md`, starting with the universal core/data/
 - Fresh snapshot findings are documented in `DATA_SNAPSHOT_2026-11-14.md`.
 - Project role split and research-first rule are documented in `PROJECT_WORKFLOW.md`.
 - No new production coding task is issued until the model/schema analysis is ready for a precise DEVELOPER prompt.
+
+
+## IL2CPP schema milestone
+
+- ABGESCHLOSSEN: current Windows IL2CPP metadata identified as version 39.
+- ABGESCHLOSSEN: primary player/account aggregate model field inventory extracted.
+- ABGESCHLOSSEN: ResourceTypeId structured resource model confirmed.
+- IN ANALYSE: snapshot serialization/formatter contract needed before parser handoff.
+- Schema findings: `IL2CPP_SCHEMA_0.62.1621.md`.
