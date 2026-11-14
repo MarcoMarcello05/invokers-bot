@@ -117,3 +117,17 @@ Live caveat: `config/arena.json` currently requires `player` to change for the s
 ## LIVE-001B
 
 Synthetic tests for eligibility, freshness, reserve, missing navigation/data, deterministic sanitized trace, exact/decreased resource predicates and blocked runtime inputs. Full pytest CI pending. No real client test.
+
+
+### LIVE-001B CI verification
+
+- commit: `6c12332548ff3c0e6d0d536fda7250156732f0ad`
+- Actions run: `43643490286`
+- result: `242 passed, 1 warning in 0.95s`
+- conclusion: SUCCESS
+
+ANALYSER review:
+- Goal gating is AccountState-driven.
+- blocked Goal paths are covered by no-input regression tests.
+- semantic resource verification rejects unchanged/wrong-direction token values.
+- Arena-specific policy remains outside BotEngine.
