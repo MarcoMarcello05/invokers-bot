@@ -72,3 +72,9 @@ Synthetic tests added for roster, identity, equipment, skills, reserved/additive
 - conclusion: SUCCESS
 
 The remaining warning is the existing pytest parametrize deprecation in the envelope test and is non-blocking.
+
+## DATA-003 Phase 4
+
+Synthetic tests cover empty/multiple inventories, identity, unknown enums, nullable ownership, booleans, opaque bonuses, malformed counts/spans/scalars, additive slots, trailing bytes, read-only files and inventory-ID joins. Command: `pytest -q`. CI outcome pending. No real snapshot execution claimed; no private fixtures committed.
+
+Sources: RELICS_MEMORYPACK_MAP_0.62.1621.md; archived memorypack.py Nullable<int> reader corroborates the native 8-byte layout (flag at byte 0, value at byte 4). Bonus and Randoms contents are not validated internally, only bounded by the outer slot lengths. Additional root/relic slots skipped by length.

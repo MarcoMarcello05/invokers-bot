@@ -151,3 +151,8 @@ Work directly from `MASTER_CHECKLIST.md`, starting with the universal core/data/
 - Test result: `129 passed, 1 warning in 0.30s`.
 - Remaining schema assumption: ReceivedHeroesCount interpreted as Int64->Int32 mapping; non-blocking for core Hero parsing.
 - NEXT: DATA-003 Phase 4 PlayerRelicsModel + PlayerRelic.
+
+## DATA-003 Phase 4 implementation
+
+- TEST AUSSTEHEND: read-only PlayerRelicsModel and PlayerRelic parser using the existing envelope and nested VersionTolerant slot readers.
+- PlayerRelicBonus and Randoms remain opaque; no assumed bonus layout or gear actions. Windows CI pending.
