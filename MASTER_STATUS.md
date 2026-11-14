@@ -64,7 +64,7 @@ Work directly from `MASTER_CHECKLIST.md`, starting with the universal core/data/
 
 ## DATA-003 Phase 1 implementation
 
-- TEST AUSSTEHEND: strict read-only outer envelope parser and synthetic regression tests implemented; inner models remain opaque.
+- ABGESCHLOSSEN: DATA-003 Phase 1 strict read-only outer envelope parser; GitHub Actions run 43602310052 passed on Windows for commit ed11fb1f06373c72f394b6d06e35be7f039a70c1.
 - Windows CI uses existing pytest discovery. No live input or snapshot writes.
 - Full DATA-003 remains open pending inner-model research and implementation.
 
@@ -74,5 +74,5 @@ Work directly from `MASTER_CHECKLIST.md`, starting with the universal core/data/
 - ABGESCHLOSSEN: PlayerModel current 53-slot VersionTolerant layout mapped.
 - ABGESCHLOSSEN: four reserved/removed slots identified at 7, 12, 13, 14.
 - ABGESCHLOSSEN: Resources / ResourcesGained / ResourcesSpent binary structure decoded and cross-validated arithmetically.
-- BEREIT ZUR ENTWICKLUNG: DATA-003 phase 2 can decode selected PlayerModel scalars and ResourceTypeId values while safely skipping nested slots.
+- BEREIT ZUR ENTWICKLUNG: DATA-003 Phase 2 can decode selected PlayerModel scalars and ResourceTypeId values while safely skipping nested slots.
 - Details: `PLAYERMODEL_RESOURCES_MAP_0.62.1621.md`.
