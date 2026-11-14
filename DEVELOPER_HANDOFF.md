@@ -1,6 +1,6 @@
 # DEVELOPER HANDOFF
 
-## Current package: ARENA-LIVE-002 — PlayerArenaModel + bounded scrollable opponent-list traversal
+## Current package: ARENA-LIVE-003 — ArenaOpponent semantics + exact opponent power + refresh fingerprint + own-power probe
 
 Status: BEREIT ZUR ENTWICKLUNG
 
@@ -11,243 +11,189 @@ Read first:
 - TEST_RESULTS.md
 - ARENA_MEMORYPACK_MAP_0.62.1621.md
 - ARENA_GOAL_POLICY.md
-- RESOURCE_PLANNER_POLICY.md
-- ACTION_SOURCE_VERIFICATION_MATRIX.md
-- LIVE_SKILL_VERIFICATION_CONTRACT.md
+- ARENA_REFRESH_POWER_SCORING_PLAN.md
+- ARENA_OWN_POWER_SOURCE_ANALYSIS.md
 - ACCOUNTSTATE_PLANNER_CONTRACT.md
-- current AccountState / Goal / Input / Vision code
+- LIVE_SKILL_VERIFICATION_CONTRACT.md
+- current arena_model.py / arena_traversal.py / arena_skill.py / account_state.py
 
 ## Verified baseline
 
-LIVE-001B:
-- commit `6c12332548ff3c0e6d0d536fda7250156732f0ad`
-- CI run `43643490286`
-- `242 passed, 1 warning`
-- AccountState-driven Arena opportunity gating works
-- semantic Arena-token verification infrastructure exists
-- fight start remains blocked by default unless explicit spend policy is configured
+ARENA-LIVE-002:
+- commit `84eadeb436e707c3e9157252fc6b3f66c5fa009c`
+- Windows CI run `43644672629`
+- `269 passed, 1 warning in 0.66s`
+- PlayerArenaModel top-level source is live
+- bounded scroll traversal is implemented
+- stale Arena source cancels traversal
+- scroll input does not invalidate account sources
+- live ROI/template/scroll calibration remains pending
 
-## Product direction
+## Goal
 
-Do NOT pivot to Campaign yet.
+Turn opaque Arena opponent entries into verified structured matchup data and establish a reliable opponent-set identity.
 
-Arena is now the first domain to be completed end-to-end before moving to the next domain.
+Also instrument the own-Team-Power probe so a real client test can answer whether formation opening materializes `PlayerBattleModel.LastMetaBattleSetup.PlayerTeamSetup.CombatPower`.
 
-User-confirmed UI behavior:
-- the Arena opponent list is vertically scrollable
-- opponents below the initial viewport must be discoverable
+Do NOT implement autonomous battle start in this package.
 
-## Arena completion roadmap
+## Part A — ArenaOpponent nested parser
 
-This package is stage 1 of completion:
+Research the current IL2CPP v39 schema and implement only verified fields.
 
-1. LIVE PlayerArenaModel source
-2. bounded opponent-list scrolling/traversal
-3. opponent observation inventory
+Target fields, where byte layout is verified:
+- stable opponent identifier if present
+- Name
+- Level
+- ArenaPoints
+- TeamSetup
+- Avatar
+- Frame
+- ClanAbbreviation
+- CreatorsInfo
+- IsVip
+- VipLevel
+- Result
 
-Following packages:
-4. verified ArenaOpponent semantic model
-5. opponent scoring/ranking
-6. target selection + formation
-7. battle start + token verification
-8. result/win/loss handling
-9. refresh-opponents logic
-10. circuit/recovery + real-client validation
+Do not guess field order from names alone.
+Preserve unknown/reserved members opaque.
 
-Do not skip directly to scoring before the opponent data model is verified.
+## Part B — TeamSetup + opponent CombatPower
 
-## Part A — PlayerArenaModel parser and AccountState source
-
-Implement the verified PlayerArenaModel top-level layout from `ARENA_MEMORYPACK_MAP_0.62.1621.md`.
-
-Requirements:
-- reuse existing envelope + VersionTolerant readers
-- add `arena` source to AccountObserver/AccountState
-- expose verified top-level fields only
-- preserve unknown/unverified nested fields opaque
-- no guessed ArenaOpponent member layout
-- numeric unknown enum values preserved
-- read-only snapshot access
-
-Expose at minimum all top-level fields whose types/layout are verified in the map, including where verified:
-- version / updated_at
-- points
-- opponents collection metadata/raw entries
-- finished opponents
-- current battle opponent
-- last opponents refresh time
-- HallBonuses
-- Stats
-- other verified root fields
-
-If opponent entry internals are not yet verified, keep individual entries opaque/bounded rather than inventing semantic fields.
-
-## Part B — generic wheel-scroll input support
-
-The Windows input layer currently supports click/key paths.
-
-Add a reusable vertical wheel action through the existing SendInput path.
+Decode the nested opponent TeamSetup far enough to expose the exact displayed opponent Team Power / CombatPower.
 
 Requirements:
-- generic action type, e.g. `scroll_wheel`
-- signed wheel delta
-- use Windows wheel semantics; WHEEL_DELTA = 120 per wheel notch
-- no obsolete mouse_event implementation
-- cursor must be positioned over a configured client-relative list ROI before wheel input if required by the game
-- action remains client/DPI aware
-- F12 abort still applies
+- exact integer/FixedPoint conversion must match stored representation
+- no OCR needed for opponent power once structured field is verified
+- unknown team member fields remain opaque
+- preserve raw IDs for future team composition mapping
 
-Do not hardcode Arena into InputController.
+Acceptance:
+- parser returns exact opponent power from saved/synthetic fixtures
+- historical project evidence indicating exact opponent CombatPower should be used as cross-check where available
 
-## Part C — bounded Arena opponent-list traversal Skill
+## Part C — opponent identity and set fingerprint
 
-Implement a reusable Arena opponent-list traversal mechanism.
+Create a stable semantic opponent identity.
 
-Behavior:
+Preferred:
+- explicit opponent/player id if verified
 
-1. start from recognized `arena_list`
-2. observe current opponent-list ROI
-3. record visible opponent rows/cards
-4. scroll downward by a configured bounded amount
-5. wait for the list ROI to visually change/stabilize
-6. observe newly visible rows
-7. de-duplicate already seen entries
-8. repeat until end-of-list or safety limit
-9. optionally restore list to top if policy requires deterministic selection
+Fallback:
+- stable tuple of verified immutable-ish structured identifiers
 
-### End-of-list detection
+Do NOT use:
+- row index
+- scroll position
+- display name alone
 
-Do NOT use a fixed arbitrary number of scrolls as the only stop condition.
+Create `OpponentSetFingerprint` from sorted semantic opponent identities + relevant matchup state.
 
-Support at least:
-- ROI/content fingerprint unchanged after a scroll
-OR
-- no new opponent observations after repeated bounded scroll attempts
+Use it to detect list refreshes.
 
-Also enforce:
-- max scroll count
-- max traversal duration
+A refresh is semantically confirmed when:
+- arena source changed
+AND
+- opponent-set fingerprint changed
 
-If the UI contains a scrollbar/thumb and robust detection already exists, it may be used as supplemental evidence, not required.
+Update WorldState/arena cache behavior so a changed fingerprint invalidates:
+- traversal inventory
+- row mapping
+- candidate ranking placeholder/cache
+- selected opponent placeholder/cache
 
-### De-duplication
+## Part D — refresh semantics
 
-Preferred identity order:
-1. structured Arena opponent identifier once ArenaOpponent schema is verified
-2. stable visual/card fingerprint
-3. bounded fallback row fingerprint for traversal only
+Expose:
+- LastOpponentsRefreshTime
+- opponent-set fingerprint
+- arena source digest/version
 
-Do not use player display name alone as guaranteed identity.
+Automatic refresh:
+- detected and causes replan
 
-## Part D — opponent observation inventory
+Manual refresh:
+- still blocked if cost is Gem/unknown
+- do not click refresh in this package
 
-This package does NOT need final opponent scoring yet.
+## Part E — own Team Power probe instrumentation
 
-It must produce a diagnostic inventory for one traversal:
-- traversal id
-- viewport/page index
-- visible row/card regions
-- visual fingerprints
-- structured opponent entry count if available
-- number of unique observations
-- stop reason: END_UNCHANGED / NO_NEW_ROWS / MAX_SCROLLS / TIMEOUT / CANCELLED
-- screenshots/fingerprints for failures only, not raw private snapshot bytes in Git
+Add a diagnostic probe for:
 
-This inventory is the bridge to the ANALYSER mapping the nested ArenaOpponent structure.
+A. arena_list before Fight
+B. formation after Fight
+C. back to arena_list without starting battle
 
-## Part E — Planner/Goal behavior
+Capture metadata for:
+- PlayerBattleModel envelope digest/version
+- PlayerArenaModel digest/version
+- selected opponent semantic identity if known
 
-Existing ArenaOpportunity remains the entry Goal.
+If PlayerBattleModel nested parsing support is sufficient and verified, decode:
+- LastMetaBattleSetup
+- PlayerTeamSetup
+- CombatPower
 
-Before FightBestAcceptableOpponent exists:
-- Arena navigation may be selected when eligible
-- list traversal may run as a read/reversible R1 Skill
-- actual battle start stays blocked by existing spend policy unless explicitly configured
+Otherwise:
+- keep envelope probe and log whether payload/digest changed
+- do not invent nested Battle offsets
 
-Do not make list scrolling spend Arena tokens.
+The probe must never start a battle.
 
-## Verification
+## Part F — traversal integration
 
-A wheel-scroll is successful only if:
-- the opponent-list ROI changes and stabilizes
-OR
-- end-of-list is explicitly detected by unchanged content after the attempt
+Once structured opponent identities exist:
+- traversal inventory may join visual rows/cards to structured opponent candidates only when evidence is sufficient
+- keep visual fingerprint as navigation evidence
+- do not assume list order from structured data equals viewport order unless verified
 
-UNKNOWN screen:
-- stop traversal
-- no additional input
-
-Unexpected screen transition:
-- cancel traversal and return control to recovery/replan
+A refresh during traversal remains STALE and forces restart.
 
 ## Tests
 
-Add tests at minimum for:
+Add at minimum:
 
-1. valid PlayerArenaModel root
-2. malformed/truncated Arena root
-3. opaque opponent entry preservation
-4. AccountState exposes fresh arena source
-5. corrupt arena source becomes unavailable
-6. signed wheel delta/action contract
-7. scroll action does not mutate account sources
-8. one-page opponent list stops without unnecessary scroll
-9. multi-page list discovers new rows across scrolls
-10. duplicate visible rows are de-duplicated
-11. unchanged ROI after scroll -> end-of-list
-12. no-new-rows repeated -> end-of-list
-13. max-scroll safety bound
-14. timeout safety bound
-15. F12 cancellation
-16. UNKNOWN cancels/no further input
-17. unexpected screen transition cancels
-18. battle start remains blocked by default
-19. existing 242+ regression tests remain green
+1. valid ArenaOpponent parse
+2. malformed/truncated opponent entry
+3. unknown/reserved nested slots preserved
+4. exact opponent CombatPower parse
+5. opponent Name/Level/ArenaPoints parse
+6. stable semantic identity deterministic
+7. same opponents different order -> same set fingerprint
+8. one opponent changed -> different set fingerprint
+9. arena digest changed but same opponent set -> no semantic refresh
+10. opponent set changed -> traversal/ranking cache invalidated
+11. stale traversal inventory rejected after set change
+12. display name collision does not collapse two different opponents
+13. LastOpponentsRefreshTime exposed
+14. own-power probe records A/B/C metadata safely
+15. probe never sends Start Battle
+16. Gem/unknown manual refresh remains blocked
+17. existing 269+ regression suite remains green
 
 ## Architecture constraints
 
+- no broad OCR
+- no guessed opponent schema
 - BotEngine remains domain-agnostic
-- scroll action belongs to generic input/action layer
-- Arena traversal belongs to Arena Skill/domain layer
-- no OCR unless a specific field cannot be obtained structurally/visually otherwise
-- no guessed ArenaOpponent schema
+- semantic Arena parsing stays in arena domain/model layer
 - no snapshot writes
 - no packet/process manipulation
-- no infinite scroll loops
+- no automatic Gem refresh
+- no battle start
+- no final opponent scoring yet
 
 ## Completion report
 
 Report:
 - commit SHA
 - branch/push result
-- total pytest count
-- Windows Actions run/result
-- changed files
-- exact PlayerArenaModel fields implemented
-- what remains opaque
-- scroll delta/config used
-- end-of-list detection behavior
-- number of synthetic traversal cases
-- unresolved live-client assumptions
-
-
-## Additional diagnostics required by ANALYSER
-
-Do not expand this package into scoring yet, but add hooks needed for the next Arena package:
-
-### Opponent-set refresh awareness
-- expose enough arena source metadata to distinguish one opponent-set snapshot from another
-- if individual opponent entries remain opaque, preserve stable bounded raw-entry hashes so the next package can build an opponent-set fingerprint
-- list traversal inventory must carry the arena source digest/version it was built against
-- if arena source changes during traversal, cancel the traversal as stale and restart/replan rather than continuing with old row mapping
-
-### Formation own-power probe support
-Prepare diagnostics only:
-- when transitioning arena_list -> formation, record pre/post PlayerBattleModel and PlayerArenaModel source digest/version if those sources are available
-- do not require Battle parser implementation in this package
-- do not OCR own power yet unless explicitly needed for a manual diagnostic build
-- no battle start is authorized by this diagnostic
-
-Reference:
-- `ARENA_REFRESH_POWER_SCORING_PLAN.md`
-- `ARENA_OWN_POWER_SOURCE_ANALYSIS.md`
+- full pytest count
+- Actions run/result
+- exact ArenaOpponent fields implemented
+- exact TeamSetup/CombatPower field implemented
+- semantic identity definition
+- opponent-set fingerprint definition
+- refresh invalidation behavior
+- own-power probe outputs
+- what still requires the real client
