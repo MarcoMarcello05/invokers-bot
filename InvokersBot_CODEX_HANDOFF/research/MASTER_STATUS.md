@@ -122,3 +122,7 @@ Implemented in `src/arena_windows.py`:
 - `tests/test_arena_geometry.py` adds isolated geometry and point-boundary regression tests.
 
 **Validation status:** Source committed to GitHub. Automated tests were **not executed** in this session because the runtime could not clone the GitHub repository (DNS unavailable); Windows physical validation also pending. Do not label this sprint fully validated until tests run. Exact 1920x1080 *client* size is required; maximized window with a smaller client must safely stop, not auto-scale. Test on the user's actual maximized window before allowing navigation.
+
+## Sprint 03 — Windows CI (2026-11-14)
+
+Added root workflow .github/workflows/arena-tests.yml: Windows Server 2022, Python 3.12, pinned arena requirements, full unittest discovery and two-cycle simulation with explicit report assertions. Relevant pushes and manual dispatch are enabled. No live flags, game installation or credentials are supplied. Workflow directory lookup returned 404; existing workflow inventory could not be independently enumerated. CI outcome remains unverified; physical Windows navigation remains pending. Do not treat this as a successful test run.
