@@ -15,7 +15,7 @@ Rules:
 ## A. Universal core
 
 - [ ] CORE-001 | IN ENTWICKLUNG | Universal WorldState / Blackboard: live AccountState observation integrated; scoped invalidation implemented, CI pending
-- [ ] CORE-002 | BEREIT ZUR ENTWICKLUNG | Goal model: concrete Invokers goal catalog + eligibility/utility policy specified
+- [ ] CORE-002 | IN ENTWICKLUNG | Goal model: connect live AccountState eligibility + deterministic decision trace
 - [ ] CORE-003 | BEREIT ZUR ENTWICKLUNG | Central TaskScheduler: tiers, hysteresis, preemption and acceptance scenarios specified
 - [ ] CORE-004 | IN ENTWICKLUNG | Skill registry
 - [ ] CORE-005 | OFFEN | Persistent run memory
@@ -23,7 +23,7 @@ Rules:
 - [ ] CORE-007 | IN ANALYSE | Recovery engine: retry/timeout/circuit-break policy specified
 - [ ] CORE-008 | IN ANALYSE | Resource planner: reserve/budget contract specified
 - [ ] CORE-009 | IN ANALYSE | Irreversible-action policy: risk classes and hard gates specified
-- [ ] CORE-010 | BEREIT ZUR ENTWICKLUNG | Event-aware priority engine: replanning triggers + domain synergy specified
+- [ ] CORE-010 | IN ENTWICKLUNG | Event-aware priority engine: first AccountState-driven replanning slice next
 
 ## B. Perception / data
 
