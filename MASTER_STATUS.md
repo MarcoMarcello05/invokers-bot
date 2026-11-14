@@ -464,3 +464,14 @@ Live conclusions:
 ## ARENA-LIVE-006A
 
 Live evidence cost 1 token, 12->11, result persistence on victory screen, LastMetaBattleSetup null. Policy v2 and exact disabled start predicate updated. Narrow formation glyph sensor implemented; actual client glyph assets and DPI/client calibration still needed; default disabled. Synthetic victory regression. CI pending.
+
+
+## ARENA-LIVE-006A CI review
+
+Implementation commit `d0432a49479578afa0ac7d1847cb0544044c90bf` is NOT accepted yet.
+Windows Actions run `43649926909` failed: `3 failed, 356 passed, 1 warning in 1.11s`.
+All failures are stale legacy expectations in tests/test_goal_eligibility.py:
+- resource_decreased vs exact resource_delta -1
+- cap None vs current regeneration ceiling 10
+- cost None vs live-validated current cost 1
+Production policy changes are retained; tests must migrate to current verified behavior.
