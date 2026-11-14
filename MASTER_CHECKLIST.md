@@ -87,9 +87,9 @@ Rules:
 - [ ] ARENA-002 | TEST AUSSTEHEND | Scrollable opponent-list traversal implemented; live ROI/template/scroll calibration pending
 - [ ] ARENA-003 | IN ENTWICKLUNG | Opponent semantics/CombatPower verified; own Team Power provenance + first ranking next
 - [ ] ARENA-004 | TEST AUSSTEHEND | Deterministic ranking implemented; real-client own Team Power validation required
-- [ ] ARENA-005 | IN ANALYSE | Arena token awareness: live ResourceTypeId source + configurable eligibility policy specified
+- [ ] ARENA-005 | IN ENTWICKLUNG | Arena token cap/regeneration pressure + pre-start authorization policy
 - [ ] ARENA-006 | OFFEN | Start battle
-- [ ] ARENA-007 | TEST AUSSTEHEND | ArenaBattleStats + structured result verifier implemented; live persistence validation pending
+- [ ] ARENA-007 | TEST AUSSTEHEND | Result verifier + immutable attempt correlation implemented; live persistence validation pending
 - [ ] ARENA-008 | TEST AUSSTEHEND | Evidence-based win/loss classification implemented; live result timing pending
 - [ ] ARENA-009 | IN ENTWICKLUNG | Semantic opponent-set refresh fingerprint verified; manual Gem refresh remains blocked
 - [ ] ARENA-010 | OFFEN | Defense team management
