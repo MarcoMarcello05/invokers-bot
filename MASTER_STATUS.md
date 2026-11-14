@@ -487,3 +487,10 @@ Production policy changes are retained; tests must migrate to current verified b
 - VERIFIED: current policy cost 1, regeneration ceiling 10 without wallet clamp, exact resource_delta -1.
 - VERIFIED: synthetic formation reader architecture remains disabled until real glyph/DPI calibration.
 - VERIFIED: live-victory regression remains green and battle start/replay/Gem refresh stay disabled.
+
+
+## Parallel Arena development while 006B live calibration is blocked
+
+006B requires real client captures and remains blocked while user is mobile.
+Next offline package: ARENA-LIVE-006C shadow end-to-end Arena coordinator.
+Goal: integrate traversal/ranking/authorization/attempt/start-evidence/result-reconciliation into a pure attempt-scoped state machine with no SendInput and no battle-start activation.
