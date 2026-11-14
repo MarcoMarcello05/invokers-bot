@@ -17,10 +17,10 @@ Rules:
 - [ ] CORE-001 | IN ENTWICKLUNG | Universal WorldState / Blackboard: live AccountState observation integrated; scoped invalidation implemented, CI pending
 - [ ] CORE-002 | IN ENTWICKLUNG | Goal model: Arena slice being completed end-to-end before next domain
 - [ ] CORE-003 | BEREIT ZUR ENTWICKLUNG | Central TaskScheduler: tiers, hysteresis, preemption and acceptance scenarios specified
-- [ ] CORE-004 | IN ENTWICKLUNG | Skill registry
+- [ ] CORE-004 | IN ENTWICKLUNG | Skill registry; Arena shadow coordinator first integrated consumer
 - [ ] CORE-005 | OFFEN | Persistent run memory
 - [ ] CORE-006 | OFFEN | Navigation graph
-- [ ] CORE-007 | IN ANALYSE | Recovery engine: retry/timeout/circuit-break policy specified
+- [ ] CORE-007 | IN ENTWICKLUNG | Arena attempt-scoped cancellation/timeout/no-blind-retry recovery first consumer
 - [ ] CORE-008 | BEREIT ZUR ENTWICKLUNG | Resource planner: reserves, caps, event-save, spend authorization and semantic verification specified
 - [ ] CORE-009 | IN ANALYSE | Irreversible-action policy: risk classes and hard gates specified
 - [ ] CORE-010 | IN ENTWICKLUNG | Event-aware priority engine: first AccountState-driven Arena slice verified; multi-domain expansion next
@@ -88,7 +88,7 @@ Rules:
 - [ ] ARENA-003 | IN ENTWICKLUNG | Opponent semantics/CombatPower verified; own Team Power provenance + first ranking next
 - [ ] ARENA-004 | TEST AUSSTEHEND | Deterministic ranking implemented; real-client own Team Power validation required
 - [x] ARENA-005 | ABGESCHLOSSEN | live offense cost verified as exactly 1 Arena Token; token pressure + authorization policy implemented
-- [ ] ARENA-006 | OFFEN | Start battle
+- [ ] ARENA-006 | IN ENTWICKLUNG | start transaction/coordinator contract next; actual input remains disabled
 - [x] ARENA-007 | ABGESCHLOSSEN | live PRE/POST victory validated: counters/resources/history persist on result screen
 - [ ] ARENA-008 | TEST AUSSTEHEND | Evidence-based win/loss classification implemented; live result timing pending
 - [ ] ARENA-009 | IN ENTWICKLUNG | Semantic opponent-set refresh fingerprint verified; manual Gem refresh remains blocked
