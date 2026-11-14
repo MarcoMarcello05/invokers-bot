@@ -198,3 +198,11 @@ Synthetic historical-profile stats and malformed wire, single-channel, outcome/c
 ## ARENA-LIVE-005B
 
 Synthetic identity/ambiguity, malformed entry, immutable baseline, stale pre-start, wrong-attempt rejection, duplicate terminal record and raw baseline exclusion tests. CI pending.
+
+
+### ARENA-LIVE-005B acceptance
+
+- commit: `4b4ced808b9fb00553c86e81c02dbc46a6467d63`
+- Actions run: `43646510502`
+- result: `329 passed, 1 warning in 0.71s`
+- conclusion: SUCCESS
