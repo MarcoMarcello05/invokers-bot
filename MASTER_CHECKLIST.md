@@ -15,15 +15,15 @@ Rules:
 ## A. Universal core
 
 - [ ] CORE-001 | IN ANALYSE | Universal WorldState / Blackboard: provenance/freshness contract specified
-- [ ] CORE-002 | IN ANALYSE | Goal model: eligibility + utility policy specified
-- [ ] CORE-003 | IN ANALYSE | Central TaskScheduler: hysteresis/preemption policy specified
+- [ ] CORE-002 | BEREIT ZUR ENTWICKLUNG | Goal model: concrete Invokers goal catalog + eligibility/utility policy specified
+- [ ] CORE-003 | BEREIT ZUR ENTWICKLUNG | Central TaskScheduler: tiers, hysteresis, preemption and acceptance scenarios specified
 - [ ] CORE-004 | IN ENTWICKLUNG | Skill registry
 - [ ] CORE-005 | OFFEN | Persistent run memory
 - [ ] CORE-006 | OFFEN | Navigation graph
 - [ ] CORE-007 | IN ANALYSE | Recovery engine: retry/timeout/circuit-break policy specified
 - [ ] CORE-008 | IN ANALYSE | Resource planner: reserve/budget contract specified
 - [ ] CORE-009 | IN ANALYSE | Irreversible-action policy: risk classes and hard gates specified
-- [ ] CORE-010 | IN ANALYSE | Event-aware priority engine: replanning triggers specified
+- [ ] CORE-010 | BEREIT ZUR ENTWICKLUNG | Event-aware priority engine: replanning triggers + domain synergy specified
 
 ## B. Perception / data
 
