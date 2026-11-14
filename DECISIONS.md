@@ -79,3 +79,13 @@ The Arena opponent list is scrollable. The bot must use generic SendInput wheel 
 
 ### D034 — Scrolling is navigation, not account mutation
 Arena list scrolling is R1/reversible UI navigation. It must not invalidate Player/Arena/account snapshots merely because a wheel input was sent. Structured state is invalidated only by actions that can change account state.
+
+
+### D035 — Opponent-set refresh invalidates Arena target state
+A confirmed PlayerArenaModel opponent-set change invalidates traversal inventory, visual row mapping, candidate ranking and selected target. The bot must reread/retraverse/rerank before clicking a target from the new list.
+
+### D036 — Premium Arena refresh remains blocked
+Official current Arena behavior allows opponent-list refreshes over time and manual refresh for Gems. The bot may observe automatic refreshes, but must not perform a Gem-cost refresh under the default policy. Unknown refresh cost is treated as blocked, not assumed free.
+
+### D037 — Own Arena Team Power requires provenance
+Preferred source order is structured LastMetaBattleSetup.PlayerTeamSetup.CombatPower after live validation, then an exact reproduced calculator only after parity is proven, then a tiny pre-battle numeric ROI as fallback. Approximate Team Power is not accepted for autonomous matchup decisions. Trophy Room bonuses must be represented because current Arena Team Power includes them.
