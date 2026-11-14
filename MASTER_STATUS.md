@@ -156,3 +156,13 @@ Work directly from `MASTER_CHECKLIST.md`, starting with the universal core/data/
 
 - TEST AUSSTEHEND: read-only PlayerRelicsModel and PlayerRelic parser using the existing envelope and nested VersionTolerant slot readers.
 - PlayerRelicBonus and Randoms remain opaque; no assumed bonus layout or gear actions. Windows CI pending.
+
+
+## Goal catalog milestone
+
+- ABGESCHLOSSEN: concrete Invokers Goal catalog defined across safety, claims, anti-waste, progression, farming, Arena, Clan, Events and maintenance.
+- ABGESCHLOSSEN: deterministic planner acceptance scenarios defined for priority, synergy, stale data, event-save policy, circuit breakers and anti-starvation.
+- ENTSCHEIDUNG: overlapping objectives should contribute synergy to one executable domain Goal instead of spawning duplicate competing action loops.
+- Details:
+  - `INVOKERS_GOAL_CATALOG.md`
+  - `PLANNER_DOMAIN_SCENARIOS.md`
