@@ -89,3 +89,10 @@ Official current Arena behavior allows opponent-list refreshes over time and man
 
 ### D037 — Own Arena Team Power requires provenance
 Preferred source order is structured LastMetaBattleSetup.PlayerTeamSetup.CombatPower after live validation, then an exact reproduced calculator only after parity is proven, then a tiny pre-battle numeric ROI as fallback. Approximate Team Power is not accepted for autonomous matchup decisions. Trophy Room bonuses must be represented because current Arena Team Power includes them.
+
+
+### D038 — Build result verification while Own-Power live validation is blocked
+ARENA-LIVE-004A requires the real Windows client and remains pending. Development may continue on independent Arena completion work that does not weaken the Own-Power gate or enable battle start. The next parallel package is ArenaBattleStats parsing and post-battle outcome reconciliation.
+
+### D039 — Arena outcome is multi-evidence, not one-field inference
+A completed Arena Offense battle is classified from offense-specific counters plus compatible visual/resource/opponent evidence. Arena Points, Arena Coins, token deltas or generic snapshot changes alone do not prove win/loss. Conflicting evidence stops the Arena loop rather than guessing.
