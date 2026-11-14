@@ -125,3 +125,12 @@ PRE -> result-screen POST showed Arena Points +9, Arena Coin +50, Bronze Arena M
 ### D046 — Result-screen displayed team power is not interchangeable with pre-start formation power
 
 Observed pre-start formation own power was 9368 while the victory result screen displayed 9425. Until the reason is schema-verified, these are distinct visual facts. Pre-start ranking/authorization must use the calibrated pre-start formation ROI, not the result-screen value.
+
+
+### D047 — Arena execution is an attempt-scoped stateful transaction, not a chain of sleeps
+
+The Arena run coordinator must model long-running navigation/start/result work as explicit states with monotonic deadlines and evidence polling. A pending action remains RUNNING/PENDING until its expected visual/structured conditions arrive, it times out, conflicts, or is cancelled. Fixed sleeps are not completion evidence.
+
+### D048 — No blind start retry after ambiguous Arena transition
+
+If battle-start evidence is delayed, incomplete, stale, or inconclusive, the coordinator must not emit a second start input. It blocks/reconciles/re-observes first. A new StartIntent requires a fresh planning cycle and fresh authorization after the prior attempt is terminal or cancelled.
