@@ -244,3 +244,12 @@ Synthetic UI glyphs, strict German numeric normalization, geometry/state/age rej
 ## ARENA-LIVE-006C
 
 Added shadow scenario tests for synthetic victory/loss, invalidation, start evidence, cancellation, wrong ID, deadlines and terminal latch. Windows CI pending. Loss not live validated.
+
+
+### ARENA-LIVE-006C final acceptance
+
+- commit: `d3a1bf33e2074d534e132dd3dcb4da30f06df3dc`
+- Actions run: `43652958684`
+- result: `376 passed, 1 warning in 1.35s`
+- conclusion: SUCCESS
+- live caveat: loss path synthetic only; no input path enabled.
