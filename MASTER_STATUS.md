@@ -93,9 +93,9 @@ Work directly from `MASTER_CHECKLIST.md`, starting with the universal core/data/
 
 ## DATA-003 Phase 2 implementation
 
-- TEST AUSSTEHEND: selected PlayerModel scalars and all three Resources dictionaries implemented using bounded VersionTolerant slot spans and the existing envelope parser.
-- Full 181-name ResourceTypeId mapping ported from the verified archive; integer keys remain canonical.
-- No other model decoding or game writes. Windows CI verification pending.
+- ABGESCHLOSSEN: DATA-003 Phase 2 PlayerModel scalars and Resources dictionaries implemented and Windows-CI verified on commit `2a9f1d5b508a321dc7553ea2a899eeff43cc3612`.
+- ABGESCHLOSSEN: full 181-name ResourceTypeId mapping ported from the verified archive; integer keys remain canonical.
+- CI: GitHub Actions run `43640238110` completed SUCCESS with `89 passed, 1 warning`.
 
 
 ## Architecture benchmark / structured-domain milestone
