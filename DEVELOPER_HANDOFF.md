@@ -1,93 +1,79 @@
 # DEVELOPER HANDOFF
 
-## ARENA-LIVE-006A-CI — migrate legacy Arena policy tests
+## ARENA-LIVE-006B — real-client formation glyph calibration
 
-Status: FIX REQUIRED
+Status: BEREIT FÜR LIVE-KALIBRIERUNG
 
-Implementation commit under review:
-`d0432a49479578afa0ac7d1847cb0544044c90bf`
+006A accepted:
+- implementation `d0432a49479578afa0ac7d1847cb0544044c90bf`
+- CI fix `f3e0e6d702e155c27d8fad5a6e6b57161ae74efe`
+- Windows CI `43650628167`
+- `359 passed, 1 warning in 1.31s`
 
-Windows CI run:
-`43649926909`
+## Goal
 
-Result:
-`3 failed, 356 passed, 1 warning in 1.11s`
+Replace synthetic-only formation glyph assumptions with a calibration workflow using real client captures.
 
-## Failure analysis
+The current real reference capture is 1536x864 and showed pre-start formation power 9368.
 
-All three failures are legacy expectations in `tests/test_goal_eligibility.py`.
+## Required live evidence
 
-### Failure 1
-`test_configured_predicate`
+Collect several formation screenshots at unchanged client geometry/DPI while deliberately changing the selected team so the visible own-power number changes.
 
-Old expectation:
-- kind == `resource_decreased`
+For every capture record:
+- exact visible own-power text
+- full client screenshot
+- client size
+- Windows DPI
+- same confirmed formation state
 
-Current verified config:
-- kind == `resource_delta`
-- resource_id == 21
-- delta == -1
+Target:
+- collectively cover digits 0..9 and the thousands separator '.'
+- preferably each digit appears at least twice across captures
+- do not use result-screen power values
+- do not use opponent power glyphs unless font/scale parity is explicitly proven
 
-Fix the test to assert the exact live-validated predicate. Do not revert production config.
+## Calibration implementation
 
-### Failure 2
-`test_unknown_cap_allows_opportunity_but_not_spend`
+Build a local calibration helper that:
+- crops only the configured formation power ROI
+- extracts connected glyph components from confirmed real captures
+- associates components with the operator-provided exact numeric label
+- creates per-glyph canonical templates for 0..9 and dot
+- rejects inconsistent samples for the same glyph
+- stores only sanitized glyph templates/calibration metadata, never full user screenshots
+- records calibration_id, client_size, DPI, ROI, sample count and template digest
 
-Old expectation:
-- Arena cap is None
+Runtime reader remains disabled until:
+- all 11 glyphs present
+- geometry/DPI exact match
+- calibration consistency tests pass
+- at least one held-out real formation capture is recognized exactly
 
-Current policy:
-- cap = 10 as regeneration ceiling
-- observed balances may exceed it, e.g. 12
-- cap must NOT clamp wallet balance
+## Validation
 
-Update the test semantics accordingly:
-- cap == 10
-- token balance 12 remains 12
-- goal may still be eligible above cap
-- start remains blocked when allow_test_battle_start=false
+Use at least one real screenshot NOT used to build templates as hold-out.
+Recognition must exactly equal the operator-observed power.
 
-Rename the test if needed so it no longer describes an unknown cap.
+No confidence=1 / validated=true before hold-out parity succeeds.
 
-### Failure 3
-`test_explicit_cost_required_and_predicate_matches`
+## Constraints
+- no broad OCR
+- no result-screen power substitution
+- no raw screenshots committed
+- no SendInput
+- no battle-start enablement
+- no replay/Gem refresh
+- existing 359+ suite remains green
 
-Old expectation:
-- config cost initially None -> DENY_UNKNOWN_COST
-
-Current live-validated policy:
-- cost == 1
-
-Update the test so:
-- current config with allow_test_battle_start=true and exact predicate -1 passes the cost gate
-- explicit synthetic override cost=None must still produce DENY_UNKNOWN_COST
-- mismatched predicate must still produce COST_PREDICATE_MISMATCH
-- exact resource_delta -1 must pass
-
-## Guardrails
-
-Do NOT:
-- revert cost to null
-- revert cap to null
-- revert resource_delta to resource_decreased
-- weaken exact cost matching
-- enable battle start
-- enable replay/Gem refresh
-- change ROI sensor behavior just to satisfy CI
-
-## Required verification
-
-Run full suite on Windows.
-
-Expected:
-- 359 tests total or more
-- 0 failures
-- existing live-victory and formation-power tests remain green
-
-Push fix to `main` and report:
-- new commit SHA
-- exact changed tests
-- pytest result
-- Windows Actions run ID/conclusion
-
-006A is not accepted until CI is green.
+## Completion report
+Report:
+- captured power labels
+- digit coverage
+- real client size/DPI
+- calibration ID
+- template consistency method
+- held-out recognition result
+- pytest count
+- Windows CI
+- remaining live blockers
