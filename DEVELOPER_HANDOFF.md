@@ -1,6 +1,6 @@
 # DEVELOPER HANDOFF
 
-## Current package: LIVE-001A — Action-scoped AccountState invalidation and verification
+## Current package: LIVE-001B — AccountState-driven Goal eligibility + semantic resource verification
 
 Status: BEREIT ZUR ENTWICKLUNG
 
@@ -9,157 +9,158 @@ Read first:
 - MASTER_STATUS.md
 - MASTER_CHECKLIST.md
 - TEST_RESULTS.md
-- LIVE_ACCOUNTSTATE.md
 - PLANNER_POLICY.md
 - ACCOUNTSTATE_PLANNER_CONTRACT.md
+- INVOKERS_GOAL_CATALOG.md
+- PLANNER_DOMAIN_SCENARIOS.md
+- ACTION_SOURCE_VERIFICATION_MATRIX.md
+- LIVE_SKILL_VERIFICATION_CONTRACT.md
+- LIVE_ACCOUNTSTATE.md
 - src/invokers_bot/account_state.py
+- src/invokers_bot/action_verification.py
 - src/invokers_bot/engine.py
 
-## Context
+## Verified baseline
 
-Phase 4 is complete and live AccountState integration exists.
-
-Verified live integration:
-- commit: `371ab08015cb0bd9ec3e2a3ca4723a187133e80f`
-- Actions run: `43642665870`
-- result: `179 passed, 1 warning`
-
-ANALYSER review found one architectural issue that should be fixed before AccountState-driven Goal selection:
-
-After every real input, `AccountObserver.invalidate()` currently invalidates ALL tracked aggregates.
-
-This is too coarse.
-
-Example:
-- user/bot opens a menu
-- no Hero or Relic data changes
-- Heroes and Relics become awaiting_change anyway
-- because the files may never change, fresh Hero/Relic state can remain unavailable unnecessarily
+LIVE-001A:
+- commit `43f665f37ec15b7d4b448f785184274e76b721ce`
+- Windows CI run `43643095273`
+- `215 passed, 1 warning`
 
 ## Goal
 
-Replace blanket invalidation with ACTION-SCOPED invalidation and verification expectations.
+Make the scheduler/runtime consume live AccountState for the first real Goal eligibility decisions, while adding semantic resource predicates so structured verification does not stop at "some PlayerModel bytes changed".
 
-## Required design
+Keep this package intentionally narrow.
 
-Each live action/Skill should be able to declare:
+## Part A — minimal AccountState-driven Goal eligibility
 
-- `invalidates_sources`
-- `expects_source_change`
-- `expects_visual_transition`
-- optional `verification_timeout`
+Implement the first planner-facing GoalCandidate/GoalEvaluation slice.
 
-Examples:
+Required first candidates:
 
-Navigation-only click:
-- invalidates_sources = []
-- expects_source_change = []
+1. `G-MAINT-001 RefreshStructuredState`
+2. `G-RES-001 SpendArenaTokensBeforeCap` / Arena opportunity eligibility
 
-Start Arena battle:
-- likely invalidates player/resources and arena when Arena parser exists
-- does NOT invalidate heroes/relics unless the action itself can change them
+Do NOT implement the whole universal planner yet.
 
-Equip Relic:
-- invalidates heroes + relics
-- expects source change in both or whichever exact model changes
+Arena eligibility must use:
+- fresh PlayerModel
+- ResourceTypeId.Arena_Token (21)
+- configured threshold/reserve/cap policy values
+- required Arena navigation capability
+- source freshness
 
-Claim reward:
-- invalidates only the aggregate(s) that contain the claim/resource state
+If AccountState is missing/stale:
+- Arena Goal is BLOCKED with an explicit reason
+- do not click
 
-Unknown legacy flow without metadata:
-- use a conservative compatibility default, but do not permanently poison unrelated sources
+If token balance is below threshold:
+- Arena Goal is not eligible
 
-## AccountObserver API
+Expose deterministic evaluation/debug output showing:
+- candidate id
+- eligible bool
+- blocked reasons
+- source age/freshness used
+- relevant resource value
+- score components if scoring is introduced
 
-Support scoped invalidation, e.g.:
-`invalidate({"player", "relics"})`
+## Part B — semantic resource verification
 
-Do not require all sources to change before unrelated sources remain usable.
+Extend ActionExpectation/verification in a minimal generic way so a state-changing action can declare semantic predicates against parsed AccountState.
 
-A source marked awaiting_change should become fresh again only after:
-- changed content is observed, OR
-- verification policy explicitly says no source change was required and visual success is sufficient
+First supported predicate family:
+- resource delta / resource decreased / exact expected delta
 
-Do not use unchanged bytes as proof of a state-changing action.
+Example concept:
+`resource_decreased("player", ResourceTypeId.Arena_Token)`
 
-## Verification model
+or config representation with equivalent semantics.
 
-Introduce a small explicit action verification contract rather than ad-hoc checks in BotEngine.
+Important:
+- a changed PlayerModel digest alone is NOT enough to prove Arena token spend
+- semantic predicate evaluates baseline vs post-action parsed PlayerModel resources
+- missing resource value => failure/inconclusive, never guessed
+- unrelated PlayerModel changes do not satisfy the predicate
 
-Suggested concept:
+Keep the predicate registry/contract extensible so future predicates can verify:
+- hero level changed
+- relic equipped relation
+- quest claim state
+without hardcoding all logic inside BotEngine.
 
-ActionExpectation:
-- invalidates_sources
-- expects_changed_sources
-- expected_visual_states
-- timeout
-- success_mode
+## Arena start behavior
 
-Possible success modes:
-- VISUAL_ONLY
-- STRUCTURED_ONLY
-- VISUAL_AND_STRUCTURED
-- VISUAL_OR_STRUCTURED
+Current `arena.json` requires PlayerModel digest change within 5 seconds.
 
-Keep implementation minimal and deterministic.
+Do NOT hardcode the assumption that this is definitely the true live save timing.
 
-Do not build full planner/Goal scoring yet.
+For this package:
+- support semantic ArenaToken decrease verification
+- keep timeout configurable
+- document that real-client testing may change whether Arena start is VISUAL_AND_STRUCTURED or staged visual-success + later structured reconciliation
 
-## Engine behavior
+If no real snapshot directory is configured:
+- structured-required Arena action remains blocked before input
 
-Before action:
-- capture pre-action relevant source versions/digests
-- keep unrelated sources fresh
+## Decision trace
 
-After action:
-- wait for expected visual transition and/or relevant structured source change
-- only poll/force-refresh relevant sources aggressively
-- do not globally invalidate all AccountState
+Store/log the first minimal planner decision trace:
+- AccountState observation/version/digest reference used
+- Goal candidate
+- eligibility result
+- blocked reason or selected reason
+- token balance/threshold
+- timestamp
 
-If verification fails:
-- return a failure result/reason
-- do not silently assume success
-- main loop may re-observe/recover
+No sensitive raw snapshot bytes.
 
 ## Tests
 
-Add synthetic tests for at minimum:
+Add tests at minimum for:
 
-1. navigation action invalidates nothing
-2. player-only action invalidates only player
-3. hero/relic action leaves player untouched
-4. unrelated unchanged source remains fresh
-5. expected source change satisfies structured verification
-6. unchanged expected source does not satisfy structured verification
-7. visual-only success does not wait for irrelevant files
-8. structured-only success
-9. visual+structured success
-10. timeout/failure reason
-11. corrupt changed source produces verification failure, not success
-12. compatibility behavior for old flow actions
-13. read-only behavior remains intact
+1. fresh PlayerModel + token above threshold -> Arena candidate eligible
+2. token below threshold -> not eligible
+3. missing PlayerModel -> blocked
+4. stale PlayerModel -> blocked
+5. missing Arena_Token resource -> blocked
+6. exact resource decrease predicate succeeds
+7. unchanged token with other PlayerModel change does NOT verify
+8. token increase does NOT verify decrease
+9. exact-delta predicate success/failure
+10. corrupt post-action source cannot satisfy semantic predicate
+11. decision trace contains no raw bytes
+12. deterministic repeated evaluation
+13. no live input occurs for blocked Goal
 
-Run full pytest, push to main, verify Windows GitHub Actions, update status/docs.
+## Architecture constraints
+
+- Planner/Goal code must consume AccountState, not MemoryPack slot numbers.
+- No raw file parsing imports in Goal code.
+- BotEngine must not grow domain-specific Arena resource logic inline.
+- Semantic predicates belong in a reusable verification layer.
+- No snapshot writes.
+- Existing F12 / UNKNOWN no-input rules remain.
 
 ## Out of scope
 
-Do NOT yet implement:
-- full Goal utility scoring
-- Arena parser
-- Battle parser
-- automatic account-directory discovery
-- filesystem watcher dependency
-- snapshot writes
-- packet/injection behavior
+Do not yet implement:
+- Arena opponent parser/scoring
+- full Goal utility engine across all domains
+- Quest/Battle/Clan parsers
+- automatic account directory discovery
+- live retry policy
+- real-client latency guessing
+- purchases/destructive actions
 
-## Completion report
+## Completion
 
-Report:
+Run full pytest, push main, verify Windows CI and report:
 - commit SHA
-- branch
-- push result
-- full pytest result/count
+- full test count
 - Actions run/result
 - changed files
-- exact compatibility default for legacy flow actions
-- unresolved assumptions
+- exact Goal eligibility behavior
+- semantic resource predicate API/config
+- remaining live assumptions
