@@ -103,3 +103,12 @@ Current official Arena documentation states Arena Tokens regenerate +1 per hour 
 
 ### D041 — Pre-start authorization is a pure decision object before any SendInput
 Arena battle start authorization must be computed from a fresh selected candidate, exact validated OwnPower, fresh PlayerModel token balance, immutable attempt baseline, current opponent-set fingerprint and explicit expected token cost. The authorization object itself cannot send input.
+
+
+### D042 — Arena Token 10 is regeneration ceiling, not hard wallet maximum
+
+Live client observation on 2026-11-14 showed 12/10 Arena Tokens. Therefore policy value 10 must be interpreted as the regeneration ceiling/pressure threshold. Reward/shop grants may raise the stored balance above 10. Authorization must never clamp observed balance to 10.
+
+### D043 — Opening Arena formation does not populate LastMetaBattleSetup in observed client path
+
+A/B/C live capture on 2026-11-14 showed PlayerBattleModel byte-identical across Arena list -> formation -> back, with slot 2 LastMetaBattleSetup null in all captures while UI own Team Power was 9368. Therefore LastMetaBattleSetup cannot be treated as a reliable pre-start OwnPower source for this navigation path. Keep structured source blocked until independently observed; next live fallback is calibrated tiny numeric ROI or an exact locally validated calculator.
