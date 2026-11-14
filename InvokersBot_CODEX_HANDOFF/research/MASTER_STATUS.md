@@ -126,3 +126,12 @@ Implemented in `src/arena_windows.py`:
 ## Sprint 03 — Windows CI (2026-11-14)
 
 Added root workflow .github/workflows/arena-tests.yml: Windows Server 2022, Python 3.12, pinned arena requirements, full unittest discovery and two-cycle simulation with explicit report assertions. Relevant pushes and manual dispatch are enabled. No live flags, game installation or credentials are supplied. Workflow directory lookup returned 404; existing workflow inventory could not be independently enumerated. CI outcome remains unverified; physical Windows navigation remains pending. Do not treat this as a successful test run.
+
+## Sprint 04 — Read-only cross-module foundations (2026-11-14)
+
+- Added calibration_diagnostics.py: foreground-only client/outer/desktop geometry, window DPI, unscaled ROI overlay, no input backend. DPI is the window-reported DPI, not necessarily physical monitor scaling for DPI-unaware games. Real Windows capture untested.
+- Fixed reference-image smoke to mock the client-image boundary rather than the old desktop screenshot boundary. Added it and synthetic recognition benchmark to CI.
+- Added recognition_benchmark.py and diagnostic tests: compare single vs three scales at .95 score on seeded synthetic positives/negatives, report confusion counts and elapsed milliseconds. No production threshold or matching change. OCR reduction candidate: defer result marker OCR until after victory template check; not implemented pending reference tests and profiling. Retain full modal OCR.
+- Hardened screenshot dimension and scroll pointer checks. No live gates changed.
+- Added state_capabilities.py wrapping existing GameState observations; no duplicate decoder, no input authorization. Structured resources/campaign/current arena/hero roster/quests/relics/clan/events already exist. Static internal names and quest prototypes heuristic; main six requires configured IDs; own arena power manual; event runtime definitions, reward claimability, relic cost/value and boss battle conditions unknown. Anima/accessory models identified but no complete module. Planner already supports review tasks and safety filtering; general actor remains disabled.
+- CI commit status and PR-filtered workflow lookup returned empty lists. Push CI result not verified. No full suite, reference smoke, benchmark or Windows capture executed in this session. No numeric recognition accuracy or timing claimed. No new dependency, game input, server action or release archive.
