@@ -21,9 +21,9 @@ class ArenaTokenPolicy:
     regeneration_seconds: int = 3600
     pressure_start: int = 8
     reserve: int = 0
-    expected_battle_cost: int | None = None
+    expected_battle_cost: int | None = 1
     max_balance_age: float = 2.0
-    policy_version: str = "arena-token-v1"
+    policy_version: str = "arena-token-v2"
 
     def __post_init__(self):
         if (any(type(x) is not int for x in (self.token_cap,self.regeneration_seconds,self.pressure_start,self.reserve))

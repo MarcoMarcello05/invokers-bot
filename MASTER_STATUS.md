@@ -460,3 +460,7 @@ Live conclusions:
 - 005B FinishedOpponents exact Player-ID correlation is live validated.
 - result reconciliation can confirm this victory from offense counters + exact selected FinishedOpponent + exact token spend, independently corroborated by visual victory.
 - own pre-start power still requires numeric ROI or another exact source; LastMetaBattleSetup is not populated in this path.
+
+## ARENA-LIVE-006A
+
+Live evidence cost 1 token, 12->11, result persistence on victory screen, LastMetaBattleSetup null. Policy v2 and exact disabled start predicate updated. Narrow formation glyph sensor implemented; actual client glyph assets and DPI/client calibration still needed; default disabled. Synthetic victory regression. CI pending.

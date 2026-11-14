@@ -172,3 +172,7 @@ Own power:
 structured if LastMetaBattleSetup validation succeeds; otherwise pre-battle tiny ROI fallback until exact calculator parity is proven.
 
 This keeps the bot data-first while allowing Arena completion without waiting for every equipment formula.
+
+## Live result 006A
+
+User/ANALYSER measured formation 9368 vs victory 9425. LastMetaBattleSetup remained null through post/return. Narrow formation ROI profile is the chosen fallback; no structured own-power field established. Reference normalized ROI is approximate desktop geometry, not yet confirmed client calibration. Local glyph assets and repeated parity checks remain required.

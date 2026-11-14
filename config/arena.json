@@ -28,7 +28,19 @@
     ],
     "own_power_numeric_roi": {
       "enabled": false,
-      "roi": null
+      "roi": [
+        0.521,
+        0.139,
+        0.651,
+        0.255
+      ],
+      "client_size": [
+        1536,
+        864
+      ],
+      "dpi": null,
+      "calibration_id": null,
+      "glyph_directory": null
     }
   },
   "safety": {
@@ -164,9 +176,10 @@
           "required_goal": "G-RES-001",
           "semantic_predicates": [
             {
-              "kind": "resource_decreased",
+              "kind": "resource_delta",
               "source": "player",
-              "resource_id": 21
+              "resource_id": 21,
+              "delta": -1
             }
           ],
           "requires_spend_authorization": true,
@@ -231,8 +244,8 @@
     "arena": {
       "threshold": 1,
       "reserve": 0,
-      "cap": null,
-      "cost": null,
+      "cap": 10,
+      "cost": 1,
       "max_age": 2,
       "allow_test_battle_start": false
     },
@@ -250,9 +263,9 @@
       "regeneration_seconds": 3600,
       "pressure_start": 8,
       "reserve": 0,
-      "expected_battle_cost": null,
+      "expected_battle_cost": 1,
       "max_balance_age": 2,
-      "policy_version": "arena-token-v1"
+      "policy_version": "arena-token-v2"
     }
   }
 }

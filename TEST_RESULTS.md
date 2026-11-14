@@ -218,3 +218,7 @@ Synthetic pressure, budget, provenance, candidate, immutable authorization, reva
 - Actions run: `43646793086`
 - result: `342 passed, 1 warning in 0.90s`
 - conclusion: SUCCESS
+
+## ARENA-LIVE-006A
+
+Synthetic UI glyphs, strict German numeric normalization, geometry/state/age rejection, planning authorization and sanitized measured victory delta regression. No raw dumps or screenshots committed. CI pending. Real glyph parity and loss transition untested.
