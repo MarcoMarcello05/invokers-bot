@@ -159,3 +159,12 @@ Synthetic opponent field, malformed identity/power, fingerprint, cache invalidat
 ## ARENA-LIVE-003 fixture repair
 
 Original run 43645108504 failed (275 passed, 3 failed, 1 warning). The fixture used raw unsigned single-byte member sizes instead of signed MemoryPack VarInt. Upstream reference: https://github.com/Cysharp/MemoryPack/blob/main/src/MemoryPack.Core/MemoryPackReaderWriter.VarInt.cs (WriteVarInt(int), ReadVarIntInt32). Reader unchanged. Independent literal wire tests and nested size boundary regressions added; real current client snapshot validation remains pending. New Windows CI pending.
+
+
+### ARENA-LIVE-003 final acceptance
+
+- commit: `bca993439fae721158939b22f2e92559c39e6ffc`
+- Actions run: `43645342539`
+- result: `289 passed, 1 warning in 0.99s`
+- conclusion: SUCCESS
+- fixture VarInt regression coverage added at 127/128/255/256/32767/32768 and nested large-object cases.
