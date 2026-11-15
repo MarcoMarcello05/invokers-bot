@@ -512,3 +512,15 @@ Shadow coordinator implemented, CI pending. Single-use attempt, explicit prepara
 - VERIFIED: cancellation, timeout, wrong-ID, invalidation and duplicate-terminal behavior are covered.
 - VERIFIED: synthetic victory/loss paths execute end-to-end; loss remains NOT live validated.
 - NEXT STRATEGY: stop adding large offline architecture layers. Pivot to real-client perception/navigation calibration and supervised live execution.
+
+
+## ARENA-LIVE-006C review finding
+
+External + independent code review identified a real integration risk in accepted 006C:
+- current start confirmation requires battle visual + wallet token -1 inside 5s,
+- live evidence only proves the token/resource persistence by result screen,
+- synthetic coordinator tests incorrectly supply POST PlayerModel at start,
+- a 5s timeout enters BLOCKED/STOP and can discard a later real result.
+
+PlayerModel already parses ResourcesSpent and the live victory showed ResourcesSpent[Arena_Token] +1.
+NEXT: 006C1 hardens post-StartIntent ownership and result-time exact spend verification before any live integration.
