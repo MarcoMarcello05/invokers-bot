@@ -62,6 +62,14 @@ class TerminalRecord:
     final_arena_version: int | None
     final_player_version: int | None
 
+    @property
+    def recovery_required(self):
+        return self.result.reason.startswith("RECOVERY_REQUIRED_")
+
+    @property
+    def retry_allowed(self):
+        return False
+
 
 class AttemptReconciliation:
     def __init__(self,context,*,timeout=15):

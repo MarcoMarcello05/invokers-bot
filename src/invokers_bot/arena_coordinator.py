@@ -6,7 +6,7 @@ from math import isfinite
 from .arena_authorization import ArenaTokenPolicy, authorize, still_valid
 from .arena_ranking import RankingPolicy, rank
 from .arena_attempt import AttemptReconciliation, AttemptObservation, TerminalRecord
-from .arena_outcome import Outcome, capture, exact_spend
+from .arena_outcome import Outcome, capture, exact_spend, evidence
 
 
 class Phase(str,Enum):
@@ -56,11 +56,24 @@ class ArenaRunCoordinator:
     begin_observation_window is a synthetic/external boundary, NOT a start
     command. It freezes the baseline before any spend or visual evidence.
     """
-    def __init__(self,*,start_timeout=5.,result_timeout=60.):
-        if any(not isfinite(v) or not 0<v<=120 for v in (start_timeout,result_timeout)):
+    def __init__(self,*,start_timeout=5.,stagnation_timeout=60.,hard_timeout=300.,result_timeout=None):
+        # Legacy result_timeout is an inactivity bound, not a battle duration.
+        if result_timeout is not None:
+            if stagnation_timeout!=60.:
+                raise ValueError("specify only one inactivity timeout")
+            stagnation_timeout=result_timeout
+        if (not all(isfinite(v) and v>0 for v in (start_timeout,stagnation_timeout,hard_timeout))
+                or start_timeout>120 or stagnation_timeout<=start_timeout
+                or hard_timeout<stagnation_timeout):
             raise ValueError("invalid deadlines")
         self.start_timeout=start_timeout
-        self.result_timeout=result_timeout
+        self.stagnation_timeout=stagnation_timeout
+        self.hard_timeout=hard_timeout
+        self.last_progress_at=None
+        self.last_progress_kind=None
+        self.hard_deadline=None
+        self.recovery_required=False
+        self._progress_keys=set()
         self.phase=Phase.IDLE
         self.reason="IDLE"
         self.trace=[]
@@ -143,11 +156,14 @@ class ArenaRunCoordinator:
             self._set(Phase.BLOCKED,"PRESTART_INVALIDATED",now)
             return None
         # Existing reconciliation requires the unchanged PRE snapshot here.
-        self.reconciliation=AttemptReconciliation(auth.attempt,timeout=self.result_timeout)
+        self.reconciliation=AttemptReconciliation(auth.attempt,timeout=min(120.,self.stagnation_timeout))
         self.reconciliation.mark_started(account,now=now)
         self.started_at=now
-        self.result_deadline=now+self.start_timeout+self.result_timeout
-        self.reconciliation.core.deadline=self.result_deadline
+        self.hard_deadline=now+self.hard_timeout
+        self.last_progress_at=now
+        self.last_progress_kind="INTENT"
+        # Inner verifier has only the absolute bound; coordinator owns liveness.
+        self.reconciliation.core.deadline=self.hard_deadline
         key=(auth.attempt_id,auth.player_digest,auth.player_version,
              candidate.arena_digest,candidate.arena_version,candidate.fingerprint,
              repr(power),repr(policy),repr(ranking_policy))
@@ -169,6 +185,41 @@ class ArenaRunCoordinator:
         self._clock(now)
         return True
 
+    def _progress(self,now,kind,key=None):
+        if key is not None:
+            if key in self._progress_keys:
+                return
+            self._progress_keys.add(key)
+        if now>self.last_progress_at:
+            self.last_progress_at=now
+            self.last_progress_kind=kind
+
+    def _structured_progress(self,sample,now):
+        # Only semantic, attempt-related evidence counts, never arbitrary digests,
+        # defense updates, wall clocks, or unrelated wallet changes.
+        e=evidence(self.auth.attempt.baseline,sample,cost=self.auth.expected_cost,
+                   identity=self.auth.selected_opponent_id)
+        if e.source_conflict or e.reset_or_rollback or e.spend_conflict:
+            return
+        for kind,valid in (
+            ("EXACT_SPEND",e.exact_token_spend),
+            ("CURRENT_OPPONENT",e.current_opponent_matched),
+            ("FINISHED_OPPONENT",e.finished_added),
+            ("OFFENSE_COMPLETE",e.offense_battles_delta==1 and e.offense_wins_delta in (0,1)),
+        ):
+            if valid:
+                self._progress(now,kind,key=kind)
+
+    def _timeout(self,now,sample=None):
+        if now>=self.hard_deadline:
+            reason="RECOVERY_REQUIRED_HARD_TIMEOUT"
+        elif now-self.last_progress_at>=self.stagnation_timeout:
+            reason="RECOVERY_REQUIRED_NO_PROGRESS"
+        else:
+            return None
+        self.recovery_required=True
+        return self._close(Outcome.INCONCLUSIVE,reason,now,sample)
+
     def _close(self,outcome,reason,now,sample=None):
         self.record=self.reconciliation.close(outcome,reason,now=now,sample=sample)
         self._set(Phase.TERMINAL,reason,now)
@@ -189,12 +240,14 @@ class ArenaRunCoordinator:
             self.last_status="PENDING"
             return self.phase
         sample=capture(account,now=now)
-        if now>=self.result_deadline:
-            self._close(Outcome.INCONCLUSIVE,"RESULT_INCONCLUSIVE_TIMEOUT",now,sample)
+        if self._timeout(now,sample) is not None:
             return self.phase
         if self._spend(sample)=="CONFLICTED":
             self._close(Outcome.CONFLICTED,"START_SPEND_CONFLICT",now,sample)
             return self.phase
+        self._structured_progress(sample,now)
+        if visual_battle is True and self.phase!=Phase.RESULT_PENDING:
+            self._progress(now,"BATTLE_STATE")
         self.visual_battle=self.visual_battle or visual_battle is True
         self.last_status="CONFIRMED" if self.spend_confirmed else "PENDING"
         if self.phase==Phase.RESULT_PENDING:
@@ -218,10 +271,15 @@ class ArenaRunCoordinator:
             return None
         sample=observation.sample
         now=sample.observed_at
-        if now>=self.result_deadline:
-            return self._close(Outcome.INCONCLUSIVE,"RESULT_INCONCLUSIVE_TIMEOUT",now,sample)
+        if self._timeout(now,sample) is not None:
+            return self.record
         if self._spend(sample)=="CONFLICTED":
             return self._close(Outcome.CONFLICTED,"RESULT_SPEND_CONFLICT",now,sample)
+        self._structured_progress(sample,now)
+        if observation.visual=="battle" and self.phase!=Phase.RESULT_PENDING:
+            self._progress(now,"BATTLE_STATE")
+        elif observation.visual in ("victory","defeat","completed"):
+            self._progress(now,"RESULT_VISUAL",key="RESULT_VISUAL")
         # An attempt-bound result can arrive even if battle visuals were missed.
         result=self.reconciliation.observe(observation)
         if isinstance(result,TerminalRecord):
@@ -247,8 +305,8 @@ class ArenaRunCoordinator:
         if self.phase==Phase.PREPARED and now-self.auth.observed_at>2:
             self._set(Phase.BLOCKED,"AUTHORIZATION_EXPIRED",now)
         elif self.intent is not None:
-            if now>=self.result_deadline:
-                self._close(Outcome.INCONCLUSIVE,"RESULT_INCONCLUSIVE_TIMEOUT",now)
-            elif self.phase==Phase.START_OBSERVED and now>=self.intent.deadline:
+            if self._timeout(now) is not None:
+                return self.phase
+            if self.phase==Phase.START_OBSERVED and now>=self.intent.deadline:
                 self._set(Phase.START_UNRESOLVED,"START_EVIDENCE_INCONCLUSIVE_OWNED",now)
         return self.phase

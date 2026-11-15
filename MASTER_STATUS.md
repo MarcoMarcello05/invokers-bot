@@ -561,3 +561,7 @@ Post-intent ownership hardened; visual battle keeps attempt active independent o
 - VERIFIED: realistic PRE -> running PRE -> delayed POST ordering is covered.
 - Battle input remains disabled.
 - NEXT: real-client calibration + dry/live driver integration; no further major offline architecture package.
+
+## Arena coordinator liveness hardening
+
+State-driven battle observation replaces fixed duration. Default soft start 5s, inactivity 60s, absolute 300s from intent. No runtime/input wiring. CI pending.

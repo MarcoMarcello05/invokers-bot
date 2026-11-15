@@ -275,3 +275,7 @@ Temporal PRE/running/late POST regression, masked wallet, conflicting spend, tim
 - result: `387 passed, 1 warning in 1.09s`
 - conclusion: SUCCESS
 - no battle input enabled.
+
+## Arena liveness hardening
+
+Regression cases: 61/95/240s battle, late win/loss, hard cap, inactivity, stale/wrong attempt, one-shot semantic/result progress and configurable bounds. Previous 006C1 tests retained. CI pending.

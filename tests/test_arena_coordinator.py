@@ -189,3 +189,80 @@ def test_traversal_diagnostics(kind,reason):
     c=ArenaRunCoordinator()
     assert c.prepare(pre,inv,power,p,r,now=10)==Phase.NEED_TRAVERSAL
     assert c.reason==reason
+
+
+# Liveness hardening: continuously observed state, not predicted duration.
+@pytest.mark.parametrize("duration",[61,95,240])
+def test_long_battle_liveness(duration):
+    c,pre,post,i=window()
+    for now in range(11,10+duration+1,15):
+        assert c.observe_start(i.attempt_id,pre,visual_battle=True,now=now)==Phase.BATTLE_RUNNING
+        assert c.last_progress_at==now
+    assert c.tick(now=10+duration)==Phase.BATTLE_RUNNING
+    assert c.record is None and not c.retry_allowed
+    assert c.hard_deadline==310
+    with pytest.raises(ValueError):
+        c.prepare(pre,None,None,now=10+duration)
+
+@pytest.mark.parametrize("win",[True,False])
+def test_late_result_before_hard_cap(win):
+    c,pre,post,i=window()
+    for now in range(11,290,20):
+        assert c.observe_start(i.attempt_id,pre,visual_battle=True,now=now)==Phase.BATTLE_RUNNING
+    sample=replace(capture(post,now=11),observed_at=309)
+    if not win:
+        sample=replace(sample,stats=replace(sample.stats,total_offense_wins=13,attack_wins_this_week=13))
+    record=c.observe_result(AttemptObservation(i.attempt_id,sample,"victory" if win else "defeat"))
+    assert record.outcome==(Outcome.WIN_CONFIRMED if win else Outcome.LOSS_CONFIRMED)
+
+def test_hard_cap_cannot_be_extended():
+    c,pre,post,i=window()
+    for now in range(11,310,20):
+        c.observe_start(i.attempt_id,pre,visual_battle=True,now=now)
+    assert c.observe_start(i.attempt_id,pre,visual_battle=True,now=310)==Phase.TERMINAL
+    assert c.record.outcome==Outcome.INCONCLUSIVE and c.record.recovery_required
+    assert c.record.result.reason=="RECOVERY_REQUIRED_HARD_TIMEOUT"
+    assert not c.record.retry_allowed and c.recovery_required
+    with pytest.raises(ValueError):
+        c.prepare(pre,None,None,now=311)
+
+def test_no_progress_and_stale_events():
+    c,pre,post,i=window()
+    c.observe_start(i.attempt_id,pre,visual_battle=True,now=11)
+    assert c.tick(now=50)==Phase.BATTLE_RUNNING
+    assert c.observe_start("other",pre,visual_battle=True,now=60)=="WRONG_ATTEMPT"
+    assert c.observe_start(i.attempt_id,pre,visual_battle=True,now=49)=="IGNORED_STALE"
+    assert c.observe_start(i.attempt_id,pre,now=65)==Phase.BATTLE_RUNNING
+    assert c.last_progress_at==11
+    assert c.tick(now=71)==Phase.TERMINAL
+    assert c.record.result.reason=="RECOVERY_REQUIRED_NO_PROGRESS"
+    assert c.record.recovery_required and not c.record.retry_allowed
+
+def test_semantic_progress_is_not_repeated():
+    c,pre,post,i=window()
+    c.observe_start(i.attempt_id,pre,visual_battle=True,now=11)
+    # Fresh real semantic spend evidence, without a battle visual.
+    player=replace(post.sources["player"],checked_at=50)
+    changed=AccountState({**pre.sources,"player":player},frozenset())
+    c.observe_start(i.attempt_id,changed,now=50)
+    assert c.last_progress_at==50
+    changed=AccountState({**pre.sources,"player":replace(player,checked_at=90)},frozenset())
+    c.observe_start(i.attempt_id,changed,now=90)
+    assert c.last_progress_at==50
+    assert c.tick(now=110)==Phase.TERMINAL
+
+def test_result_visual_progress_once():
+    c,pre,post,i=window()
+    c.observe_start(i.attempt_id,pre,visual_battle=True,now=11)
+    sample=replace(capture(post,now=11),observed_at=55,tokens=12,tokens_spent=0)
+    assert c.observe_result(AttemptObservation(i.attempt_id,sample,"victory")).pending
+    assert c.last_progress_at==55
+    assert c.observe_result(AttemptObservation(i.attempt_id,replace(sample,observed_at=90),"victory")).pending
+    assert c.last_progress_at==55
+    assert c.tick(now=115)==Phase.TERMINAL
+
+def test_custom_liveness_bounds():
+    c=ArenaRunCoordinator(start_timeout=3,stagnation_timeout=90,hard_timeout=400)
+    assert c.stagnation_timeout==90 and c.hard_timeout==400
+    with pytest.raises(ValueError):
+        ArenaRunCoordinator(stagnation_timeout=90,hard_timeout=80)
