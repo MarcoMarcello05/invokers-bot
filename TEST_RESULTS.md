@@ -257,3 +257,12 @@ Added shadow scenario tests for synthetic victory/loss, invalidation, start evid
 ## ARENA-LIVE-006C1
 
 Temporal PRE/running/late POST regression, masked wallet, conflicting spend, timeout record, unresolved ownership, wrong/stale ID and diagnostics tests. CI pending.
+
+
+### ARENA-LIVE-006C1 final acceptance
+
+- commit: `a7d8400d7f1c49ab40feaa730cd09a08cc8c2276`
+- Actions run: `43694893685`
+- result: `387 passed, 1 warning in 1.09s`
+- conclusion: SUCCESS
+- realistic temporal regression now covers PRE -> visual battle with unchanged token -> soft start timeout -> late POST exact spend/result.
