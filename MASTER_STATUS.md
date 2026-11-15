@@ -528,3 +528,19 @@ NEXT: 006C1 hardens post-StartIntent ownership and result-time exact spend verif
 ## ARENA-LIVE-006C1
 
 Post-intent ownership hardened; visual battle keeps attempt active independent of spend persistence; exact counter-aware spend required for results. CI pending. Battle input remains disabled.
+
+
+## ARENA-LIVE-006C1 acceptance
+
+- ABGESCHLOSSEN (CODE/CI)
+- commit: `a7d8400d7f1c49ab40feaa730cd09a08cc8c2276`
+- Windows CI run: `43694893685`
+- result: `387 passed, 1 warning in 1.09s`
+- VERIFIED: battle visual can keep an attempt running while spend persistence is delayed.
+- VERIFIED: soft start timeout becomes START_UNRESOLVED rather than discarding post-intent ownership.
+- VERIFIED: result timeout produces a metadata-only terminal INCONCLUSIVE record.
+- VERIFIED: exact Arena spend prefers ResourcesSpent[21] and tolerates wallet masking by regeneration.
+- VERIFIED: WIN/LOSS now require exact spend plus compatible result evidence.
+- VERIFIED: wrong/stale runtime samples no longer crash the coordinator path.
+- VERIFIED: battle input remains disabled.
+- REMAINING LIVE BLOCKERS: real UI calibration/navigation, OwnPower MVP source, real start timing, live loss timing/path.
