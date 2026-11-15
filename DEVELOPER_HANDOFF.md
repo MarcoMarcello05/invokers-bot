@@ -9,54 +9,38 @@ Accepted baseline:
 - Windows CI `43694893685`
 - `387 passed, 1 warning in 1.09s`
 
-006C1 resolved the delayed token-persistence defect:
-- visual battle can keep the attempt active without immediate spend persistence
-- start timeout is soft after StartIntent
-- unresolved post-intent ownership is retained
-- exact result spend prefers ResourcesSpent[Arena_Token]
-- terminal INCONCLUSIVE records preserve unresolved attempts
-- no battle input is enabled
+## Important
 
-## Do not start another large offline package
+Do not start another large offline architecture package.
 
-The project is now integration-bound.
+The next work requires the real Windows client.
 
-Next work requires the real Windows client:
-1. capture client size + DPI
-2. calibrate current Arena UI states/templates/ROIs
-3. validate Home -> Arena -> list -> formation navigation
-4. choose the MVP OwnPower strategy from real evidence
-5. run live dry/shadow observation
-6. enable one supervised navigation input
-7. then one supervised Arena StartIntent execution
-8. observe start timing and PlayerModel/ResourcesSpent persistence
-9. reconcile result
-10. capture any popup/loading/recovery cases encountered
+Primary objectives:
+1. calibrate live UI states/templates/ROIs,
+2. validate real driver loop wiring against ArenaRunCoordinator,
+3. measure actual start/result timing and persistence,
+4. solve OwnPower pragmatically,
+5. supervised navigation input,
+6. supervised Arena start with no blind retry,
+7. automatic result reconciliation.
 
-## Specific live measurement
+## Required live timing probe
 
-For one supervised battle, sample at ~1s cadence from PRE through result:
+For one supervised Arena attempt, observe at ~1s cadence:
 - visual state
 - PlayerModel digest/version
-- Arena token balance
+- Arena Token wallet
 - ResourcesSpent[Arena_Token]
-- PlayerArenaModel digest/version
-- CurrentBattleOpponent if available
+- CurrentBattleOpponent if present
+- Arena offense counters
+from pre-click through result screen.
 
-This is diagnostic observation only until explicit start integration is enabled.
+This validates when spend and structured battle evidence actually persist.
 
-## While user is mobile
-
-Allowed:
-- code review for defects
-- CI maintenance
-- documentation corrections
-- tiny scaffolding directly needed for the next live session
-
-Do not:
-- expand planner/GOAP architecture
-- add Campaign
-- invent templates/coordinates
-- enable battle input
-- enable replay
-- enable Gem refresh
+## Constraints
+- no speculative coordinates/templates
+- no battle input until live calibration is explicitly ready
+- no replay
+- no Gem refresh
+- no new planner/GOAP abstractions
+- no Campaign implementation yet
