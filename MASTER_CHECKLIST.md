@@ -88,9 +88,9 @@ Rules:
 - [ ] ARENA-003 | IN ENTWICKLUNG | Opponent semantics/CombatPower verified; own Team Power provenance + first ranking next
 - [ ] ARENA-004 | TEST AUSSTEHEND | Deterministic ranking implemented; real-client own Team Power validation required
 - [x] ARENA-005 | ABGESCHLOSSEN | live offense cost verified as exactly 1 Arena Token; token pressure + authorization policy implemented
-- [ ] ARENA-006 | TEST AUSSTEHEND | shadow start transaction/coordinator complete; supervised real-client start integration pending
+- [ ] ARENA-006 | IN ENTWICKLUNG | 006C coordinator requires post-StartIntent timeout/spend hardening before supervised live start
 - [x] ARENA-007 | ABGESCHLOSSEN | live PRE/POST victory validated: counters/resources/history persist on result screen
-- [ ] ARENA-008 | TEST AUSSTEHEND | Evidence-based win/loss classification implemented; live result timing pending
+- [ ] ARENA-008 | IN ENTWICKLUNG | require exact Arena spend corroboration at result; live loss/timing still pending
 - [ ] ARENA-009 | IN ENTWICKLUNG | Semantic opponent-set refresh fingerprint verified; manual Gem refresh remains blocked
 - [ ] ARENA-010 | OFFEN | Defense team management
 
