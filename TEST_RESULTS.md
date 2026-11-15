@@ -253,3 +253,7 @@ Added shadow scenario tests for synthetic victory/loss, invalidation, start evid
 - result: `376 passed, 1 warning in 1.35s`
 - conclusion: SUCCESS
 - live caveat: loss path synthetic only; no input path enabled.
+
+## ARENA-LIVE-006C1
+
+Temporal PRE/running/late POST regression, masked wallet, conflicting spend, timeout record, unresolved ownership, wrong/stale ID and diagnostics tests. CI pending.

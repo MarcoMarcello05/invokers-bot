@@ -3,10 +3,10 @@ from dataclasses import dataclass
 from enum import Enum
 from hashlib import sha256
 from math import isfinite
-from .arena_authorization import ArenaTokenPolicy, authorize, still_valid, verify_spend
+from .arena_authorization import ArenaTokenPolicy, authorize, still_valid
 from .arena_ranking import RankingPolicy, rank
 from .arena_attempt import AttemptReconciliation, AttemptObservation, TerminalRecord
-from .arena_outcome import Outcome, capture
+from .arena_outcome import Outcome, capture, exact_spend
 
 
 class Phase(str,Enum):
@@ -18,6 +18,7 @@ class Phase(str,Enum):
     NEED_AUTHORIZATION="NEED_AUTHORIZATION"
     PREPARED="PREPARED"
     START_OBSERVED="START_OBSERVED"
+    START_UNRESOLVED="START_UNRESOLVED"
     BATTLE_RUNNING="BATTLE_RUNNING"
     RESULT_PENDING="RESULT_PENDING"
     TERMINAL="TERMINAL"
@@ -71,6 +72,9 @@ class ArenaRunCoordinator:
         self.visual_battle=False
         self.started_at=None
         self.retry_allowed=False
+        self.spend_confirmed=False
+        self.last_spend=None
+        self.last_status=None
 
     def _clock(self,now):
         if not isfinite(now) or now<self.last_time:
@@ -88,6 +92,8 @@ class ArenaRunCoordinator:
     def cancel(self,*,now):
         self._clock(now)
         if self.phase not in STOP:
+            if self.intent is not None:
+                self.record=self.reconciliation.close(Outcome.INCONCLUSIVE,"CANCELLED_NO_RETRY",now=now)
             self._set(Phase.CANCELLED,"CANCELLED_NO_RETRY",now)
         return self.phase
 
@@ -100,19 +106,25 @@ class ArenaRunCoordinator:
         if not a or not a.digest or not a.fresh(2,now):
             return self._set(Phase.BLOCKED,"BLOCK_ARENA_STALE",now)
         self._set(Phase.NEED_TRAVERSAL,"CHECK_TRAVERSAL",now)
-        if (inventory is None or inventory.digest!=a.digest or inventory.version!=a.model.version
-                or inventory.reason not in ("END_UNCHANGED","NO_NEW_ROWS","COUNT_REACHED")
-                or inventory.unique_count!=a.model.opponents.count):
-            return self.phase
+        for failed,reason in (
+            (inventory is None,"TRAVERSAL_MISSING"),
+            (inventory is not None and inventory.digest!=a.digest,"TRAVERSAL_DIGEST_MISMATCH"),
+            (inventory is not None and inventory.version!=a.model.version,"TRAVERSAL_VERSION_MISMATCH"),
+            (inventory is not None and inventory.reason not in ("END_UNCHANGED","NO_NEW_ROWS","COUNT_REACHED"),"TRAVERSAL_INCOMPLETE"),
+            (inventory is not None and (inventory.unique_count!=a.model.opponents.count or inventory.structured_count!=a.model.opponents.count),"TRAVERSAL_COUNT_MISMATCH")):
+            if failed:
+                return self._set(Phase.NEED_TRAVERSAL,reason,now)
         self._set(Phase.NEED_OWN_POWER,"CHECK_POWER",now)
         context=[]
         for name in ("arena","heroes","relics"):
             item=account.sources.get(name)
             if not item or not item.digest or not item.fresh(2,now):
-                return self.phase
+                return self._set(Phase.NEED_OWN_POWER,"OWN_POWER_CONTEXT_STALE",now)
             context.append((name,item.digest,item.model.version))
-        if power is None or not power.usable(now,ranking_policy.power_max_age,tuple(context)):
-            return self.phase
+        if power is None or not power.exact or not power.validated or power.value is None:
+            return self._set(Phase.NEED_OWN_POWER,"OWN_POWER_UNAVAILABLE",now)
+        if not power.usable(now,ranking_policy.power_max_age,tuple(context)):
+            return self._set(Phase.NEED_OWN_POWER,"OWN_POWER_STALE_OR_CONTEXT_MISMATCH",now)
         self._set(Phase.NEED_RANKING,"RANK",now)
         ranking=rank(account,power,ranking_policy,now=now,context=tuple(context))
         self._set(Phase.NEED_AUTHORIZATION,"AUTHORIZE",now)
@@ -134,6 +146,8 @@ class ArenaRunCoordinator:
         self.reconciliation=AttemptReconciliation(auth.attempt,timeout=self.result_timeout)
         self.reconciliation.mark_started(account,now=now)
         self.started_at=now
+        self.result_deadline=now+self.start_timeout+self.result_timeout
+        self.reconciliation.core.deadline=self.result_deadline
         key=(auth.attempt_id,auth.player_digest,auth.player_version,
              candidate.arena_digest,candidate.arena_version,candidate.fingerprint,
              repr(power),repr(policy),repr(ranking_policy))
@@ -144,61 +158,97 @@ class ArenaRunCoordinator:
         self._set(Phase.START_OBSERVED,"AWAITING_START_EVIDENCE",now)
         return self.intent
 
-    def observe_start(self,attempt_id,account,*,visual_battle=False,now):
-        self._check_id(attempt_id)
+    def _runtime_sample(self,attempt_id,now):
+        # All supplied timestamps must share the caller's monotonic epoch.
+        if self.auth is None or attempt_id!=self.auth.attempt_id:
+            self.last_status="WRONG_ATTEMPT"
+            return False
+        if not isfinite(now) or now<self.last_time or (self.intent and now<self.intent.created_at):
+            self.last_status="IGNORED_STALE"
+            return False
         self._clock(now)
+        return True
+
+    def _close(self,outcome,reason,now,sample=None):
+        self.record=self.reconciliation.close(outcome,reason,now=now,sample=sample)
+        self._set(Phase.TERMINAL,reason,now)
+        self.last_status=outcome.value
+        return self.record
+
+    def _spend(self,sample):
+        self.last_spend=exact_spend(self.auth.attempt.baseline,sample,self.auth.expected_cost)
+        self.spend_confirmed=self.last_spend.status=="CONFIRMED"
+        return self.last_spend.status
+
+    def observe_start(self,attempt_id,account,*,visual_battle=False,now):
+        if not self._runtime_sample(attempt_id,now):
+            return self.last_status
         if self.phase in STOP:
             return self.phase
-        if self.phase!=Phase.START_OBSERVED:
-            raise ValueError("not awaiting start evidence")
-        if now>=self.intent.deadline:
-            return self._set(Phase.BLOCKED,"START_INCONCLUSIVE_TIMEOUT",now)
+        if self.phase not in (Phase.START_OBSERVED,Phase.START_UNRESOLVED,Phase.BATTLE_RUNNING,Phase.RESULT_PENDING):
+            self.last_status="PENDING"
+            return self.phase
+        sample=capture(account,now=now)
+        if now>=self.result_deadline:
+            self._close(Outcome.INCONCLUSIVE,"RESULT_INCONCLUSIVE_TIMEOUT",now,sample)
+            return self.phase
+        if self._spend(sample)=="CONFLICTED":
+            self._close(Outcome.CONFLICTED,"START_SPEND_CONFLICT",now,sample)
+            return self.phase
         self.visual_battle=self.visual_battle or visual_battle is True
-        # The spend helper's window starts at auth; align with intent deadline.
-        elapsed=self.intent.created_at-self.auth.observed_at
-        spend=verify_spend(self.auth,account,visual_battle=self.visual_battle,
-                          now=now,timeout=self.start_timeout+elapsed)
-        if spend.status=="CONFIRMED":
-            self.reconciliation.core.deadline=now+self.result_timeout
-            return self._set(Phase.BATTLE_RUNNING,"START_CONFIRMED",now)
-        if spend.status in ("CONFLICTED","BLOCKED","INCONCLUSIVE"):
-            return self._set(Phase.BLOCKED,"START_"+spend.status,now)
+        self.last_status="CONFIRMED" if self.spend_confirmed else "PENDING"
+        if self.phase==Phase.RESULT_PENDING:
+            return self.phase
+        if self.visual_battle:
+            return self._set(Phase.BATTLE_RUNNING,"START_CONFIRMED" if self.spend_confirmed else "BATTLE_VISUAL_SPEND_PENDING",now)
+        if now>=self.intent.deadline:
+            return self._set(Phase.START_UNRESOLVED,"START_EVIDENCE_INCONCLUSIVE_OWNED",now)
         return self._set(Phase.START_OBSERVED,"START_PENDING",now)
 
-    def _check_id(self,attempt_id):
-        if self.auth is None or attempt_id!=self.auth.attempt_id:
-            raise ValueError("wrong attempt ID")
-
     def observe_result(self,observation):
-        self._check_id(observation.attempt_id)
+        if self.auth is None or observation.attempt_id!=self.auth.attempt_id:
+            self.last_status="WRONG_ATTEMPT"
+            return self.last_status
         if self.record is not None:
             return self.record
-        if self.phase in STOP:
+        if not self._runtime_sample(observation.attempt_id,observation.sample.observed_at):
+            return self.last_status
+        if self.phase in STOP or self.intent is None:
+            self.last_status="PENDING"
             return None
-        if self.phase not in (Phase.BATTLE_RUNNING,Phase.RESULT_PENDING):
-            raise ValueError("start not confirmed")
-        now=observation.sample.observed_at
-        if now<self.last_time:
-            return None
-        self._clock(now)
+        sample=observation.sample
+        now=sample.observed_at
+        if now>=self.result_deadline:
+            return self._close(Outcome.INCONCLUSIVE,"RESULT_INCONCLUSIVE_TIMEOUT",now,sample)
+        if self._spend(sample)=="CONFLICTED":
+            return self._close(Outcome.CONFLICTED,"RESULT_SPEND_CONFLICT",now,sample)
+        # An attempt-bound result can arrive even if battle visuals were missed.
         result=self.reconciliation.observe(observation)
         if isinstance(result,TerminalRecord):
             self.record=result
-            phase=Phase.TERMINAL if result.outcome in (Outcome.WIN_CONFIRMED,Outcome.LOSS_CONFIRMED) else Phase.BLOCKED
-            self._set(phase,result.outcome.value,now)
-        elif result is not None and (observation.visual in ("victory","defeat","completed")
-                                     or result.outcome==Outcome.BATTLE_COMPLETED_RESULT_UNKNOWN
-                                     or self.phase==Phase.RESULT_PENDING):
-            self._set(Phase.RESULT_PENDING,result.reason,now)
+            self._set(Phase.TERMINAL,result.outcome.value,now)
+            self.last_status=result.outcome.value
+        elif result is not None:
+            self.last_status="PENDING"
+            if observation.visual in ("victory","defeat","completed") or result.outcome==Outcome.BATTLE_COMPLETED_RESULT_UNKNOWN or self.phase==Phase.RESULT_PENDING:
+                self._set(Phase.RESULT_PENDING,result.reason,now)
+            elif observation.visual=="battle":
+                self.visual_battle=True
+                self._set(Phase.BATTLE_RUNNING,"BATTLE_VISUAL_SPEND_PENDING",now)
         return result
 
     def tick(self,*,now):
-        """Pure deadline polling even when no source can be read."""
+        if not isfinite(now) or now<self.last_time:
+            self.last_status="IGNORED_STALE"
+            return self.last_status
         self._clock(now)
+        if self.phase in STOP:
+            return self.phase
         if self.phase==Phase.PREPARED and now-self.auth.observed_at>2:
             self._set(Phase.BLOCKED,"AUTHORIZATION_EXPIRED",now)
-        elif self.phase==Phase.START_OBSERVED and now>=self.intent.deadline:
-            self._set(Phase.BLOCKED,"START_INCONCLUSIVE_TIMEOUT",now)
-        elif self.phase in (Phase.BATTLE_RUNNING,Phase.RESULT_PENDING) and now>=self.reconciliation.core.deadline:
-            self._set(Phase.BLOCKED,"RESULT_INCONCLUSIVE_TIMEOUT",now)
+        elif self.intent is not None:
+            if now>=self.result_deadline:
+                self._close(Outcome.INCONCLUSIVE,"RESULT_INCONCLUSIVE_TIMEOUT",now)
+            elif self.phase==Phase.START_OBSERVED and now>=self.intent.deadline:
+                self._set(Phase.START_UNRESOLVED,"START_EVIDENCE_INCONCLUSIVE_OWNED",now)
         return self.phase

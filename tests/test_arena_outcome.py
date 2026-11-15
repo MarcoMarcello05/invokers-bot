@@ -36,7 +36,7 @@ def post(b,**kwargs):
 def test_counter_visual(win,visual,expected):
     b=baseline()
     s=replace(b.stats,total_offense_battles=14,total_offense_wins=13+win,attack_battles_this_week=14,attack_wins_this_week=13+win)
-    result=Reconciliation(b).observe(post(b,stats=s),visual=visual)
+    result=Reconciliation(b,cost=1).observe(post(b,stats=s,tokens=2),visual=visual)
     assert result.outcome==expected and not result.replay_allowed
 
 @pytest.mark.parametrize("changes,expected",[({"points":600},Outcome.INCONCLUSIVE),({"coins":50},Outcome.INCONCLUSIVE),({"tokens":2},Outcome.BATTLE_START_ONLY)])

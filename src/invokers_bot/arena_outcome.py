@@ -34,6 +34,7 @@ class Sample:
     coins: int | None = None
     finished_ids: tuple[str,...] | None = None
     current_id: str | None = None
+    tokens_spent: int | None = None
 
 
 def _identity(raw):
@@ -64,7 +65,8 @@ def capture(account, *, now=None):
         m=p.model
         values.update(player_digest=p.digest,player_version=m.version,
                       tokens=m.resources.get(ResourceTypeId.Arena_Token),
-                      coins=m.resources.get(ResourceTypeId.Arena_Coin))
+                      coins=m.resources.get(ResourceTypeId.Arena_Coin),
+                      tokens_spent=getattr(m,'resources_spent',{}).get(ResourceTypeId.Arena_Token))
     return Sample(now,**values)
 
 
@@ -72,8 +74,42 @@ def delta(a,b):
     return b-a if type(a) is int and type(b) is int else None
 
 
+@dataclass(frozen=True,slots=True)
+class ExactSpend:
+    status: str
+    balance_delta: int | None
+    spent_delta: int | None
+    source: str | None = None
+
+
+def exact_spend(before,after,cost):
+    """Counter preferred; wallet-only fallback when the counter is unavailable.
+
+    Known unchanged counter with decreased wallet is unresolved, not proof.
+    A counter-confirmed spend can coexist with regeneration/rewards.
+    """
+    wallet=delta(before.tokens,after.tokens)
+    spent=delta(before.tokens_spent,after.tokens_spent)
+    if type(cost) is not int or cost<=0:
+        return ExactSpend("PENDING",wallet,spent)
+    if not before.player_digest or not after.player_digest or before.player_version is None or after.player_version is None:
+        return ExactSpend("PENDING",wallet,spent)
+    if after.player_version<before.player_version or (
+        before.player_digest==after.player_digest and (wallet not in (None,0) or spent not in (None,0))):
+        return ExactSpend("CONFLICTED",wallet,spent)
+    if spent is not None and spent not in (0,cost):
+        return ExactSpend("CONFLICTED",wallet,spent)
+    if wallet is not None and wallet < -cost:
+        return ExactSpend("CONFLICTED",wallet,spent)
+    if spent==cost:
+        return ExactSpend("CONFIRMED",wallet,spent,"RESOURCES_SPENT")
+    if spent is None and wallet==-cost:
+        return ExactSpend("CONFIRMED",wallet,spent,"BALANCE")
+    return ExactSpend("PENDING",wallet,spent)
+
+
 def arena_token_spent_exactly(before,after,cost):
-    return type(cost) is int and cost>0 and delta(before.tokens,after.tokens)==-cost
+    return exact_spend(before,after,cost).status=="CONFIRMED"
 
 
 def finished_opponent_added(before,after,identity):
@@ -96,6 +132,9 @@ class ArenaBattleOutcomeEvidence:
     visual_result: str | None
     reset_or_rollback: bool
     source_conflict: bool
+    tokens_spent_delta: int | None = None
+    spend_source: str | None = None
+    spend_conflict: bool = False
 
     @property
     def arena_offense_battles_increased(self):
@@ -138,14 +177,15 @@ def evidence(before,after,*,cost=None,identity=None,visual=None):
               (player_ok and before.player_digest==after.player_digest and
                (before.tokens,before.coins)!=(after.tokens,after.coins)) or
               (stats_ok and identity is not None and after.current_id is not None and after.current_id!=identity))
+    spend=exact_spend(before,after,cost)
     return ArenaBattleOutcomeEvidence(ob,ow,db,
         delta(before.points,after.points) if stats_ok else None,
         delta(before.tokens,after.tokens) if player_ok else None,
         delta(before.coins,after.coins) if player_ok else None,
-        player_ok and arena_token_spent_exactly(before,after,cost),
+        player_ok and spend.status=="CONFIRMED",
         stats_ok and finished_opponent_added(before,after,identity),
         stats_ok and identity is not None and after.current_id==identity,
-        visual,reset,bool(conflict))
+        visual,reset,bool(conflict),spend.spent_delta,spend.source,spend.status=="CONFLICTED")
 
 
 @dataclass(frozen=True,slots=True)
@@ -191,6 +231,8 @@ class Reconciliation:
             result=Result(Outcome.CONFLICTED,e,False,"CONTRADICTORY_PROVENANCE_OR_VISUAL")
         elif expired:
             result=Result(Outcome.INCONCLUSIVE,e,False,"OBSERVATION_TIMEOUT")
+        elif e.spend_conflict:
+            result=Result(Outcome.CONFLICTED,e,False,"TOKEN_SPEND_CONFLICT")
         elif e.reset_or_rollback:
             result=Result(Outcome.CONFLICTED,e,False,"RESET_OR_COUNTER_ROLLBACK")
         elif ob is not None and (ob>1 or ow>ob):
@@ -199,7 +241,7 @@ class Reconciliation:
             expected="victory" if ow==1 else "defeat"
             if self.visual in ("victory","defeat") and self.visual!=expected:
                 result=Result(Outcome.CONFLICTED,e,False,"VISUAL_COUNTER_CONFLICT")
-            elif self.visual==expected or (e.finished_added and e.exact_token_spend):
+            elif e.exact_token_spend and (self.visual==expected or e.finished_added):
                 result=Result(Outcome.WIN_CONFIRMED if ow else Outcome.LOSS_CONFIRMED,e,False,"OFFENSE_AND_SUPPORT")
             else:
                 result=Result(Outcome.BATTLE_COMPLETED_RESULT_UNKNOWN,e,True,"AWAITING_CORROBORATION")

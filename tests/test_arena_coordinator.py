@@ -39,15 +39,17 @@ def window():
 @pytest.mark.parametrize("win",[True,False])
 def test_end_to_end(win):
     c,pre,post,i=window()
-    assert c.observe_start(i.attempt_id,post,visual_battle=True,now=11)==Phase.BATTLE_RUNNING
+    assert c.observe_start(i.attempt_id,pre,visual_battle=True,now=11)==Phase.BATTLE_RUNNING
+    assert not c.spend_confirmed
+    assert c.tick(now=16)==Phase.BATTLE_RUNNING
     sample=capture(post,now=11)
     if not win:
         sample=replace(sample,stats=replace(sample.stats,total_offense_wins=13,attack_wins_this_week=13),
                        points=534,coins=100)
-    record=c.observe_result(AttemptObservation(i.attempt_id,replace(sample,observed_at=12),"victory" if win else "defeat"))
+    record=c.observe_result(AttemptObservation(i.attempt_id,replace(sample,observed_at=20),"victory" if win else "defeat"))
     assert record.outcome==(Outcome.WIN_CONFIRMED if win else Outcome.LOSS_CONFIRMED)
     assert record.opponent_id==i.opponent_id and c.phase==Phase.TERMINAL
-    assert c.observe_result(AttemptObservation(i.attempt_id,replace(sample,observed_at=13))) is record
+    assert c.observe_result(AttemptObservation(i.attempt_id,replace(sample,observed_at=21))) is record
     assert not c.retry_allowed and not record.result.replay_allowed
 
 
@@ -77,7 +79,7 @@ def test_invalidation(kind):
 
 def test_visual_only_then_spend():
     c,pre,post,i=window()
-    assert c.observe_start(i.attempt_id,pre,visual_battle=True,now=10.5)==Phase.START_OBSERVED
+    assert c.observe_start(i.attempt_id,pre,visual_battle=True,now=10.5)==Phase.BATTLE_RUNNING
     assert c.observe_start(i.attempt_id,post,now=11)==Phase.BATTLE_RUNNING
 
 
@@ -91,14 +93,17 @@ def test_wrong_delta():
     c,pre,post,i=window()
     item=post.sources["player"]
     bad=AccountState({**post.sources,"player":replace(item,model=SimpleNamespace(version=2,resources={21:10}))},frozenset())
-    assert c.observe_start(i.attempt_id,bad,visual_battle=True,now=11)==Phase.BLOCKED
-    assert c.reason=="START_CONFLICTED"
+    assert c.observe_start(i.attempt_id,bad,visual_battle=True,now=11)==Phase.TERMINAL
+    assert c.record.outcome==Outcome.CONFLICTED
 
 
 def test_deadline():
     c,pre,post,i=window()
-    assert c.tick(now=15)==Phase.BLOCKED and not c.retry_allowed
-    assert c.observe_start(i.attempt_id,post,visual_battle=True,now=16)==Phase.BLOCKED
+    assert c.tick(now=15)==Phase.START_UNRESOLVED and not c.retry_allowed
+    assert c.record is None
+    with pytest.raises(ValueError):
+        c.prepare(pre,None,None,now=15)
+    assert c.observe_start(i.attempt_id,pre,visual_battle=True,now=16)==Phase.BATTLE_RUNNING
 
 
 @pytest.mark.parametrize("started",[False,True])
@@ -116,8 +121,7 @@ def test_cancel(started):
 
 def test_wrong_id_and_single_attempt():
     c,pre,post,i=window()
-    with pytest.raises(ValueError,match="wrong attempt"):
-        c.observe_start("bad",post,now=11)
+    assert c.observe_start("bad",post,now=11)=="WRONG_ATTEMPT"
     with pytest.raises(ValueError):
         c.prepare(pre,None,None,now=11)
 
@@ -125,7 +129,7 @@ def test_wrong_id_and_single_attempt():
 def test_result_timeout():
     c,pre,post,i=window()
     c.observe_start(i.attempt_id,post,visual_battle=True,now=11)
-    assert c.tick(now=71)==Phase.BLOCKED and c.record is None
+    assert c.tick(now=75)==Phase.TERMINAL and c.record.outcome==Outcome.INCONCLUSIVE
 
 
 def test_refresh_after_start():
@@ -134,3 +138,54 @@ def test_refresh_after_start():
     sample=replace(capture(post,now=11),observed_at=12,arena_digest="refreshed")
     record=c.observe_result(AttemptObservation(i.attempt_id,sample,"victory"))
     assert record.opponent_id==i.opponent_id and record.attempt_id==i.attempt_id
+
+
+@pytest.mark.parametrize("wallet,spent,expected",[(12,1,Outcome.WIN_CONFIRMED),(11,2,Outcome.CONFLICTED),(10,1,Outcome.CONFLICTED)])
+def test_counter_preferred(wallet,spent,expected):
+    c,pre,post,i=window()
+    c.observe_start(i.attempt_id,pre,visual_battle=True,now=11)
+    c.tick(now=16)
+    sample=replace(capture(post,now=11),observed_at=20,tokens=wallet,tokens_spent=spent)
+    record=c.observe_result(AttemptObservation(i.attempt_id,sample,"victory"))
+    assert record.outcome==expected
+    if expected==Outcome.WIN_CONFIRMED:
+        assert record.result.evidence.spend_source=="RESOURCES_SPENT"
+
+
+def test_visual_result_without_spend_pending():
+    c,pre,post,i=window()
+    c.observe_start(i.attempt_id,pre,visual_battle=True,now=11)
+    sample=replace(capture(post,now=11),observed_at=20,tokens=12,tokens_spent=0)
+    result=c.observe_result(AttemptObservation(i.attempt_id,sample,"victory"))
+    assert result.pending and c.phase==Phase.RESULT_PENDING
+    assert c.tick(now=75)==Phase.TERMINAL
+    assert c.record.outcome==Outcome.INCONCLUSIVE and not c.record.result.replay_allowed
+
+
+def test_no_start_evidence_final_timeout():
+    c,pre,post,i=window()
+    assert c.tick(now=15)==Phase.START_UNRESOLVED
+    assert c.tick(now=75)==Phase.TERMINAL
+    assert c.record.attempt_id==i.attempt_id and c.record.opponent_id==i.opponent_id
+    assert c.record.outcome==Outcome.INCONCLUSIVE
+
+
+def test_late_wrong_stale():
+    c,pre,post,i=window()
+    c.observe_start(i.attempt_id,pre,visual_battle=True,now=11)
+    sample=capture(post,now=11)
+    assert c.observe_result(AttemptObservation("other",sample,"victory"))=="WRONG_ATTEMPT"
+    assert c.observe_result(AttemptObservation(i.attempt_id,replace(sample,observed_at=9),"victory"))=="IGNORED_STALE"
+    assert c.phase==Phase.BATTLE_RUNNING
+
+
+@pytest.mark.parametrize("kind,reason",[(None,"TRAVERSAL_MISSING"),("digest","TRAVERSAL_DIGEST_MISMATCH"),("version","TRAVERSAL_VERSION_MISMATCH"),("reason","TRAVERSAL_INCOMPLETE"),("unique_count","TRAVERSAL_COUNT_MISMATCH")])
+def test_traversal_diagnostics(kind,reason):
+    pre,post,inv,power,p,r=inputs()
+    if kind is None:
+        inv=None
+    else:
+        inv=replace(inv,**{kind:{"digest":"wrong","version":99,"reason":"TIMEOUT","unique_count":1}[kind]})
+    c=ArenaRunCoordinator()
+    assert c.prepare(pre,inv,power,p,r,now=10)==Phase.NEED_TRAVERSAL
+    assert c.reason==reason

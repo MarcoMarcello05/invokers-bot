@@ -524,3 +524,7 @@ External + independent code review identified a real integration risk in accepte
 
 PlayerModel already parses ResourcesSpent and the live victory showed ResourcesSpent[Arena_Token] +1.
 NEXT: 006C1 hardens post-StartIntent ownership and result-time exact spend verification before any live integration.
+
+## ARENA-LIVE-006C1
+
+Post-intent ownership hardened; visual battle keeps attempt active independent of spend persistence; exact counter-aware spend required for results. CI pending. Battle input remains disabled.

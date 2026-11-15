@@ -6,6 +6,7 @@ import time
 from .arena_ranking import RankingPolicy, PowerSource, rank
 from .arena_attempt import create_attempt, ArenaBattleAttemptContext
 from .resource_types import ResourceTypeId
+from .arena_outcome import capture, exact_spend
 
 
 class TokenPressure(str, Enum):
@@ -183,15 +184,10 @@ def verify_spend(auth,account,*,visual_battle=False,now=None,timeout=5):
         raise ValueError("invalid spend window")
     if now<auth.observed_at or now-auth.observed_at>=timeout:
         return SpendObservation("INCONCLUSIVE")
-    value=balance(account,auth.policy,now)
-    item=account.sources.get("player") if account else None
-    if value is None or item.digest==auth.player_digest:
-        return SpendObservation("PENDING")
-    if item.model.version<auth.player_version:
+    current=capture(account,now=now)
+    spend=exact_spend(auth.attempt.baseline,current,auth.expected_cost)
+    if spend.status=="CONFLICTED":
         return SpendObservation("CONFLICTED")
-    delta=value-auth.token_balance
-    if delta==-auth.expected_cost and visual_battle:
+    if spend.status=="CONFIRMED" and visual_battle:
         return SpendObservation("CONFIRMED")
-    if delta not in (0,-auth.expected_cost):
-        return SpendObservation("CONFLICTED")
     return SpendObservation("PENDING")

@@ -92,6 +92,23 @@ class AttemptReconciliation:
         self.core.deadline=self.started_at+self.timeout
         self.core.latest_at=self.started_at
 
+    def close(self, outcome, reason, *, now, sample=None):
+        """Explicit metadata-only closure, even without a fresh sample."""
+        if self.record is not None:
+            return self.record
+        from .arena_outcome import evidence
+        b=self.context.baseline
+        sample=sample if sample is not None else Sample(now)
+        e=evidence(b,sample,cost=self.context.expected_token_cost,
+                   identity=self.context.opponent_id,visual=self.core.visual)
+        result=Result(outcome,e,False,reason)
+        self.core.terminal=result
+        self.record=TerminalRecord(self.context.attempt_id,self.context.opponent_id,outcome,
+            self.started_at,now,result,b.arena_digest,b.player_digest,
+            sample.arena_digest,sample.player_digest,b.arena_version,b.player_version,
+            sample.arena_version,sample.player_version)
+        return self.record
+
     def observe(self,observation):
         if observation.attempt_id!=self.context.attempt_id:
             raise ValueError("wrong attempt")
