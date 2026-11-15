@@ -544,3 +544,20 @@ Post-intent ownership hardened; visual battle keeps attempt active independent o
 - VERIFIED: wrong/stale runtime samples no longer crash the coordinator path.
 - VERIFIED: battle input remains disabled.
 - REMAINING LIVE BLOCKERS: real UI calibration/navigation, OwnPower MVP source, real start timing, live loss timing/path.
+
+
+## ARENA-LIVE-006C1 acceptance
+
+- ABGESCHLOSSEN (CODE/CI)
+- commit: `a7d8400d7f1c49ab40feaa730cd09a08cc8c2276`
+- Windows CI run: `43694893685`
+- result: `387 passed, 1 warning in 1.09s`
+- VERIFIED: battle visual can keep post-StartIntent attempt active before token persistence.
+- VERIFIED: soft start timeout no longer discards a running/unresolved attempt.
+- VERIFIED: final timeout creates metadata-only INCONCLUSIVE terminal record.
+- VERIFIED: exact spend prefers ResourcesSpent[Arena_Token] delta +1 and detects conflicting deltas.
+- VERIFIED: WIN/LOSS now require exact spend corroboration.
+- VERIFIED: wrong/stale runtime samples no longer crash coordinator.
+- VERIFIED: realistic PRE -> running PRE -> delayed POST ordering is covered.
+- Battle input remains disabled.
+- NEXT: real-client calibration + dry/live driver integration; no further major offline architecture package.
