@@ -23,4 +23,6 @@ jobs:
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
           python -m pip install Brotli==1.2.0
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          python -m pip install -e .
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
           python tools/quest_static_discovery.py --archive
