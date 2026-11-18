@@ -602,3 +602,27 @@ Corrected inherited Arena regression test only: first result evidence at monoton
 ## QUEST-LIVE-002 discovery / catalog foundation
 
 Archive Windows discovery runs 44314113822 and 44314362726 SUCCESS. Verified HZCP format 4, 446 keys/chunks/hashes, 0.62.1655 revision, 0.62.700 secondary string, Main 8652824 B; SHA256 and exact type fields in QUEST_STATIC_DEFINITIONS_0.62.md. Strict container reader, explicit semantic evidence states, versioned catalog contract and non-executable conditional hints added. No real prototype rows loaded: sequential StaticData QuestData table boundary and nested reward/condition serializers remain unverified. No Arena or action changes, raw/bulk files or guessed mappings. Full-suite and strict archived-reader CI pending on implementation commit.
+
+
+## QUEST-LIVE-002 final acceptance
+
+- ABGESCHLOSSEN (CODE/CI): HZCP container reader + fail-closed versioned QuestStaticCatalog foundation.
+- commit: `04dd53fbad1cfb86114dbdd9126fa5915e106034`
+- Windows Actions run: `44315267859`
+- result: `460 passed, 1 warning in 1.68s`
+- conclusion: SUCCESS
+- VERIFIED: no real bulk quest definitions are silently treated as decoded; unresolved serializer/table boundaries remain explicit.
+- VERIFIED: no Arena production/action path changes.
+- CORRECTION: HZCP files expose two distinct version strings. Treat the first string (for example 0.62.1655/1657/1659/1661) as the container/file build string until semantics are proven; keep the second string `0.62.700` separate. Do not call either one "Static revision" without evidence.
+
+### Fresh PC evidence for QUEST-LIVE-003
+
+Current user-provided artifacts outside the public repo:
+- static-data.0.62.1657.dat — 5,808,901 bytes — SHA256 `6f1c536c90c51465ea632c371719bde14ab90a314e8c2855fcfa79bd8703fd2f`
+- static-data.0.62.1659.dat — 5,838,336 bytes — SHA256 `d45634471a348ebbd8f3949feec085e27206c65922aba2f36edbbf443e4f6701`
+- static-data.0.62.1661.dat — 5,809,126 bytes — SHA256 `390f752c88d6247674fae7901653bf2b636af6735b1a0f1c157879060cd6b46d`
+- PlayerQuestsModel.dat — 52,486 bytes — SHA256 `44b094afb8ada6818303ac4854cfc805a0dc5d93e9bc6db48288f5e675abdcad`
+
+All three current static files begin with HZCP format 4 and contain primary version strings matching their filenames plus the separate second version string `0.62.700`.
+
+These files are analysis inputs only and must not be committed raw to main.
