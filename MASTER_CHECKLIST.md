@@ -315,5 +315,5 @@ This checklist remains open-ended: newly discovered Invokers systems must be app
 - [x] Static artifact SHA256 and HZCP vector/size evidence
 - [x] Strict read-only container and versioned catalog consumer foundation
 - [x] Verified enum IDs and explicit unknown/absent/unsupported semantics
-- [ ] Implementation CI acceptance
-- [ ] QUEST-LIVE-003: complete structural QuestData table boundaries, nested condition/reward serialization, real PrototypeId join and build compatibility
+- [x] Implementation CI acceptance: 460 passed, 1 warning, run 44315267859
+- [ ] QUEST-LIVE-003 | IN ENTWICKLUNG | structural QuestData decoder + real PrototypeId join using fresh 1657/1659/1661 evidence
