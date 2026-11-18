@@ -53,14 +53,14 @@ Rules:
 
 ## D. Quests / rewards / progression
 
-- [ ] QUEST-001 | IN ANALYSE | Progress Quests inspect
+- [ ] QUEST-001 | IN ENTWICKLUNG | structured PlayerQuestsModel parser + AccountState inspection foundation
 - [ ] QUEST-002 | OFFEN | Progress Quest GO-navigation
-- [ ] QUEST-003 | OFFEN | Progress Quest completion/reward claim
-- [ ] QUEST-004 | OFFEN | Daily Quests
-- [ ] QUEST-005 | OFFEN | Weekly Quests
-- [ ] QUEST-006 | OFFEN | Monthly Quests
+- [ ] QUEST-003 | IN ANALYSE | completed quest candidates will be exposed read-only; claim UI remains later
+- [ ] QUEST-004 | IN ANALYSE | Daily periodic group/window structured parsing in QUEST-LIVE-001
+- [ ] QUEST-005 | IN ANALYSE | Weekly periodic group/window structured parsing in QUEST-LIVE-001
+- [ ] QUEST-006 | IN ANALYSE | Monthly periodic group/window structured parsing in QUEST-LIVE-001
 - [ ] QUEST-007 | OFFEN | Quest completion chests
-- [ ] QUEST-008 | OFFEN | Achievements inspect
+- [ ] QUEST-008 | IN ENTWICKLUNG | achievement group/progress structured inspection in QUEST-LIVE-001
 - [ ] QUEST-009 | OFFEN | Achievements claim
 - [ ] QUEST-010 | OFFEN | Daily login reward
 - [ ] QUEST-011 | OFFEN | Playtime rewards
