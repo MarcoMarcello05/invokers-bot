@@ -1,274 +1,66 @@
 # DEVELOPER HANDOFF
 
-## QUEST-LIVE-001 — structured quest state foundation
+## QUEST-LIVE-001A — CI acceptance / stale Arena regression test
 
 Status: BEREIT ZUR ENTWICKLUNG
 
-User is currently mobile, so this package must be fully offline/read-only and require no real-client interaction.
+Baseline implementation:
+- QUEST-LIVE-001 commit: `d8f1ffeb7a660dbdd79a37366751342afa318e2f`
+- Windows Actions run: `44280741108`
+- actual result: **1 failed, 422 passed, 1 warning in 1.60s**
 
-Arena remains paused at the accepted live-integration boundary. Do not modify Arena behavior in this package.
+Failure:
+`tests/test_arena_coordinator.py::test_visual_result_without_spend_pending`
 
-## Goal
+Observed assertion:
+expected `Phase.TERMINAL`, actual `Phase.RESULT_PENDING` at the old timeout point.
 
-Implement the first real Quest domain slice from the already-mapped PlayerQuestsModel.
+## Root cause
 
-The package should make Quest state available through AccountState and expose safe, semantic read-only facts for later planning.
+This failure is inherited from the previously merged Arena liveness hardening.
 
-This package does NOT click, claim, navigate, or infer unknown quest objectives.
+The Arena coordinator no longer treats a fixed 60-second result duration as battle duration. It now uses:
+- soft start window
+- inactivity/liveness timeout
+- absolute hard cap
 
-## Verified schema source
+The failing test still asserts the pre-hardening timing behavior.
 
-Use `QUESTS_MEMORYPACK_MAP_0.62.1621.md` as the binary source of truth.
+QUEST-LIVE-001 itself must not change Arena production behavior.
 
-PlayerQuestsModel:
-- exactly 6 current members
-- slot 0 LastQuestId int32
-- slot 1 ActiveQuestsById
-- slot 2 CompletedPrototypeIds List<int>
-- slot 3 PeriodicGroups
-- slot 4 AchievementGroups
-- slot 5 TotalCompletedQuests int32
+## Required fix
 
-IQuestState union:
-- tag 1 QuestStatePeriodic
-- tag 2 QuestStateAchievement
-- tag 3 QuestStateBook
+1. Inspect current `ArenaRunCoordinator` liveness semantics from commit history/current main.
+2. Update only the stale Arena regression test(s) so they match the accepted state-driven watchdog behavior.
+3. Do NOT weaken the liveness rules just to satisfy the old test.
+4. Do NOT modify Arena production code unless an actual production defect is independently demonstrated.
+5. Preserve the intended assertion:
+   - visual result without exact spend remains RESULT_PENDING while within valid liveness window
+   - it eventually becomes TERMINAL/INCONCLUSIVE only when the appropriate inactivity or hard watchdog deadline is actually reached
+   - retry remains disallowed
+6. Run the full pytest suite.
+7. Push the correction to `main`.
+8. Verify the real Windows Actions log, not only workflow status.
 
-Current quest-state member count:
-- 51
-- verified nonzero slots: 0,1,2,3,5,50
-- slot0 QuestId int32
-- slot1 PrototypeId int32
-- slot2 StateId int32
-- slot3 TimeStarted DateTime
-- slot5 Progress int32
-- slot50 subtype-specific enum/page
-- all other current slots reserved/zero-length
+## QUEST-LIVE-001 acceptance checks after CI is green
 
-QuestStateId:
-- 0 Unknown
-- 1 New
-- 2 InProgress
-- 3 Completed
-
-Periodic subtype slot50:
-- QuestPeriodicGroup
-
-Achievement subtype slot50:
-- QuestAchievementGroup
-
-Book subtype slot50:
-- Page
-
-Enforce:
-- dictionary key == QuestId for every active quest
-- unknown union tags are explicit unsupported values/errors, never guessed
-- malformed lengths/counts rejected
-- reserved fields not semantically interpreted
-
-## A. Parser
-
-Create a strict read-only parser, naming may follow project conventions, e.g.:
-- `quests_model.py`
-
-Suggested immutable models:
-
-`QuestKind`
-- PERIODIC
-- ACHIEVEMENT
-- BOOK
-
-`QuestStateId`
-- UNKNOWN=0
-- NEW=1
-- IN_PROGRESS=2
-- COMPLETED=3
-
-`QuestState`
-- quest_id
-- prototype_id
-- state_id
-- time_started_utc
-- progress
-- kind
-- group_or_page
-- source union tag
-
-`PeriodicWindow`
-- group
-- start_time_utc
-- finish_time_utc nullable
-
-`AchievementProgress`
-- group_id
-- current_level
-- progress
-
-`PlayerQuestsState`
-- version
-- updated_at_utc
-- last_quest_id
-- active_by_id immutable mapping
-- completed_prototype_ids immutable tuple/frozenset
-- periodic_groups immutable mapping
-- achievement_groups immutable mapping
-- total_completed_quests
-
-Preserve numeric IDs as canonical values. Enums may wrap known values but parser must not invent labels for unknown future numeric values unless existing verified schema explicitly supports them.
-
-## B. AccountState integration
-
-Add `PlayerQuestsModel.dat` as source name `quests` to AccountObserver.
-
-Requirements:
-- same read-only before/after stat guard as existing sources
-- same digest/version/freshness semantics
-- `AccountState.quests` convenience property
-- source-scoped invalidation support automatically includes quests
-- no unrelated Arena/Hero/Relic behavior changes
-
-Update type unions cleanly.
-
-## C. Quest semantic adapter
-
-Add a pure/domain-level quest view, separate from binary parsing.
-
-At minimum expose:
-
-`QuestSummary`
-- source digest/version/observed_at
-- total active
-- total completed-state active entries
-- periodic count
-- achievement count
-- book/progress count
-- completed prototype count
-- total_completed_quests
-
-`ClaimableQuest`
-- quest_id
-- prototype_id
-- kind
-- state_id == COMPLETED
-- group_or_page
-- time_started
-- periodic finish time if directly joinable
-- source provenance
-
-Important:
-A quest in ActiveQuestsById with StateId COMPLETED is only a **claim candidate**.
-Do not assert reward details or UI claimability until live/static-definition evidence exists.
-
-Provide deterministic queries:
-- all_completed_candidates()
-- periodic_candidates(group)
-- active_periodic_windows()
-- summary()
-
-## D. Periodic windows
-
-Parse the four observed periodic groups generically:
-- Daily
-- Weekly
-- Monthly
-- Clan
-
-Do not hardcode that only four can ever exist.
-
-Nullable FinishTime must be preserved exactly.
-
-The planner may later use finish time for urgency, but this package only exposes the data.
-
-## E. Static definition boundary
-
-Do NOT attempt to infer objective/reward semantics from PrototypeId.
-
-Create an explicit boundary/interface or TODO contract for a later `QuestDefinitionCatalog` sourced from verified static game data.
-
-Reason:
-Current official game material confirms quest objectives/rewards can change between updates, including 0.62 quest reward changes and hidden Clan Quest placement. Static definitions must therefore be build/version aware, not baked into snapshot parser code.
-
-No web data belongs in runtime parser constants.
-
-## F. Pure goal facts, no scheduler expansion
-
-Produce only safe facts for later goals:
-- `quests.has_completed_candidates`
-- completed candidate count
-- nearest known periodic finish time
-- groups with completed candidates
-- source freshness/provenance
-
-Do NOT build full ProgressQuest routing yet.
-Do NOT add new utility-scoring architecture.
-Do NOT implement claim clicks.
-
-## G. Tests
-
-Use synthetic binary fixtures following the verified MemoryPack profile.
-
-At minimum test:
-
-1. parse 6-slot PlayerQuestsModel
-2. periodic union tag 1
-3. achievement tag 2
-4. book tag 3
-5. dictionary key == QuestId success
-6. dictionary key mismatch rejected
-7. malformed member count rejected
-8. malformed scalar width rejected
-9. reserved/extra future slots safely handled only according to existing VersionTolerant reader contract
-10. unknown union tag explicitly rejected/unsupported
-11. Completed StateId=3 becomes claim candidate
-12. New/InProgress do not become claim candidates
-13. CompletedPrototypeIds parsed exactly
-14. periodic nullable FinishTime
-15. achievement current_level/progress
-16. AccountObserver reads `quests`
-17. unchanged quest file retains model/digest semantics
-18. changed quest file marks source changed
-19. invalid/corrupt quest source does not destroy last-good diagnostic model
-20. quest invalidation is source-scoped
-21. summary/group queries deterministic
-22. no input/action dependencies imported by quest parser/domain adapter
-23. entire existing test suite remains green
-
-## H. Documentation
-
-Update:
-- MASTER_STATUS.md
-- MASTER_CHECKLIST.md
-- TEST_RESULTS.md
-- ACCOUNTSTATE_SOURCE_MATRIX.md if necessary
-- LIVE_ACCOUNTSTATE.md if necessary
-
-Document clearly:
-- parser/code CI validation is not live quest UI validation
-- no static PrototypeId semantics yet
-- no claim/navigation capability yet
-- no raw user snapshot committed
-
-## Constraints
-
-- read-only
-- no SendInput
-- no screenshots/templates
-- no OCR
-- no claim action
-- no purchase behavior
-- no static quest guesses
-- no raw PlayerQuestsModel.dat committed
-- no Arena regressions
-- Windows CI required
+Reconfirm:
+- `quests_model.py` parses only verified PlayerQuestsModel fields
+- union tags 1/2/3 only
+- unknown numeric state/group values remain numeric; no guessed semantics
+- dictionary QuestId/key invariant enforced
+- Completed active state is only a claim candidate, not proof of UI claimability
+- `PlayerQuestsModel.dat` integrated as scoped AccountState source
+- no SendInput/OCR/navigation/claim code
+- no raw snapshots committed
+- no Arena production/config changes in the QUEST implementation commit
 
 ## Completion report
 
 Report:
-- commit SHA
-- files changed
-- parser model/schema decisions
-- AccountState integration
-- claim-candidate semantics
-- test count
-- Windows CI run/result
-- remaining blockers for QUEST-LIVE-002
+- corrective commit SHA
+- exact stale test change
+- final pytest count
+- Windows Actions run ID and conclusion
+- confirmation that no Arena production behavior was changed
+- confirmation that QUEST-LIVE-001 remains read-only
