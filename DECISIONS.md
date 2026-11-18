@@ -134,3 +134,12 @@ The Arena run coordinator must model long-running navigation/start/result work a
 ### D048 — No blind start retry after ambiguous Arena transition
 
 If battle-start evidence is delayed, incomplete, stale, or inconclusive, the coordinator must not emit a second start input. It blocks/reconciles/re-observes first. A new StartIntent requires a fresh planning cycle and fresh authorization after the prior attempt is terminal or cancelled.
+
+
+### D049 — Quest snapshot state and quest definitions are separate layers
+
+PlayerQuestsModel provides instance state/progress/reset windows. Prototype objective text, reward semantics and routing metadata belong to a build-versioned QuestDefinitionCatalog sourced from verified static game data. The binary parser must never infer objective or reward meaning from PrototypeId.
+
+### D050 — Completed active quest is a claim candidate, not proof of UI claimability
+
+QuestStateId.Completed inside ActiveQuestsById may generate a read-only claim candidate. Actual UI claimability and reward collection require a later navigation/verification capability and must not be assumed from the snapshot alone.
