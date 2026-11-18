@@ -573,3 +573,7 @@ User requested offline Quest development while real-client Arena work is blocked
 Existing schema research already maps PlayerQuestsModel, IQuestState union, periodic windows and achievement groups.
 Next package: strict read-only PlayerQuests parser + AccountState integration + semantic completed/claim-candidate facts.
 No quest input/navigation/claiming in this package.
+
+## QUEST-LIVE-001
+
+Read-only quest parser (tag 8), AccountState quests source and pure candidate/summary/facts adapter implemented; CI pending. No static semantics, navigation, claim or runtime scheduler changes. Arena code/config unchanged. UI/live validation pending.

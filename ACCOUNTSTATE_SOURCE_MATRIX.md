@@ -78,3 +78,7 @@ Suggested classes:
 - STATIC: versioned by game build/config version
 
 Exact thresholds belong in later implementation policy, not in the parser.
+
+## QUEST-LIVE-001 implemented source
+
+Source quests / PlayerQuestsModel.dat / union 8 uses the existing stat guard, digest, freshness and invalidation path. QuestView requires fresh typed source with digest. QuestGoalFacts exposes unknown (None) when unavailable, not false/zero. No scheduler registration. Completed active state is a candidate only.

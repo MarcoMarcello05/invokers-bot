@@ -299,3 +299,12 @@ The project is only considered functionally complete when the bot can:
 - produce logs explaining what it did and why.
 
 This checklist remains open-ended: newly discovered Invokers systems must be appended with stable IDs.
+
+## QUEST-LIVE-001
+
+- [x] Verified wire profile parser and immutable quest models
+- [x] AccountObserver source-scoped quests integration
+- [x] Fresh deterministic completion candidates and periodic windows
+- [x] Version-aware static catalog interface only
+- [ ] Windows CI acceptance
+- [ ] QUEST-LIVE-002: verified static definitions and live quest UI/claim evidence (not implemented)

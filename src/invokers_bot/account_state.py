@@ -12,18 +12,20 @@ from .player_model import PlayerModelState, parse_player_model
 from .heroes_model import PlayerHeroesState, parse_heroes_model
 from .relics_model import PlayerRelicsState, parse_relics_model
 from .arena_model import ArenaState, parse_arena_model
+from .quests_model import PlayerQuestsState, parse_quests_model
 
 _SOURCES = {
     "player": ("PlayerModel.dat", parse_player_model),
     "heroes": ("PlayerHeroesModel.dat", parse_heroes_model),
     "relics": ("PlayerRelicsModel.dat", parse_relics_model),
     "arena": ("PlayerArenaModel.dat", parse_arena_model),
+    "quests": ("PlayerQuestsModel.dat", parse_quests_model),
 }
 
 
 @dataclass(frozen=True, slots=True)
 class Observation:
-    model: PlayerModelState | PlayerHeroesState | PlayerRelicsState | ArenaState | None
+    model: PlayerModelState | PlayerHeroesState | PlayerRelicsState | ArenaState | PlayerQuestsState | None
     file_stamp: tuple[int, ...] | None
     digest: str | None
     checked_at: float
@@ -66,6 +68,10 @@ class AccountState:
     @property
     def arena(self):
         return self.get_fresh("arena")
+
+    @property
+    def quests(self):
+        return self.get_fresh("quests")
 
 
 def _stamp(stat):
