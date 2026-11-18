@@ -581,3 +581,20 @@ Read-only quest parser (tag 8), AccountState quests source and pure candidate/su
 ## QUEST-LIVE-001A
 
 Corrected inherited Arena regression test only: first result evidence at monotonic t=20 renews inactivity deadline to t=80 (60s without progress), not old t=75. Assert pending at 75 and just before 80, terminal INCONCLUSIVE/RECOVERY_REQUIRED_NO_PROGRESS at 80, immutable attempt identity, no retry/replay and idempotent terminal. Quest and Arena production code/config unchanged. CI pending.
+
+
+## QUEST-LIVE-001 / 001A acceptance
+
+- ABGESCHLOSSEN (CODE/CI): strict read-only PlayerQuestsModel parser + AccountState quest source + pure quest candidate/fact adapter.
+- implementation commit: `d8f1ffeb7a660dbdd79a37366751342afa318e2f`
+- CI-fix commit: `0347c6d59d091c6f155ba791fc59ca57006ec631`
+- Windows Actions run: `44312996129`
+- result: `423 passed, 1 warning in 1.51s`
+- VERIFIED: PlayerQuestsModel union tag 8 integrated as scoped source.
+- VERIFIED: active quest dictionary key must equal QuestId.
+- VERIFIED: union tags 1/2/3 only; unknown numeric state/group/page values remain numeric.
+- VERIFIED: Completed active state yields claim candidate only, never UI-claim authorization.
+- VERIFIED: periodic windows and achievement progress exposed read-only.
+- VERIFIED: no SendInput/OCR/navigation/claim code, no raw account snapshots.
+- VERIFIED: 001A changed only stale Arena regression test + docs; Arena production code unchanged.
+- NEXT: QUEST-LIVE-002 static quest-definition discovery/catalog foundation.
