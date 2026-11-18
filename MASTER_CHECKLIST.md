@@ -53,14 +53,14 @@ Rules:
 
 ## D. Quests / rewards / progression
 
-- [ ] QUEST-001 | IN ENTWICKLUNG | structured PlayerQuestsModel parser + AccountState inspection foundation
+- [x] QUEST-001 | ABGESCHLOSSEN | structured PlayerQuestsModel parser + AccountState inspection foundation CI-verified
 - [ ] QUEST-002 | OFFEN | Progress Quest GO-navigation
-- [ ] QUEST-003 | IN ANALYSE | completed quest candidates will be exposed read-only; claim UI remains later
-- [ ] QUEST-004 | IN ANALYSE | Daily periodic group/window structured parsing in QUEST-LIVE-001
-- [ ] QUEST-005 | IN ANALYSE | Weekly periodic group/window structured parsing in QUEST-LIVE-001
-- [ ] QUEST-006 | IN ANALYSE | Monthly periodic group/window structured parsing in QUEST-LIVE-001
+- [ ] QUEST-003 | IN ANALYSE | completed quest candidates exposed read-only; claim UI remains later
+- [ ] QUEST-004 | IN ANALYSE | Daily periodic group/window structured parsing complete; objective/reward definitions next
+- [ ] QUEST-005 | IN ANALYSE | Weekly periodic group/window structured parsing complete; objective/reward definitions next
+- [ ] QUEST-006 | IN ANALYSE | Monthly periodic group/window structured parsing complete; objective/reward definitions next
 - [ ] QUEST-007 | OFFEN | Quest completion chests
-- [ ] QUEST-008 | IN ENTWICKLUNG | achievement group/progress structured inspection in QUEST-LIVE-001
+- [ ] QUEST-008 | IN ANALYSE | achievement group/progress structured inspection complete; static semantic mapping next
 - [ ] QUEST-009 | OFFEN | Achievements claim
 - [ ] QUEST-010 | OFFEN | Daily login reward
 - [ ] QUEST-011 | OFFEN | Playtime rewards
@@ -306,5 +306,5 @@ This checklist remains open-ended: newly discovered Invokers systems must be app
 - [x] AccountObserver source-scoped quests integration
 - [x] Fresh deterministic completion candidates and periodic windows
 - [x] Version-aware static catalog interface only
-- [ ] Windows CI acceptance
-- [ ] QUEST-LIVE-002: verified static definitions and live quest UI/claim evidence (not implemented)
+- [x] Windows CI acceptance: 423 passed, 1 warning, run 44312996129
+- [ ] QUEST-LIVE-002: verified static definitions/catalog foundation
