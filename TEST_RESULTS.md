@@ -287,3 +287,13 @@ Synthetic quest wire fixtures cover all three union tags, unknown numeric enum v
 ## QUEST-LIVE-001A
 
 Inherited test_visual_result_without_spend_pending migrated to current watchdog semantics, stronger boundary and recovery assertions; no tests removed. Baseline run 44280741108: 1 failed, 422 passed, 1 warning. Full Windows CI pending.
+
+
+### QUEST-LIVE-001 / 001A final acceptance
+
+- implementation: `d8f1ffeb7a660dbdd79a37366751342afa318e2f`
+- CI-fix: `0347c6d59d091c6f155ba791fc59ca57006ec631`
+- Actions run: `44312996129`
+- result: `423 passed, 1 warning in 1.51s`
+- conclusion: SUCCESS
+- stale Arena watchdog regression aligned with current liveness semantics; no production behavior changed.
