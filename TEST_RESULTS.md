@@ -283,3 +283,7 @@ Regression cases: 61/95/240s battle, late win/loss, hard cap, inactivity, stale/
 ## QUEST-LIVE-001
 
 Synthetic quest wire fixtures cover all three union tags, unknown numeric enum values, list duplicates, nullable windows, future slots, invalid lengths/counts/keys, observation lifecycle, freshness, scoped invalidation and candidate semantics. Windows CI pending. No raw dumps or live quest actions.
+
+## QUEST-LIVE-001A
+
+Inherited test_visual_result_without_spend_pending migrated to current watchdog semantics, stronger boundary and recovery assertions; no tests removed. Baseline run 44280741108: 1 failed, 422 passed, 1 warning. Full Windows CI pending.

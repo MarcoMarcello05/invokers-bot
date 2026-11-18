@@ -577,3 +577,7 @@ No quest input/navigation/claiming in this package.
 ## QUEST-LIVE-001
 
 Read-only quest parser (tag 8), AccountState quests source and pure candidate/summary/facts adapter implemented; CI pending. No static semantics, navigation, claim or runtime scheduler changes. Arena code/config unchanged. UI/live validation pending.
+
+## QUEST-LIVE-001A
+
+Corrected inherited Arena regression test only: first result evidence at monotonic t=20 renews inactivity deadline to t=80 (60s without progress), not old t=75. Assert pending at 75 and just before 80, terminal INCONCLUSIVE/RECOVERY_REQUIRED_NO_PROGRESS at 80, immutable attempt identity, no retry/replay and idempotent terminal. Quest and Arena production code/config unchanged. CI pending.

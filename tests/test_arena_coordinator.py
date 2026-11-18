@@ -158,8 +158,22 @@ def test_visual_result_without_spend_pending():
     sample=replace(capture(post,now=11),observed_at=20,tokens=12,tokens_spent=0)
     result=c.observe_result(AttemptObservation(i.attempt_id,sample,"victory"))
     assert result.pending and c.phase==Phase.RESULT_PENDING
-    assert c.tick(now=75)==Phase.TERMINAL
-    assert c.record.outcome==Outcome.INCONCLUSIVE and not c.record.result.replay_allowed
+    assert not c.spend_confirmed and c.last_progress_at==20
+    # Result evidence renews liveness once; the old intent-based deadline
+    # (75) is still inside the inactivity window (20 + 60 = 80).
+    deadline=min(c.last_progress_at+c.stagnation_timeout,c.hard_deadline)
+    assert deadline==80
+    assert c.tick(now=75)==Phase.RESULT_PENDING
+    assert c.tick(now=deadline-0.001)==Phase.RESULT_PENDING
+    assert c.record is None and not c.retry_allowed
+    assert c.tick(now=deadline)==Phase.TERMINAL
+    record=c.record
+    assert record.outcome==Outcome.INCONCLUSIVE
+    assert record.result.reason=="RECOVERY_REQUIRED_NO_PROGRESS"
+    assert record.recovery_required and c.recovery_required
+    assert record.attempt_id==i.attempt_id and record.opponent_id==i.opponent_id
+    assert not record.retry_allowed and not record.result.replay_allowed
+    assert c.observe_result(AttemptObservation(i.attempt_id,replace(sample,observed_at=81),"victory")) is record
 
 
 def test_no_start_evidence_final_timeout():
