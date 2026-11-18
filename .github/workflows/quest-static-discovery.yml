@@ -4,6 +4,7 @@ on:
     branches: [main]
     paths:
       - 'tools/quest_static_discovery.py'
+      - 'src/invokers_bot/static_pack.py'
       - '.github/workflows/quest-static-discovery.yml'
   workflow_dispatch:
 permissions:
@@ -20,8 +21,6 @@ jobs:
         shell: pwsh
         run: |
           git fetch --no-tags --depth=1 origin d363ef72e3cde80e05cc3829ac09f0137acedc5f
-          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
-          python -m pip install Brotli==1.2.0
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
           python -m pip install -e .
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }

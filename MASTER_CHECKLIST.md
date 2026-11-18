@@ -308,3 +308,12 @@ This checklist remains open-ended: newly discovered Invokers systems must be app
 - [x] Version-aware static catalog interface only
 - [x] Windows CI acceptance: 423 passed, 1 warning, run 44312996129
 - [ ] QUEST-LIVE-002: verified static definitions/catalog foundation
+
+## QUEST-LIVE-002
+
+- [x] Archive and IL2CPP static definition/container discovery (discovery Actions SUCCESS)
+- [x] Static artifact SHA256 and HZCP vector/size evidence
+- [x] Strict read-only container and versioned catalog consumer foundation
+- [x] Verified enum IDs and explicit unknown/absent/unsupported semantics
+- [ ] Implementation CI acceptance
+- [ ] QUEST-LIVE-003: complete structural QuestData table boundaries, nested condition/reward serialization, real PrototypeId join and build compatibility

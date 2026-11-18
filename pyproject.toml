@@ -6,7 +6,7 @@ build-backend = "setuptools.build_meta"
 name = "invokers-live-bot"
 version = "0.1.0"
 requires-python = ">=3.11"
-dependencies = ["numpy>=2.1","opencv-python>=4.10","dxcam>=0.0.5","mss>=10.0","pywin32>=308"]
+dependencies = ["numpy>=2.1","opencv-python>=4.10","dxcam>=0.0.5","mss>=10.0","pywin32>=308","Brotli>=1.2,<2"]
 
 [project.scripts]
 invokers-bot = "invokers_bot.app:main"

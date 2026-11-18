@@ -598,3 +598,7 @@ Corrected inherited Arena regression test only: first result evidence at monoton
 - VERIFIED: no SendInput/OCR/navigation/claim code, no raw account snapshots.
 - VERIFIED: 001A changed only stale Arena regression test + docs; Arena production code unchanged.
 - NEXT: QUEST-LIVE-002 static quest-definition discovery/catalog foundation.
+
+## QUEST-LIVE-002 discovery / catalog foundation
+
+Archive Windows discovery runs 44314113822 and 44314362726 SUCCESS. Verified HZCP format 4, 446 keys/chunks/hashes, 0.62.1655 revision, 0.62.700 secondary string, Main 8652824 B; SHA256 and exact type fields in QUEST_STATIC_DEFINITIONS_0.62.md. Strict container reader, explicit semantic evidence states, versioned catalog contract and non-executable conditional hints added. No real prototype rows loaded: sequential StaticData QuestData table boundary and nested reward/condition serializers remain unverified. No Arena or action changes, raw/bulk files or guessed mappings. Full-suite and strict archived-reader CI pending on implementation commit.

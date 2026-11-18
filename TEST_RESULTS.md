@@ -297,3 +297,7 @@ Inherited test_visual_result_without_spend_pending migrated to current watchdog 
 - result: `423 passed, 1 warning in 1.51s`
 - conclusion: SUCCESS
 - stale Arena watchdog regression aligned with current liveness semantics; no production behavior changed.
+
+## QUEST-LIVE-002
+
+Discovery Actions 44314113822 and 44314362726 SUCCESS (archive metadata/byte probe). Probe commit 0abf440b68885d4a52c122c9257f4c41e87eae4d full Windows tests run 44314113823: 423 passed, 1 warning in 1.53s. New synthetic HZCP and catalog contract regressions; no actual quest table decoder. Full implementation Windows CI and strict archive reader re-verification pending.

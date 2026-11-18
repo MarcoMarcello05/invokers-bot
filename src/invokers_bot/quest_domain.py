@@ -2,8 +2,11 @@
 from dataclasses import dataclass
 from datetime import datetime
 from math import isfinite
-from typing import Protocol
+from typing import Protocol, TYPE_CHECKING
 from .quests_model import QuestKind, QuestStateId, PlayerQuestsState, PeriodicWindow
+
+if TYPE_CHECKING:
+    from .quest_catalog import QuestDefinition
 
 
 @dataclass(frozen=True, slots=True)
@@ -108,4 +111,4 @@ class QuestDefinitionCatalog(Protocol):
     with mismatched versions must return no definition. Objective/reward types
     remain intentionally unspecified until the static wire format is verified.
     """
-    def lookup(self,prototype_id:int,*,game_build:str,static_revision:str) -> object | None: ...
+    def lookup(self,prototype_id:int,*,game_build:str,static_revision:str) -> "QuestDefinition | None": ...
