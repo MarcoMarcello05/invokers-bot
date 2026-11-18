@@ -1,0 +1,26 @@
+name: quest static discovery
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'tools/quest_static_discovery.py'
+      - '.github/workflows/quest-static-discovery.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  inspect:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - name: Read-only archive inspection
+        shell: pwsh
+        run: |
+          git fetch --no-tags --depth=1 origin d363ef72e3cde80e05cc3829ac09f0137acedc5f
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          python -m pip install Brotli==1.2.0
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          python tools/quest_static_discovery.py --archive
