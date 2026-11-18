@@ -565,3 +565,11 @@ Post-intent ownership hardened; visual battle keeps attempt active independent o
 ## Arena coordinator liveness hardening
 
 State-driven battle observation replaces fixed duration. Default soft start 5s, inactivity 60s, absolute 300s from intent. No runtime/input wiring. CI pending.
+
+
+## Quest domain start — QUEST-LIVE-001
+
+User requested offline Quest development while real-client Arena work is blocked.
+Existing schema research already maps PlayerQuestsModel, IQuestState union, periodic windows and achievement groups.
+Next package: strict read-only PlayerQuests parser + AccountState integration + semantic completed/claim-candidate facts.
+No quest input/navigation/claiming in this package.
