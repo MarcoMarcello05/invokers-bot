@@ -17,7 +17,7 @@ Rules:
 - [ ] CORE-001 | IN ENTWICKLUNG | Universal WorldState / Blackboard: live AccountState observation integrated; scoped invalidation implemented, CI pending
 - [ ] CORE-002 | IN ENTWICKLUNG | Goal model: Arena slice being completed end-to-end before next domain
 - [ ] CORE-003 | BEREIT ZUR ENTWICKLUNG | Central TaskScheduler: tiers, hysteresis, preemption and acceptance scenarios specified
-- [ ] CORE-004 | IN ENTWICKLUNG | Arena shadow coordinator integrated; defer broader abstraction until second domain
+- [ ] CORE-004 | IN ENTWICKLUNG | first real Arena vertical slice now top priority; broader abstraction deferred
 - [ ] CORE-005 | OFFEN | Persistent run memory
 - [ ] CORE-006 | OFFEN | Navigation graph
 - [ ] CORE-007 | IN ENTWICKLUNG | Arena attempt-scoped cancellation/timeout/no-blind-retry verified synthetically; live recovery still pending
@@ -88,7 +88,7 @@ Rules:
 - [ ] ARENA-003 | IN ENTWICKLUNG | Opponent semantics/CombatPower verified; own Team Power provenance + first ranking next
 - [ ] ARENA-004 | TEST AUSSTEHEND | Deterministic ranking implemented; real-client own Team Power validation required
 - [x] ARENA-005 | ABGESCHLOSSEN | live offense cost verified as exactly 1 Arena Token; token pressure + authorization policy implemented
-- [ ] ARENA-006 | TEST AUSSTEHEND | post-StartIntent coordinator hardening accepted; supervised real-client start integration pending
+- [ ] ARENA-006 | IN ENTWICKLUNG | AUTOPILOT-MVP-001 wiring supervised real-client start/result/return loop
 - [x] ARENA-007 | ABGESCHLOSSEN | live PRE/POST victory validated: counters/resources/history persist on result screen
 - [ ] ARENA-008 | TEST AUSSTEHEND | exact Arena spend corroboration implemented; live loss/timing still pending
 - [ ] ARENA-009 | IN ENTWICKLUNG | Semantic opponent-set refresh fingerprint verified; manual Gem refresh remains blocked
@@ -316,4 +316,4 @@ This checklist remains open-ended: newly discovered Invokers systems must be app
 - [x] Strict read-only container and versioned catalog consumer foundation
 - [x] Verified enum IDs and explicit unknown/absent/unsupported semantics
 - [x] Implementation CI acceptance: 460 passed, 1 warning, run 44315267859
-- [ ] QUEST-LIVE-003 | IN ENTWICKLUNG | structural QuestData decoder + real PrototypeId join using fresh 1657/1659/1661 evidence
+- [ ] QUEST-LIVE-003 | BLOCKIERT | parked intentionally until first end-to-end autopilot slice works
