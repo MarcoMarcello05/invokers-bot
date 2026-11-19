@@ -626,3 +626,16 @@ Current user-provided artifacts outside the public repo:
 All three current static files begin with HZCP format 4 and contain primary version strings matching their filenames plus the separate second version string `0.62.700`.
 
 These files are analysis inputs only and must not be committed raw to main.
+
+
+## Strategic pivot — working autopilot before deeper semantics
+
+User feedback: project feels over-engineered relative to visible autonomous progress.
+
+Decision:
+- PAUSED: QUEST-LIVE-003 static QuestData decoder. Preserve all completed Quest/static work.
+- NEW PRIORITY: AUTOPILOT-MVP-001, a thin vertical Arena slice using the already working capture/Input foundations.
+- Goal: prove one complete real closed loop before more static-data reverse engineering.
+- Principle: functionality first, intelligence second.
+- MVP intentionally does not require exact own Team Power, global opponent ranking, Quest semantics, or universal scheduling.
+- Safety remains strict: Arena Token only, no Gems, UNKNOWN=no-input, F12 stop, no blind Start retry.
