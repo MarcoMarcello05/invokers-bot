@@ -1,220 +1,190 @@
 # DEVELOPER HANDOFF
 
-## QUEST-LIVE-003 — real static QuestData decoder + current PrototypeId join
+## AUTOPILOT-MVP-001 — first real closed-loop Arena run
 
 Status: BEREIT ZUR ENTWICKLUNG
 
-Accepted baseline:
-- QUEST-LIVE-002 commit: `04dd53fbad1cfb86114dbdd9126fa5915e106034`
-- Windows Actions: `44315267859`
-- result: `460 passed, 1 warning in 1.68s`
-- conclusion: SUCCESS
+## Strategic pivot
 
-Read first:
-- `QUEST_STATIC_DEFINITIONS_0.62.md`
-- `MASTER_STATUS.md`
-- `TEST_RESULTS.md`
-- existing `static_pack.py`, `quest_catalog.py`, `quest_static_discovery.py`
+Pause QUEST-LIVE-003 static-definition decoding.
 
-## Important correction
+Reason:
+The project has accumulated strong data/schema infrastructure, but the highest-risk unknown is no longer data decoding. It is whether the existing capture + vision + SendInput + verification stack can complete a full useful task autonomously in the real client.
 
-Do not conflate the two HZCP header version strings.
+Priority is now:
+**working end-to-end loop first, intelligence second.**
 
-Observed current files expose:
-- first string: 0.62.1657 / 0.62.1659 / 0.62.1661 respectively
-- second string: 0.62.700 in all three
+Do not delete Quest work. Keep it parked and reusable.
 
-Treat them as distinct opaque version identifiers until the code/IL2CPP loader proves their exact semantics.
-Do not label either one "Static revision" merely from filename/header position.
+## Goal
 
-## Fresh real artifacts supplied from current PC
+Build the smallest safe real Arena autopilot slice that can execute:
 
-These are NOT to be committed raw:
+HOME / known state
+→ enter Arena
+→ identify a valid visible opponent card
+→ select one opponent
+→ reach formation / pre-battle state
+→ start exactly one offense battle
+→ observe battle/result state without fixed-duration sleeps
+→ classify WIN / LOSS / INCONCLUSIVE
+→ return to Arena
+→ verify the attempt through existing structured Arena evidence where available
 
-- `static-data.0.62.1657.dat`
-  - size 5,808,901
-  - SHA256 `6f1c536c90c51465ea632c371719bde14ab90a314e8c2855fcfa79bd8703fd2f`
+This package is successful only if the path is wired end-to-end and ready for a supervised live client test.
 
-- `static-data.0.62.1659.dat`
-  - size 5,838,336
-  - SHA256 `d45634471a348ebbd8f3949feec085e27206c65922aba2f36edbbf443e4f6701`
+## Deliberate simplifications
 
-- `static-data.0.62.1661.dat`
-  - size 5,809,126
-  - SHA256 `390f752c88d6247674fae7901653bf2b636af6735b1a0f1c157879060cd6b46d`
+For MVP-001:
+- do NOT require optimal opponent ranking
+- do NOT block on exact own Team Power
+- do NOT require full opponent-list traversal
+- do NOT require Quest semantics
+- do NOT require universal scheduler
+- do NOT require static-data decoding
 
-- current `PlayerQuestsModel.dat`
-  - size 52,486
-  - SHA256 `44b094afb8ada6818303ac4854cfc805a0dc5d93e9bc6db48288f5e675abdcad`
+Use one clearly visible, confidently detected opponent card.
+Selection policy may be deterministic and intentionally simple (for example first safely recognized eligible visible card).
 
-The old archived 0.62.1655 artifact remains useful for regression comparison, but current decoding should prioritize 1661 and use 1657/1659 for differential validation.
+The objective is proving the closed loop, not winning every battle.
 
-If these fresh artifacts are not available in your workspace, do NOT fabricate their contents. Implement the decoder against the archived 1655 evidence plus proven serializer/schema information, and report exactly what still requires the user-supplied current files for final cross-check.
+## Safety
 
-## Verified type target
+Hard gates:
+- Arena offense only
+- require structured Arena token balance >= 1 and fresh enough for existing policy
+- cost is exactly 1 verified Arena token
+- NEVER spend Gems
+- if any Gem/premium confirmation is detected or action path is ambiguous: abort
+- UNKNOWN visual state = no input
+- F12 remains global stop
+- no blind retry of Start
+- one attempt ownership at a time
+- no replay on inconclusive outcome
+- no manual Arena refresh
+- no destructive inventory/account actions
 
-IL2CPP discovery already establishes:
-- `StaticQuestData`
-- `IQuestPrototype`
-- prototype union tags:
-  - 1 Periodic
-  - 2 Achievement
-  - 3 Book
-- common prototype semantics include:
-  - Id
-  - Action
-  - RequiredAmount
-  - Conditions
-  - Reward
-  - Disabled
-  - AutoComplete
-  - OpenCondition
-- IQuestCondition union tags 1..15 are typed in the schema
-- QuestAction enum values are schema evidence, not PrototypeId mappings
+## Architecture
 
-The task is to prove the serialized layout and decode actual rows.
+Use the existing deterministic loop:
 
-## A. Recover exact serialization
+capture
+→ classify current visual state
+→ choose exactly one allowed transition
+→ SendInput
+→ immediately re-observe
+→ verify transition
+→ continue or recover
 
-Preferred evidence order:
-1. generated MemoryPack formatter/serializer code for StaticData / StaticQuestData / QuestPrototype / conditions / Reward;
-2. matching generated metadata/formatter artifacts;
-3. independent bounded structural proof from the real Main chunk, with exact list/object boundaries and full consumption.
+No macro-style fixed click sequence.
 
-Memory field offsets alone are insufficient.
+Prefer existing DXcam/OpenCV/ROI/template infrastructure.
+OCR remains optional and should not be needed for this MVP unless a tiny numeric/text ROI is the only robust evidence.
 
-No scan-by-ID heuristic is allowed as the production decoder.
-No broad byte-range guessing.
+## Required visual states
 
-## B. Decode StaticData -> QuestData
-
-Prove:
-- StaticData root member containing QuestData
-- QuestData object member order
-- prototype collection start/end/count
-- whether PrototypeById is serialized directly or derived after load
-- complete object/list consumption with no unexplained trailing bytes
-
-Keep all unsupported members opaque/UNKNOWN rather than inventing semantics.
-
-## C. Decode real prototype records
-
-Decode union tags 1/2/3 with at least:
-- prototype_id
-- kind
-- action
-- required_amount
-- disabled
-- auto_complete
-- subtype group/page fields when verified
-
-Decode Conditions only for serializers that are proven.
-Decode Reward only for child structures whose wire layout is proven.
-
-It is acceptable for Reward/Condition subfields to remain UNKNOWN while Id/Action/RequiredAmount are verified.
-Do not block the whole prototype if a bounded optional child can be preserved opaque safely.
-
-## D. Real PrototypeId join
-
-Use the current PlayerQuestsModel parser and perform a read-only join:
-
-`PlayerQuestsModel.active_by_id[*].prototype_id`
-→ decoded `StaticQuestData` prototype ID.
-
-Report:
-- number of unique active PrototypeIds
-- number resolved
-- number unresolved
-- duplicates if any
-- kind/action/required amount coverage
-- any current PrototypeId absent from the static table
-
-Do not commit bulk user quest rows.
-Tests should use minimal synthetic fixtures and a tiny sanitized set of non-sensitive numeric regression facts only when necessary.
-
-## E. Differential validation across static files
-
-Compare 1657, 1659, 1661 structurally:
-- HZCP/header compatibility
-- chunk count/key set changes
-- QuestData table count
-- prototype IDs added/removed/changed
-- whether Action/RequiredAmount/Reward fields changed
-
-This is especially useful to prove that the decoder is reading semantic records rather than accidentally matching byte patterns.
-
-Do not assume 1657/1659/1661 are schema-compatible merely because the format header is 4.
-
-## F. Catalog integration
-
-Once a definition row is structurally verified:
-- create exact CatalogBinding using both HZCP version identifiers + artifact SHA256
-- attach DefinitionOrigin / evidence level
-- fail closed on a different binding
-- unknown prototype remains UNKNOWN
-- unsupported objective/condition/reward remains explicit
-
-DomainHint remains non-executable.
-
-No scheduler rewrite.
-
-## G. Tests
-
-Add synthetic regression tests for:
-- exact QuestData table boundary
-- each prototype union tag 1/2/3
-- action + required amount
-- unknown/unsupported union
-- malformed/truncated object
-- duplicate prototype ID
-- trailing bytes
-- version/binding mismatch
-- current catalog fail-closed behavior
-- optional opaque unsupported condition/reward handling
-- deterministic real-ID join adapter using sanitized fixture IDs
-- existing 460 tests remain green
-
-If fresh real artifacts are accessible in CI only through a private/archive mechanism, run them as a separate read-only discovery validation. Never add raw static files or PlayerQuestsModel.dat to public main.
-
-## H. Documentation
-
-Update:
-- `QUEST_STATIC_DEFINITIONS_0.62.md`
-- MASTER_STATUS.md
-- MASTER_CHECKLIST.md
-- TEST_RESULTS.md
-
-Explicitly separate:
-- VERIFIED BY SERIALIZER/IL2CPP
-- VERIFIED BY REAL STATIC DATA
-- VERIFIED BY CROSS-VERSION DIFFERENTIAL
-- VERIFIED BY PLAYER QUEST JOIN
+Wire only the minimum state graph needed:
+- HOME or known launch state
+- ARENA_LIST
+- OPPONENT_SELECTED / FORMATION
+- BATTLE_RUNNING or battle-start evidence
+- RESULT_WIN
+- RESULT_LOSS
+- ARENA_RETURNED
+- LOADING / transition
 - UNKNOWN
+- PREMIUM_CONFIRMATION / unsafe modal if distinguishable
 
-## Constraints
+State recognition should be stable over multiple frames where appropriate.
 
-- read-only
-- no raw/bulk data commit
-- no SendInput
-- no OCR
-- no quest navigation
-- no claim
-- no spending
-- no Arena production changes
-- no guessed PrototypeId mapping
-- Windows CI required
+## Arena opponent choice
+
+For this MVP, opponent choice must be simple and observable.
+
+Allowed:
+- first/highest-confidence visible opponent card
+- existing opponent card template/ROI if already available
+- deterministic card index tied to current viewport
+
+Not required:
+- own-power ratio
+- global opponent ranking
+- scrolling all opponents
+
+Keep the existing smart ranking code intact for later use.
+
+## Start and battle monitoring
+
+Reuse current Arena attempt coordinator:
+- immutable attempt/opponent identity
+- soft start evidence
+- progress/liveness updates
+- inactivity watchdog
+- absolute hard cap
+- late result acceptance where safe
+- no fixed fight duration
+- exact spend/result reconciliation when snapshots arrive
+
+Do not reintroduce fixed 60-second battle waits.
+
+## Recovery
+
+Bounded recovery only:
+- if expected visual transition does not appear, re-observe
+- one safe back/close recovery only where state is known
+- if identity/state becomes ambiguous: terminal INCONCLUSIVE + screenshot/trace
+- never blindly re-click Start
+
+## Diagnostics
+
+For every live decision record:
+- visual state
+- confidence/evidence
+- selected action
+- target coordinates/ROI
+- pre/post AccountState versions relevant to Arena
+- attempt ID/opponent ID if known
+- terminal reason
+
+On UNKNOWN/abort save a diagnostic screenshot with relevant ROIs overlaid.
+
+## Tests
+
+Add deterministic offline tests using synthetic/replay frames where possible:
+- state transition graph
+- no action on UNKNOWN
+- no action on premium/Gem confirmation
+- one-action-per-observation
+- start not retried blindly
+- first visible card deterministic selection
+- result WIN/LOSS paths
+- result INCONCLUSIVE path
+- return-to-arena verification
+- F12/cancel propagation
+- existing Arena coordinator tests remain green
+- existing Quest/static tests remain green
+
+Full Windows CI required.
+
+## Important non-goals
+
+Do NOT continue QUEST-LIVE-003 in this package.
+Do NOT decode more static data.
+Do NOT create a universal planner.
+Do NOT optimize opponent ranking.
+Do NOT modify Arena token semantics.
+Do NOT add auto-refresh.
 
 ## Completion report
 
 Report:
-- exact StaticData -> QuestData serialization proof
-- exact prototype member layout
-- condition/reward coverage
-- current active PrototypeId resolution coverage
-- 1657/1659/1661 differential findings if files were available
-- version/binding semantics
+- exact end-to-end state graph implemented
+- visual evidence used for each transition
 - files changed
+- what remains dependent on live calibration
+- whether the path can be launched in supervised live mode
 - commit SHA
-- final pytest count
+- full pytest count
 - Windows Actions run/result
-- precise remaining blocker for QUEST-LIVE-004
+- exact command for the first supervised real-client test
+
